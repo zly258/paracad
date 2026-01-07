@@ -12,6 +12,12 @@ export interface CustomNodeDef {
   connections: Connection[];
 }
 
+// History Snapshot
+interface HistoryState {
+    nodes: NodeData[];
+    connections: Connection[];
+}
+
 interface GraphContextType extends GraphState {
   setNodes: (nodes: NodeData[]) => void;
   addNode: (type: NodeType, position: { x: number; y: number }, customSpec?: string) => void;
@@ -19,7 +25,7 @@ interface GraphContextType extends GraphState {
   removeSelectedNodes: () => void;
   duplicateSelectedNodes: () => void;
   fitView: (containerWidth: number, containerHeight: number) => void;
-  updateNodePosition: (id: string, position: { x: number; y: number }) => void;
+  updateNodePosition: (id: string, position: { x: number; y: number }, snapshot?: boolean) => void;
   updateNodeParam: (id: string, key: string, value: any) => void;
   addConnection: (sourceNodeId: string, sourceSocketId: string, targetNodeId: string, targetSocketId: string) => void;
   removeConnection: (id: string) => void;
@@ -40,6 +46,12 @@ interface GraphContextType extends GraphState {
   deleteCustomNode: (id: string) => void;
   toggleLanguage: () => void;
   t: (key: string) => string;
+  // History
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  recordHistory: () => void;
 }
 
 const GraphContext = createContext<GraphContextType | null>(null);
@@ -51,12 +63,7 @@ export const useGraph = () => {
 };
 
 export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [nodes, setNodesState] = useState<NodeData[]>(() => [
-    createDefaultNode(NodeType.PARAMETER, { x: 50, y: 50 }),
-    createDefaultNode(NodeType.BOX, { x: 350, y: 50 }),
-    createDefaultNode(NodeType.SPHERE, { x: 350, y: 350 }),
-    createDefaultNode(NodeType.BOOLEAN_OP, { x: 700, y: 200 })
-  ]);
+  const [nodes, setNodesState] = useState<NodeData[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -69,6 +76,10 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [kernelReady, setKernelReady] = useState(false); 
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
 
+  // History
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [future, setFuture] = useState<HistoryState[]>([]);
+
   // Custom Nodes Management
   const [savedCustomNodes, setSavedCustomNodes] = useState<CustomNodeDef[]>([]);
 
@@ -77,32 +88,65 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const t = useCallback((key: string): string => {
-     if (language === 'en') return key; // Default keys are English
+     if (language === 'en') return key; 
      return translations['zh'][key] || key;
   }, [language]);
 
   const addLog = useCallback((message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') => {
-    setLogs(prev => [{
-      id: uuidv4(),
-      timestamp: new Date(),
-      message,
-      type
-    }, ...prev].slice(0, 50));
+    setLogs(prev => {
+        const newLog = {
+          id: uuidv4(),
+          timestamp: new Date(),
+          message,
+          type
+        };
+        const updated = [...prev, newLog];
+        if (updated.length > 50) return updated.slice(updated.length - 50);
+        return updated;
+    });
   }, []);
 
-  // Load Custom Nodes on Mount
+  const recordHistory = useCallback(() => {
+      setHistory(prev => {
+          const snapshot = { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)) };
+          return [...prev.slice(-19), snapshot];
+      });
+      setFuture([]);
+  }, [nodes, connections]);
+
+  const undo = useCallback(() => {
+      if (history.length === 0) return;
+      const previous = history[history.length - 1];
+      const current = { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)) };
+      
+      setFuture(prev => [current, ...prev]);
+      setNodesState(previous.nodes);
+      setConnections(previous.connections);
+      setHistory(prev => prev.slice(0, -1));
+      addLog('Undo', 'info');
+  }, [history, nodes, connections, addLog]);
+
+  const redo = useCallback(() => {
+      if (future.length === 0) return;
+      const next = future[0];
+      const current = { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)) };
+
+      setHistory(prev => [...prev, current]);
+      setNodesState(next.nodes);
+      setConnections(next.connections);
+      setFuture(prev => prev.slice(1));
+      addLog('Redo', 'info');
+  }, [future, nodes, connections, addLog]);
+
   useEffect(() => {
     const stored = localStorage.getItem('paracad_custom_nodes');
     if (stored) {
       try {
         setSavedCustomNodes(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to load custom nodes", e);
-      }
+      } catch (e) { console.error("Failed to load custom nodes", e); }
     }
   }, []);
 
-  // Initialize Kernel
   useEffect(() => {
       const init = async () => {
           await initOCCT();
@@ -118,8 +162,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   
   const triggerCompute = useCallback(() => {
       setComputeTrigger(prev => prev + 1);
-      addLog('Compute Triggered', 'info');
-  }, [addLog]);
+  }, []);
 
   useEffect(() => {
     if (!kernelReady) return; 
@@ -147,51 +190,45 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [nodes, connections, computeTrigger, addLog, kernelReady]); 
 
   const addNode = useCallback((type: NodeType, position: { x: number; y: number }, customSpec?: string) => {
+    recordHistory(); // Snapshot before change
     const newNode = createDefaultNode(type, position, customSpec);
-    
     setNodesState(prev => {
-        // Auto-generate unique name for Parameters
         if (type === NodeType.PARAMETER) {
             let counter = 1;
             let newName = `Param${counter}`;
             const existingNames = new Set(prev.filter(n => n.type === NodeType.PARAMETER).map(n => n.params.name));
-            while (existingNames.has(newName)) {
-                counter++;
-                newName = `Param${counter}`;
-            }
+            while (existingNames.has(newName)) { counter++; newName = `Param${counter}`; }
             newNode.params.name = newName;
         }
         return [...prev, newNode];
     });
-    // addLog(`Node Added: ${newNode.label}`, 'success'); 
-  }, [addLog]);
+  }, [addLog, recordHistory]);
 
   const removeNode = useCallback((id: string) => {
+    recordHistory();
     setNodesState(prev => prev.filter(n => n.id !== id));
     setConnections(prev => prev.filter(c => c.sourceNodeId !== id && c.targetNodeId !== id));
     setSelectedNodeIds(prev => prev.filter(nid => nid !== id));
     addLog('Node Deleted', 'info');
-  }, [addLog]);
+  }, [addLog, recordHistory]);
 
   const removeSelectedNodes = useCallback(() => {
+    recordHistory();
     setSelectedNodeIds(currentSelected => {
         if (currentSelected.length === 0) return currentSelected;
-        
         setNodesState(prev => prev.filter(n => !currentSelected.includes(n.id)));
         setConnections(prev => prev.filter(c => !currentSelected.includes(c.sourceNodeId) && !currentSelected.includes(c.targetNodeId)));
-        addLog(`Deleted ${currentSelected.length} nodes`, 'info');
         return [];
     });
-  }, [addLog]);
+  }, [addLog, recordHistory]);
 
   const duplicateSelectedNodes = useCallback(() => {
+     recordHistory();
      setSelectedNodeIds(currentSelected => {
          if (currentSelected.length === 0) return currentSelected;
-
          setNodesState(prevNodes => {
              const newNodes: NodeData[] = [];
              const existingParamNames = new Set(prevNodes.filter(n => n.type === NodeType.PARAMETER).map(n => n.params.name));
-
              prevNodes.forEach(node => {
                  if (currentSelected.includes(node.id)) {
                      const newNode = JSON.parse(JSON.stringify(node));
@@ -200,42 +237,38 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                      newNode.position.y += 50;
                      newNode.inputs.forEach((s: any) => s.id = uuidv4());
                      newNode.outputs.forEach((s: any) => s.id = uuidv4());
-                     
                      if (newNode.type === NodeType.PARAMETER) {
                          let counter = 1;
                          let baseName = newNode.params.name.replace(/\d+$/, ''); 
                          if (!baseName) baseName = 'Param';
-                         
                          let newName = `${baseName}${counter}`;
-                         while (existingParamNames.has(newName)) {
-                             counter++;
-                             newName = `${baseName}${counter}`;
-                         }
+                         while (existingParamNames.has(newName)) { counter++; newName = `${baseName}${counter}`; }
                          newNode.params.name = newName;
                          existingParamNames.add(newName);
                      }
-
                      newNodes.push(newNode);
                  }
              });
-             addLog(`Duplicated ${newNodes.length} nodes`, 'success');
              return [...prevNodes, ...newNodes];
          });
-         
          return currentSelected;
      });
-  }, [addLog]);
+  }, [addLog, recordHistory]);
 
   const fitView = useCallback((w: number, h: number) => {
     setPan({x: 50, y: 50});
     setZoom(1);
   }, []);
 
-  const updateNodePosition = useCallback((id: string, position: { x: number; y: number }) => {
+  const updateNodePosition = useCallback((id: string, position: { x: number; y: number }, snapshot = false) => {
+    if (snapshot) recordHistory();
     setNodesState(prev => prev.map(n => n.id === id ? { ...n, position } : n));
-  }, []);
+  }, [recordHistory]);
 
   const updateNodeParam = useCallback((id: string, key: string, value: any) => {
+    // Note: For sliders/input typing, this records every stroke. 
+    // Optimization: In a real app, debounce or use onBlur. For this prototype, we record.
+    recordHistory();
     setNodesState(prev => {
         if (key === 'name') {
             const node = prev.find(n => n.id === id);
@@ -249,9 +282,10 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
         return prev.map(n => n.id === id ? { ...n, params: { ...n.params, [key]: value } } : n);
     });
-  }, []);
+  }, [recordHistory]);
 
   const addConnection = useCallback((sourceNodeId: string, sourceSocketId: string, targetNodeId: string, targetSocketId: string) => {
+    recordHistory();
     setConnections(prev => {
       const filtered = prev.filter(c => c.targetSocketId !== targetSocketId);
       return [...filtered, {
@@ -262,12 +296,12 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         targetSocketId
       }];
     });
-    // addLog('Connected', 'info');
-  }, [addLog]);
+  }, [addLog, recordHistory]);
 
   const removeConnection = useCallback((id: string) => {
+    recordHistory();
     setConnections(prev => prev.filter(c => c.id !== id));
-  }, []);
+  }, [recordHistory]);
 
   const selectNode = useCallback((id: string | null, multi: boolean = false) => {
     if (id === null) {
@@ -300,6 +334,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [nodes, connections, addLog]);
 
   const loadGraph = useCallback((file: File) => {
+      recordHistory();
       const reader = new FileReader();
       reader.onload = (e) => {
           try {
@@ -317,7 +352,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
       };
       reader.readAsText(file);
-  }, [addLog]);
+  }, [addLog, recordHistory]);
 
   const saveAsCustomNode = useCallback((name: string) => {
       if (!name) return;
@@ -326,14 +361,10 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (n.type === NodeType.PARAMETER) {
                const pName = n.params.name;
                if (!pName) continue;
-               if (paramNames.has(pName)) {
-                   alert(`Duplicate param name: "${pName}"`);
-                   return;
-               }
+               if (paramNames.has(pName)) { alert(`Duplicate: "${pName}"`); return; }
                paramNames.add(pName);
           }
       }
-
       const newDef: CustomNodeDef = {
           id: uuidv4(),
           name,
@@ -358,44 +389,16 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [addLog]);
 
   const contextValue = useMemo(() => ({
-      nodes,
-      connections,
-      selectedNodeIds,
-      pan,
-      zoom,
-      computedResults,
-      logs,
-      connectionDraft,
-      isComputing,
-      kernelReady,
-      savedCustomNodes,
-      language,
-      addLog,
-      setNodes,
-      addNode,
-      removeNode,
-      removeSelectedNodes,
-      duplicateSelectedNodes,
-      fitView,
-      updateNodePosition,
-      updateNodeParam,
-      addConnection,
-      removeConnection,
-      setPan,
-      setZoom,
-      selectNode,
-      setSelectedNodes,
-      setConnectionDraft,
-      saveGraph,
-      loadGraph,
-      triggerCompute,
-      saveAsCustomNode,
-      deleteCustomNode,
-      toggleLanguage,
-      t
-  }), [
       nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, savedCustomNodes, language,
-      addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, saveAsCustomNode, deleteCustomNode, toggleLanguage, t
+      history, future, canUndo: history.length > 0, canRedo: future.length > 0,
+      addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
+      addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, 
+      saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
+  }), [
+      nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, savedCustomNodes, language, history, future,
+      addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
+      addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, 
+      saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
   ]);
 
   return (

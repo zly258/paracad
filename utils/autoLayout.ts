@@ -1,6 +1,6 @@
 import dagre from 'dagre';
 import { NodeData, Connection } from '../types';
-import { NODE_WIDTH, HEADER_HEIGHT, SOCKET_HEIGHT, OUTPUT_HEIGHT } from '../constants';
+import { NODE_WIDTH, HEADER_HEIGHT, getSocketHeight, OUTPUT_ROW_HEIGHT } from '../constants';
 
 export const performAutoLayout = (nodes: NodeData[], connections: Connection[]) => {
   const g = new dagre.graphlib.Graph();
@@ -10,8 +10,8 @@ export const performAutoLayout = (nodes: NodeData[], connections: Connection[]) 
   // Add nodes
   nodes.forEach(node => {
     // Estimate height
-    const inputHeight = node.inputs.length * SOCKET_HEIGHT;
-    const outputHeight = node.outputs.length * OUTPUT_HEIGHT;
+    const inputHeight = node.inputs.reduce((acc, input) => acc + getSocketHeight(input.type), 0);
+    const outputHeight = node.outputs.length * OUTPUT_ROW_HEIGHT;
     const height = HEADER_HEIGHT + inputHeight + outputHeight + 60; // +60 for params/padding
 
     g.setNode(node.id, { width: NODE_WIDTH, height: height });

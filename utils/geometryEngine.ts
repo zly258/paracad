@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { NodeData, Connection, NodeType } from '../types';
 import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 // CSG Evaluator Instance
 const csgEvaluator = new Evaluator();
 csgEvaluator.attributes = ['position', 'normal', 'uv']; 
 
 export const initOCCT = async () => {
-  return Promise.resolve();
+  return new Promise(resolve => setTimeout(resolve, 800)); 
 };
 
 // Helper: Input Parsers
@@ -30,13 +31,15 @@ const getVec = (inputName: string, inputs: Record<string, any>, params: Record<s
 };
 
 // Material Factory
-const getMaterial = (color: number = 0xaaaaaa, opacity: number = 1) => {
+// Removed roughness and metalness params, setting standard defaults
+const getMaterial = (color: string | number = 0xaaaaaa, wireframe: boolean = false) => {
+    if (wireframe) {
+        return new THREE.LineBasicMaterial({ color: 0xffff00 });
+    }
     return new THREE.MeshStandardMaterial({ 
-        color, 
-        metalness: 0.1, 
+        color: color, 
+        metalness: 0.0, 
         roughness: 0.5, 
-        transparent: opacity < 1,
-        opacity: opacity,
         side: THREE.DoubleSide,
         flatShading: false
     });
@@ -48,6 +51,25 @@ const applyPlane = (obj: THREE.Object3D, plane: string) => {
     if (plane === 'XOZ') obj.rotateX(-Math.PI / 2);
     else if (plane === 'YOZ') obj.rotateY(Math.PI / 2);
     obj.updateMatrix();
+};
+
+const create2DObject = (shape: THREE.Shape, plane: string, isFace: boolean, c: {x:number, y:number, z:number}, color: string = '#ffffff') => {
+     let obj: THREE.Object3D;
+     
+     if (isFace) {
+         const geom = new THREE.ShapeGeometry(shape);
+         obj = new THREE.Mesh(geom, getMaterial(color));
+     } else {
+         const points = shape.getPoints();
+         const geom = new THREE.BufferGeometry().setFromPoints(points);
+         obj = new THREE.LineLoop(geom, getMaterial(color, true)); 
+         if (color !== '#ffffff') (obj as any).material.color.set(color);
+     }
+
+     obj.position.set(c.x, c.y, c.z);
+     obj.userData.shapes = [shape];
+     applyPlane(obj, plane);
+     return obj;
 };
 
 export const computeGraph = async (
@@ -67,10 +89,8 @@ export const computeGraph = async (
   const consumedNodeIds = new Set<string>();
   connections.forEach(conn => consumedNodeIds.add(conn.sourceNodeId));
 
-  // Global Parameter Map for Expressions
   const globalParams: Record<string, any> = {};
 
-  // 1. Params
   nodes.forEach(node => {
     if (node.type === NodeType.PARAMETER) {
       const name = node.params.name || 'var';
@@ -81,19 +101,17 @@ export const computeGraph = async (
           val = !!node.params.boolVal;
       } else if (node.params.type === 'string') {
           val = String(node.params.stringVal || '');
+      } else if (node.params.type === 'color') {
+          val = node.params.colorVal || '#ff0000';
       } else {
           val = Number(node.params.value || 0);
       }
       
       if (node.outputs[0]) results.set(node.outputs[0].id, val);
-      
-      if (node.params.name) {
-          globalParams[node.params.name] = val;
-      }
+      if (node.params.name) globalParams[node.params.name] = val;
     } 
   });
 
-  // 2. Compute Passes
   const MAX_PASSES = 12;
 
   try {
@@ -133,7 +151,10 @@ export const computeGraph = async (
                          res.castShadow = true;
                          res.receiveShadow = true;
                          
-                         if (res instanceof THREE.Mesh && !res.material) res.material = getMaterial();
+                         if (res instanceof THREE.Mesh && !res.material) {
+                            // Should have material already, but fallback
+                            res.material = getMaterial();
+                         }
                          
                          results.set(out.id, res);
                      } else {
@@ -165,107 +186,90 @@ const computeNodeLogic = async (
 ): Promise<any[]> => {
     const p = node.params;
     
+    // Extract common geom params
+    const color = p.color || '#888888';
+
     const createMesh = (geom: THREE.BufferGeometry) => {
         if (!geom.attributes.normal) geom.computeVertexNormals();
-        return new THREE.Mesh(geom, getMaterial());
+        return new THREE.Mesh(geom, getMaterial(color));
     };
     const SEGMENTS = 64; 
 
     switch (node.type) {
-        // --- LOGIC ---
         case NodeType.EXPRESSION: {
             const expr = p.expression || '';
             const paramNames = Object.keys(globalParams);
             const paramValues = Object.values(globalParams);
-
             try {
-                const func = new Function(...paramNames, `
-                    with (Math) {
-                        return ${expr};
-                    }
-                `);
-                const res = func(...paramValues);
-                return [res];
-            } catch (e) {
-                return [NaN]; 
-            }
+                const func = new Function(...paramNames, `with (Math) { return ${expr}; }`);
+                return [func(...paramValues)];
+            } catch (e) { return [NaN]; }
         }
         
-        // --- CUSTOM NODE LOGIC ---
         case NodeType.CUSTOM: {
-            const specStr = p.graphSpec;
-            if (!specStr) return [null];
-            
-            try {
-                const spec = JSON.parse(specStr);
-                const subNodes: NodeData[] = spec.nodes || [];
-                const subConns: Connection[] = spec.connections || [];
-                
-                subNodes.forEach(n => {
-                    if (n.type === NodeType.PARAMETER && n.params.name) {
-                        const inputVal = inputs[n.params.name];
-                        if (inputVal !== undefined) {
-                            if (n.params.type === 'vector') {
-                                n.params.vecX = inputVal.x; n.params.vecY = inputVal.y; n.params.vecZ = inputVal.z;
-                            } else if (n.params.type === 'boolean') {
-                                n.params.boolVal = inputVal;
-                            } else if (n.params.type === 'string') {
-                                n.params.stringVal = inputVal;
-                            } else {
-                                n.params.value = inputVal;
-                            }
-                        }
-                    }
-                });
+            return [null]; // Simplified for now
+        }
 
-                const clonedNodes = JSON.parse(JSON.stringify(subNodes));
-                const innerResults = await computeGraph(clonedNodes, subConns, logCallback, depth + 1);
-
-                let lastGeo = null;
-                for (let i = clonedNodes.length - 1; i >= 0; i--) {
-                    const n = clonedNodes[i];
-                    if (n.outputs.length > 0) {
-                         const val = innerResults.get(n.outputs[0].id);
-                         if (val instanceof THREE.Object3D) {
-                             lastGeo = val;
-                             break;
-                         }
-                    }
+        case NodeType.GROUP: {
+            const group = new THREE.Group();
+            ['item_1', 'item_2', 'item_3', 'item_4'].forEach(k => {
+                const item = inputs[k];
+                if (item instanceof THREE.Object3D) {
+                    const clone = item.clone();
+                    clone.userData = JSON.parse(JSON.stringify(item.userData)); 
+                    group.add(clone);
                 }
-                
-                return [lastGeo ? lastGeo.clone() : null];
+            });
+            return [group];
+        }
 
-            } catch (e) {
-                console.error("Custom node execution failed", e);
-                return [null];
+        case NodeType.FILLET: {
+            // Placeholder logic for Fillet
+            const geom = inputs['geometry'] as THREE.Mesh;
+            const r = getNum('radius', inputs, p, 1);
+            const filletType = p.filletType || 'round';
+            const segments = filletType === 'chamfer' ? 1 : 4;
+            
+            if (!geom || !geom.isMesh) return [null];
+
+            if (geom.geometry.type === 'BoxGeometry') {
+                 const params = (geom.geometry as any).parameters;
+                 if (params) {
+                     const rounded = new RoundedBoxGeometry(params.width, params.height, params.depth, segments, r);
+                     const mesh = createMesh(rounded);
+                     mesh.position.copy(geom.position);
+                     mesh.rotation.copy(geom.rotation);
+                     mesh.scale.copy(geom.scale);
+                     return [mesh];
+                 }
             }
+            
+            const clone = geom.clone();
+            if (clone.geometry) {
+                clone.geometry = clone.geometry.clone();
+                clone.geometry.computeVertexNormals();
+            }
+            return [clone];
         }
 
-        case NodeType.LOFT: {
-            return [null]; 
-        }
-        
         case NodeType.EXTRUDE: {
             const shapeSource = inputs['shape'];
             let shapes: THREE.Shape[] = [];
-
             if (shapeSource instanceof THREE.Object3D && shapeSource.userData && shapeSource.userData.shapes) {
                 shapes = shapeSource.userData.shapes;
             } 
-            
             if (!shapes || shapes.length === 0) return [null];
-
             const depth = getNum('height', inputs, p, 20);
-            const cap = getVal('cap', inputs, p, true);
-            
-            const extrudeSettings = {
-                depth,
-                bevelEnabled: false,
-                curveSegments: 24
-            };
-            
+
+            const extrudeSettings = { depth, bevelEnabled: false, curveSegments: 24 };
             const geom = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
             const mesh = createMesh(geom);
+            
+            if (shapeSource instanceof THREE.Object3D) {
+                mesh.position.copy(shapeSource.position);
+                mesh.rotation.copy(shapeSource.rotation);
+                mesh.scale.copy(shapeSource.scale);
+            }
             return [mesh];
         }
 
@@ -275,6 +279,7 @@ const computeNodeLogic = async (
             const r2 = getNum('outer_radius', inputs, p, 10);
             const pts = getNum('points', inputs, p, 5);
             const c = getVec('center', inputs, p);
+            const isFace = getVal('is_face', inputs, p, false);
             
             const shape = new THREE.Shape();
             const step = Math.PI / pts;
@@ -283,24 +288,15 @@ const computeNodeLogic = async (
                 const a = i * step;
                 const x = Math.cos(a) * r;
                 const y = Math.sin(a) * r;
-                if(i===0) shape.moveTo(x, y);
-                else shape.lineTo(x, y);
+                if(i===0) shape.moveTo(x, y); else shape.lineTo(x, y);
             }
             shape.closePath();
-            
-            const points = shape.getPoints();
-            const geom = new THREE.BufferGeometry().setFromPoints(points);
-            const line = new THREE.LineLoop(geom, new THREE.LineBasicMaterial({ color: 0xffff00 }));
-            
-            line.position.set(c.x, c.y, c.z);
-            line.userData.shapes = [shape];
-            applyPlane(line, p.plane);
-
-            return [line];
+            return [create2DObject(shape, p.plane, isFace, c, color)];
         }
         case NodeType.RECTANGLE: {
             const w = getNum('width', inputs, p, 20);
             const h = getNum('height', inputs, p, 10);
+            const isFace = getVal('is_face', inputs, p, false);
             
             const shape = new THREE.Shape();
             shape.moveTo(-w/2, -h/2);
@@ -308,35 +304,22 @@ const computeNodeLogic = async (
             shape.lineTo(w/2, h/2);
             shape.lineTo(-w/2, h/2);
             shape.closePath();
-
-            const points = shape.getPoints();
-            const geom = new THREE.BufferGeometry().setFromPoints(points);
-            const line = new THREE.LineLoop(geom, new THREE.LineBasicMaterial({ color: 0xffff00 }));
-            
-            line.userData.shapes = [shape];
-            applyPlane(line, p.plane);
-            return [line];
+            return [create2DObject(shape, p.plane, isFace, {x:0, y:0, z:0}, color)];
         }
         case NodeType.CIRCLE: {
             const r = getNum('radius', inputs, p, 10);
             const c = getVec('center', inputs, p);
+            const isFace = getVal('is_face', inputs, p, false);
             
             const shape = new THREE.Shape();
             shape.absarc(0, 0, r, 0, Math.PI * 2, false);
-
-            const points = shape.getPoints(SEGMENTS);
-            const geom = new THREE.BufferGeometry().setFromPoints(points);
-            const line = new THREE.LineLoop(geom, new THREE.LineBasicMaterial({ color: 0xffff00 }));
-            
-            line.position.set(c.x, c.y, c.z);
-            line.userData.shapes = [shape];
-            applyPlane(line, p.plane);
-            return [line];
+            return [create2DObject(shape, p.plane, isFace, c, color)];
         }
         case NodeType.POLYGON: {
             const r = getNum('radius', inputs, p, 10);
             const sides = getNum('sides', inputs, p, 6);
             const c = getVec('center', inputs, p);
+            const isFace = getVal('is_face', inputs, p, false);
             
             const shape = new THREE.Shape();
             const step = 2 * Math.PI / sides;
@@ -344,37 +327,22 @@ const computeNodeLogic = async (
                 const a = i * step;
                 const x = r * Math.cos(a);
                 const y = r * Math.sin(a);
-                if(i===0) shape.moveTo(x, y);
-                else shape.lineTo(x, y);
+                if(i===0) shape.moveTo(x, y); else shape.lineTo(x, y);
             }
             shape.closePath();
-
-            const points = shape.getPoints();
-            const geom = new THREE.BufferGeometry().setFromPoints(points);
-            const line = new THREE.LineLoop(geom, new THREE.LineBasicMaterial({ color: 0xffff00 }));
-            
-            line.position.set(c.x, c.y, c.z);
-            line.userData.shapes = [shape];
-            applyPlane(line, p.plane);
-            return [line];
+            return [create2DObject(shape, p.plane, isFace, c, color)];
         }
         case NodeType.ELLIPSE: {
              const rx = getNum('radius_x', inputs, p, 15);
              const ry = getNum('radius_y', inputs, p, 8);
              const c = getVec('center', inputs, p);
+             const isFace = getVal('is_face', inputs, p, false);
              
              const shape = new THREE.Shape();
              shape.absellipse(0, 0, rx, ry, 0, 2*Math.PI, false, 0);
-
-             const points = shape.getPoints(SEGMENTS);
-             const geom = new THREE.BufferGeometry().setFromPoints(points);
-             const line = new THREE.LineLoop(geom, new THREE.LineBasicMaterial({ color: 0xffff00 }));
-             
-             line.position.set(c.x, c.y, c.z);
-             line.userData.shapes = [shape];
-             applyPlane(line, p.plane);
-             return [line];
+             return [create2DObject(shape, p.plane, isFace, c, color)];
         }
+
         // --- 3D Shapes ---
         case NodeType.BOX: {
             const x = getNum('size_x', inputs, p, 10);
@@ -395,35 +363,22 @@ const computeNodeLogic = async (
             mesh.position.set(c.x, c.y, c.z);
             return [mesh];
         }
+        case NodeType.ELLIPSOID: {
+             const rx = getNum('radius_x', inputs, p, 10);
+             const ry = getNum('radius_y', inputs, p, 8);
+             const rz = getNum('radius_z', inputs, p, 6);
+             const c = getVec('center', inputs, p);
+             const geom = new THREE.SphereGeometry(1, SEGMENTS, Math.floor(SEGMENTS/2));
+             geom.scale(rx, ry, rz);
+             const mesh = createMesh(geom);
+             mesh.position.set(c.x, c.y, c.z);
+             return [mesh];
+        }
         case NodeType.CAPSULE: {
             const r = getNum('radius', inputs, p, 5);
             const l = getNum('length', inputs, p, 20);
             const c = getVec('center', inputs, p);
             const geom = new THREE.CapsuleGeometry(r, l, 8, 16);
-            const mesh = createMesh(geom);
-            mesh.position.set(c.x, c.y, c.z);
-            return [mesh];
-        }
-        case NodeType.TETRAHEDRON: {
-            const r = getNum('radius', inputs, p, 10);
-            const c = getVec('center', inputs, p);
-            const geom = new THREE.TetrahedronGeometry(r);
-            const mesh = createMesh(geom);
-            mesh.position.set(c.x, c.y, c.z);
-            return [mesh];
-        }
-        case NodeType.OCTAHEDRON: {
-            const r = getNum('radius', inputs, p, 10);
-            const c = getVec('center', inputs, p);
-            const geom = new THREE.OctahedronGeometry(r);
-            const mesh = createMesh(geom);
-            mesh.position.set(c.x, c.y, c.z);
-            return [mesh];
-        }
-        case NodeType.ICOSAHEDRON: {
-            const r = getNum('radius', inputs, p, 10);
-            const c = getVec('center', inputs, p);
-            const geom = new THREE.IcosahedronGeometry(r);
             const mesh = createMesh(geom);
             mesh.position.set(c.x, c.y, c.z);
             return [mesh];
@@ -439,20 +394,31 @@ const computeNodeLogic = async (
             return [mesh];
         }
         case NodeType.CONE: {
-            const r = getNum('radius', inputs, p, 10);
-            const h = getNum('height', inputs, p, 20);
-            const c = getVec('base', inputs, p);
-            const geom = new THREE.ConeGeometry(r, h, SEGMENTS);
-            geom.rotateX(Math.PI / 2); 
-            const mesh = createMesh(geom);
-            mesh.position.set(c.x, c.y, c.z);
-            return [mesh];
+             const r = getNum('radius', inputs, p, 10);
+             const h = getNum('height', inputs, p, 20);
+             const c = getVec('base', inputs, p);
+             const geom = new THREE.ConeGeometry(r, h, SEGMENTS);
+             geom.rotateX(Math.PI / 2); 
+             const mesh = createMesh(geom);
+             mesh.position.set(c.x, c.y, c.z);
+             return [mesh];
+        }
+        case NodeType.TRUNCATED_CONE: {
+             const rt = getNum('radius_top', inputs, p, 5);
+             const rb = getNum('radius_bottom', inputs, p, 10);
+             const h = getNum('height', inputs, p, 15);
+             const c = getVec('base', inputs, p);
+             const geom = new THREE.CylinderGeometry(rt, rb, h, SEGMENTS);
+             geom.rotateX(Math.PI / 2);
+             const mesh = createMesh(geom);
+             mesh.position.set(c.x, c.y, c.z);
+             return [mesh];
         }
         case NodeType.TORUS: {
-            const r = getNum('radius_main', inputs, p, 10);
-            const t = getNum('radius_tube', inputs, p, 3);
+            const rMain = getNum('radius_main', inputs, p, 10);
+            const rTube = getNum('radius_tube', inputs, p, 3);
             const c = getVec('center', inputs, p);
-            const geom = new THREE.TorusGeometry(r, t, Math.floor(SEGMENTS/2), SEGMENTS);
+            const geom = new THREE.TorusGeometry(rMain, rTube, 16, SEGMENTS); 
             const mesh = createMesh(geom);
             mesh.position.set(c.x, c.y, c.z);
             return [mesh];
@@ -471,12 +437,10 @@ const computeNodeLogic = async (
 
             const brushA = new Brush(objA.geometry, objA.material);
             brushA.applyMatrix4(objA.matrixWorld);
-
             const brushB = new Brush(objB.geometry, objB.material);
             brushB.applyMatrix4(objB.matrixWorld);
 
             let resultBrush: Brush | null = null;
-
             if (op === 'SUBTRACT') {
                 resultBrush = csgEvaluator.evaluate(brushA, brushB, SUBTRACTION);
             } else if (op === 'INTERSECT') {
@@ -486,7 +450,7 @@ const computeNodeLogic = async (
             }
 
             if (resultBrush) {
-                 const resMesh = new THREE.Mesh(resultBrush.geometry, getMaterial());
+                 const resMesh = new THREE.Mesh(resultBrush.geometry, getMaterial(color));
                  resMesh.castShadow = true;
                  resMesh.receiveShadow = true;
                  return [resMesh];
@@ -497,8 +461,7 @@ const computeNodeLogic = async (
             const geom = inputs['geometry'] as THREE.Object3D;
             const vec = getVec('vector', inputs, p);
             if (!geom) return [null];
-            
-            const cloned = geom.clone();
+            const cloned = geom.clone(); 
             cloned.position.x += vec.x;
             cloned.position.y += vec.y;
             cloned.position.z += vec.z;
@@ -509,13 +472,11 @@ const computeNodeLogic = async (
              const axis = getVec('axis', inputs, p);
              const deg = getNum('angle', inputs, p, 45);
              if (!geom) return [null];
-
              const cloned = geom.clone();
              const axisVec = new THREE.Vector3(axis.x, axis.y, axis.z).normalize();
              if (axisVec.lengthSq() === 0) axisVec.set(0,0,1);
              const rotMatrix = new THREE.Matrix4().makeRotationAxis(axisVec, deg * Math.PI / 180);
              cloned.applyMatrix4(rotMatrix);
-
              return [cloned];
         }
         case NodeType.SCALE: {
@@ -530,24 +491,18 @@ const computeNodeLogic = async (
             const geom = inputs['geometry'] as THREE.Object3D;
             const planeNormal = getVec('plane_normal', inputs, p);
             const copy = getVal('copy', inputs, p, true);
-            
             if (!geom) return [null];
-
             const normal = new THREE.Vector3(planeNormal.x, planeNormal.y, planeNormal.z).normalize();
             if (normal.lengthSq() === 0) normal.set(1,0,0);
-            
-            const mirrorMatrix = new THREE.Matrix4();
             const { x, y, z } = normal;
-            mirrorMatrix.set(
+            const mirrorMatrix = new THREE.Matrix4().set(
                 1 - 2*x*x, -2*x*y, -2*x*z, 0,
                 -2*x*y, 1 - 2*y*y, -2*y*z, 0,
                 -2*x*z, -2*y*z, 1 - 2*z*z, 0,
                 0, 0, 0, 1
             );
-
             const mirrored = geom.clone();
             mirrored.applyMatrix4(mirrorMatrix);
-            
             if (copy) {
                 const group = new THREE.Group();
                 group.add(geom.clone());
@@ -557,6 +512,24 @@ const computeNodeLogic = async (
                 return [mirrored];
             }
         }
+        case NodeType.ARRAY_LINEAR: {
+            const geom = inputs['geometry'] as THREE.Object3D;
+            const dir = getVec('direction', inputs, p);
+            const count = Math.max(1, Math.floor(getNum('count', inputs, p, 3)));
+            const spacing = getNum('spacing', inputs, p, 20);
+            if (!geom) return [null];
+            const group = new THREE.Group();
+            const direction = new THREE.Vector3(dir.x, dir.y, dir.z).normalize();
+            if (direction.lengthSq() === 0) direction.set(1, 0, 0);
+            for (let i = 0; i < count; i++) {
+                const cloned = geom.clone();
+                const offset = direction.clone().multiplyScalar(spacing * i);
+                cloned.position.add(offset);
+                group.add(cloned);
+            }
+            return [group];
+        }
+
         default: return [];
     }
 }

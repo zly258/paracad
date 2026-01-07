@@ -1,5 +1,5 @@
 {
-  "name": "paracad---节点式参数化建模",
+  "name": "paracad",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,15 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-dom": "^19.2.3",
-    "react": "^19.2.3",
-    "@react-three/drei": "^10.7.7",
-    "three": "0.174.0",
-    "lucide-react": "^0.562.0",
-    "uuid": "^13.0.0",
-    "@react-three/fiber": "^9.4.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@react-three/fiber": "8.15.14",
+    "@react-three/drei": "9.99.0",
+    "three": "0.160.0",
+    "lucide-react": "0.300.0",
+    "uuid": "9.0.1",
     "dagre": "0.8.5",
-    "three-mesh-bvh": "0.8.0",
+    "three-mesh-bvh": "0.7.0",
     "three-bvh-csg": "0.0.16"
   },
   "devDependencies": {

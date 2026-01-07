@@ -1,11 +1,13 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { useGraph } from '../../store/GraphStore';
 import NodeComponent from './NodeComponent';
 import ConnectionLayer from './ConnectionLayer';
-import { NodeType, NodeData } from '../../types';
-import { Maximize, Trash2, Copy, Scan, LayoutGrid, Download, Upload } from 'lucide-react';
+import { NodeType, NodeData, SocketType, ConnectionDraft } from '../../types';
+import { Maximize, Trash2, Copy, Scan, LayoutGrid, Download, Upload, Undo2, Redo2 } from 'lucide-react';
 import { performAutoLayout } from '../../utils/autoLayout';
-import { NODE_WIDTH } from '../../constants';
+import { NODE_WIDTH, calculateSocketPosition } from '../../constants';
+
+const SNAP_THRESHOLD = 40; 
 
 const NodeCanvas: React.FC = () => {
   const { 
@@ -13,17 +15,26 @@ const NodeCanvas: React.FC = () => {
       pan, setPan, zoom, setZoom, 
       removeSelectedNodes, duplicateSelectedNodes, fitView,
       selectedNodeIds, setSelectedNodes,
-      connectionDraft, setConnectionDraft,
-      saveGraph, loadGraph
+      connectionDraft, setConnectionDraft, addConnection,
+      saveGraph, loadGraph,
+      updateNodePosition, updateNodeParam, computedResults, t,
+      undo, redo, recordHistory, canUndo, canRedo,
+      removeNode, removeConnection
   } = useGraph();
   
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number } | null>(null);
   const [selectionBox, setSelectionBox] = useState<{ startX: number, startY: number, curX: number, curY: number } | null>(null);
-  const selectionStart = useRef<{ x: number, y: number } | null>(null); // Track start pos for threshold
+  const selectionStart = useRef<{ x: number, y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingCanvas = useRef(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
+  const isDraggingNode = useRef(false); 
+
+  const connectionDraftRef = useRef<ConnectionDraft | null>(connectionDraft);
+  useEffect(() => {
+      connectionDraftRef.current = connectionDraft;
+  }, [connectionDraft]);
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,7 +49,6 @@ const NodeCanvas: React.FC = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Middle mouse or Alt+Left for panning
     if (e.button === 1 || (e.button === 0 && e.altKey)) { 
        isDraggingCanvas.current = true;
        lastMousePos.current = { x: e.clientX, y: e.clientY };
@@ -46,18 +56,13 @@ const NodeCanvas: React.FC = () => {
        return;
     } 
     
-    // Left mouse for selection
     if (e.button === 0) {
-       // Only if clicking on canvas background
-       if (!(e.target as HTMLElement).closest('.node-component')) {
-           const rect = containerRef.current?.getBoundingClientRect();
-           if(rect) {
-               // Record start position but don't start selection box yet (wait for threshold)
-               selectionStart.current = {
-                   x: e.clientX - rect.left,
-                   y: e.clientY - rect.top
-               };
-           }
+       const rect = containerRef.current?.getBoundingClientRect();
+       if(rect) {
+           selectionStart.current = {
+               x: e.clientX - rect.left,
+               y: e.clientY - rect.top
+           };
        }
        setContextMenu(null);
     }
@@ -76,10 +81,8 @@ const NodeCanvas: React.FC = () => {
        lastMousePos.current = { x: e.clientX, y: e.clientY };
     }
 
-    // Selection Box Logic with Threshold
     if (selectionStart.current) {
         if (!selectionBox) {
-            // Check threshold (e.g., 5 pixels)
             const dx = localX - selectionStart.current.x;
             const dy = localY - selectionStart.current.y;
             if (dx * dx + dy * dy > 25) {
@@ -91,7 +94,6 @@ const NodeCanvas: React.FC = () => {
                 });
             }
         } else {
-            // Update existing selection box
             setSelectionBox(prev => prev ? { ...prev, curX: localX, curY: localY } : null);
         }
     }
@@ -99,7 +101,38 @@ const NodeCanvas: React.FC = () => {
     if (connectionDraft) {
         const worldX = (localX - pan.x) / zoom;
         const worldY = (localY - pan.y) / zoom;
-        setConnectionDraft({ ...connectionDraft, currentPos: { x: worldX, y: worldY } });
+        
+        let bestSnapNodeId: string | undefined = undefined;
+        let bestSnapSocketId: string | undefined = undefined;
+        let bestDist = SNAP_THRESHOLD / zoom; 
+        let snapPos = { x: worldX, y: worldY };
+
+        nodes.forEach(node => {
+            if (node.id === connectionDraft.sourceNodeId) return;
+
+            const candidateSockets = connectionDraft.isInput ? node.outputs : node.inputs;
+            const isTargetInput = !connectionDraft.isInput;
+
+            candidateSockets.forEach(sock => {
+                const pos = calculateSocketPosition(node, sock.id, isTargetInput);
+                if (pos) {
+                    const dist = Math.hypot(pos.x - worldX, pos.y - worldY);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        snapPos = pos;
+                        bestSnapNodeId = node.id;
+                        bestSnapSocketId = sock.id;
+                    }
+                }
+            });
+        });
+
+        setConnectionDraft({ 
+            ...connectionDraft, 
+            currentPos: snapPos,
+            snappedNodeId: bestSnapNodeId,
+            snappedSocketId: bestSnapSocketId
+        });
     }
   };
 
@@ -107,7 +140,6 @@ const NodeCanvas: React.FC = () => {
     isDraggingCanvas.current = false;
     
     if (selectionBox) {
-        // Finalize Selection
         const x1 = (Math.min(selectionBox.startX, selectionBox.curX) - pan.x) / zoom;
         const x2 = (Math.max(selectionBox.startX, selectionBox.curX) - pan.x) / zoom;
         const y1 = (Math.min(selectionBox.startY, selectionBox.curY) - pan.y) / zoom;
@@ -123,11 +155,9 @@ const NodeCanvas: React.FC = () => {
             }
         });
         
-        // Add Shift key logic if needed, currently replaces selection
         if (idsInBox.length > 0) setSelectedNodes(idsInBox);
         setSelectionBox(null);
     } else if (selectionStart.current) {
-        // If we had a start point but didn't drag enough to create a box -> It's a Click on Empty Space
         if (!e.shiftKey) {
             selectNode(null);
         }
@@ -136,6 +166,13 @@ const NodeCanvas: React.FC = () => {
     selectionStart.current = null;
 
     if (connectionDraft) {
+        if (connectionDraft.snappedNodeId && connectionDraft.snappedSocketId) {
+            if (connectionDraft.isInput) {
+                addConnection(connectionDraft.snappedNodeId, connectionDraft.snappedSocketId, connectionDraft.sourceNodeId, connectionDraft.sourceSocketId);
+            } else {
+                addConnection(connectionDraft.sourceNodeId, connectionDraft.sourceSocketId, connectionDraft.snappedNodeId, connectionDraft.snappedSocketId);
+            }
+        }
         setConnectionDraft(null);
     }
   };
@@ -145,17 +182,12 @@ const NodeCanvas: React.FC = () => {
     const rect = containerRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-
     const worldMouseX = (mouseX - pan.x) / zoom;
     const worldMouseY = (mouseY - pan.y) / zoom;
-
-    const zoomSensitivity = 0.001;
-    const delta = -e.deltaY * zoomSensitivity;
+    const delta = -e.deltaY * 0.001;
     const newZoom = Math.min(Math.max(0.1, zoom + delta), 3);
-
     const newPanX = mouseX - worldMouseX * newZoom;
     const newPanY = mouseY - worldMouseY * newZoom;
-
     setZoom(newZoom);
     setPan({x: newPanX, y: newPanY});
   };
@@ -170,18 +202,42 @@ const NodeCanvas: React.FC = () => {
       const type = e.dataTransfer.getData('nodeType') as NodeType;
       if (type && containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
-          const worldX = (e.clientX - rect.left - pan.x) / zoom - 90;
+          const worldX = (e.clientX - rect.left - pan.x) / zoom - NODE_WIDTH/2;
           const worldY = (e.clientY - rect.top - pan.y) / zoom - 20;
-
-          // Check if it's a custom node drop (Removed for now)
           if (type === NodeType.CUSTOM) {
-               // const customData = e.dataTransfer.getData('customData');
-               // addNode(type, { x: worldX, y: worldY }, customData);
+               const customData = e.dataTransfer.getData('customData');
+               addNode(type, { x: worldX, y: worldY }, customData);
           } else {
                addNode(type, { x: worldX, y: worldY });
           }
       }
   };
+
+  const handleSocketMouseDown = useCallback((nodeId: string, socketId: string, type: SocketType, isInput: boolean, nx: number, ny: number) => {
+      setConnectionDraft({
+        sourceNodeId: nodeId,
+        sourceSocketId: socketId,
+        sourceType: type,
+        isInput,
+        currentPos: { x: nx, y: ny }
+    });
+  }, [setConnectionDraft]);
+
+  const handleSocketMouseUpWrapper = useCallback((targetNodeId: string, targetSocketId: string, isInput: boolean) => {
+      const draft = connectionDraftRef.current;
+      if (draft && !draft.snappedNodeId) { 
+        if (draft.sourceNodeId !== targetNodeId && draft.isInput !== isInput) {
+             if (isInput) addConnection(draft.sourceNodeId, draft.sourceSocketId, targetNodeId, targetSocketId);
+             else addConnection(targetNodeId, targetSocketId, draft.sourceNodeId, draft.sourceSocketId);
+        }
+        setConnectionDraft(null);
+    }
+  }, [addConnection, setConnectionDraft]);
+
+  const handleNodeDragStart = useCallback(() => {
+      recordHistory();
+  }, [recordHistory]);
+
 
   return (
     <div 
@@ -197,6 +253,8 @@ const NodeCanvas: React.FC = () => {
       onDrop={handleDrop}
       tabIndex={0}
       onKeyDown={(e) => {
+          if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+          if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
           if (e.key === 'Delete' || e.key === 'Backspace') removeSelectedNodes();
       }}
     >
@@ -216,10 +274,24 @@ const NodeCanvas: React.FC = () => {
             }}
           />
 
-          <ConnectionLayer />
+          <ConnectionLayer nodes={nodes} connections={connections} connectionDraft={connectionDraft} onRemoveConnection={removeConnection} />
 
           {nodes.map(node => (
-            <NodeComponent key={node.id} node={node} />
+            <NodeComponent 
+                key={node.id} 
+                node={node} 
+                isSelected={selectedNodeIds.includes(node.id)}
+                computedResults={computedResults}
+                connections={connections}
+                t={t}
+                onSelect={selectNode}
+                onUpdatePosition={updateNodePosition}
+                onUpdateParam={updateNodeParam}
+                onSocketMouseDown={handleSocketMouseDown}
+                onSocketMouseUp={handleSocketMouseUpWrapper}
+                onDragStart={handleNodeDragStart} 
+                onDelete={removeNode}
+            />
           ))}
       </div>
 
@@ -237,6 +309,23 @@ const NodeCanvas: React.FC = () => {
 
       {/* Canvas Toolbar */}
       <div className="absolute top-4 right-4 flex gap-2">
+         <button 
+             onClick={undo} 
+             disabled={!canUndo}
+             className={`p-2 rounded backdrop-blur border border-white/10 transition-colors ${canUndo ? 'bg-black/50 hover:bg-black/80 text-white' : 'bg-black/30 text-gray-600 cursor-not-allowed'}`}
+             title={t('Undo') + " (Ctrl+Z)"}
+         >
+             <Undo2 size={16} />
+         </button>
+         <button 
+             onClick={redo} 
+             disabled={!canRedo}
+             className={`p-2 rounded backdrop-blur border border-white/10 transition-colors ${canRedo ? 'bg-black/50 hover:bg-black/80 text-white' : 'bg-black/30 text-gray-600 cursor-not-allowed'}`}
+             title={t('Redo') + " (Ctrl+Y)"}
+         >
+             <Redo2 size={16} />
+         </button>
+         <div className="w-px bg-white/10 mx-1 h-8"></div>
          <button onClick={() => setNodes(performAutoLayout(nodes, connections))} className="bg-black/50 hover:bg-black/80 text-white p-2 rounded backdrop-blur border border-white/10 transition-colors" title="自动布局"><LayoutGrid size={16} /></button>
          <button onClick={() => {if(containerRef.current) fitView(containerRef.current.clientWidth, containerRef.current.clientHeight)}} className="bg-black/50 hover:bg-black/80 text-white p-2 rounded backdrop-blur border border-white/10 transition-colors" title="充满画布"><Scan size={16} /></button>
          <div className="w-px bg-white/10 mx-1 h-8"></div>

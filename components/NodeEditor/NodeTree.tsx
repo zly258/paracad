@@ -3,9 +3,8 @@ import { Box, Circle, Type, FileDigit, MousePointer2, ChevronDown, ChevronRight,
 import { NodeType } from '../../types';
 import { useGraph } from '../../store/GraphStore';
 
-const CategoryGroup: React.FC<{ title: string, items: any[], isCustom?: boolean, onDelete?: (id: string) => void }> = ({ title, items, isCustom, onDelete }) => {
+const CategoryGroup: React.FC<{ title: string, items: any[], isCustom?: boolean, onDelete?: (id: string) => void, t: (k:string)=>string }> = ({ title, items, isCustom, onDelete, t }) => {
   const [expanded, setExpanded] = useState(true);
-  const { t } = useGraph();
 
   return (
     <div className="mb-1 select-none">
@@ -84,22 +83,20 @@ const NodeLibrary: React.FC = () => {
     {
       label: '3D Solids',
       items: [
-        { label: 'Box', type: NodeType.BOX },
+        { label: 'Box', type: NodeType.BOX }, // Replaced Rounded Box
         { label: 'Sphere', type: NodeType.SPHERE },
         { label: 'Capsule', type: NodeType.CAPSULE },
         { label: 'Cylinder', type: NodeType.CYLINDER },
         { label: 'Cone', type: NodeType.CONE },
         { label: 'Frustum', type: NodeType.TRUNCATED_CONE },
         { label: 'Torus', type: NodeType.TORUS },
-        { label: 'Tetrahedron', type: NodeType.TETRAHEDRON },
-        { label: 'Octahedron', type: NodeType.OCTAHEDRON },
-        { label: 'Icosahedron', type: NodeType.ICOSAHEDRON },
         { label: 'Ellipsoid', type: NodeType.ELLIPSOID },
       ]
     },
     {
       label: 'Features',
       items: [
+        { label: 'Fillet', type: NodeType.FILLET },
         { label: 'Extrude', type: NodeType.EXTRUDE },
         { label: 'Revolve', type: NodeType.REVOLVE },
         { label: 'Sweep', type: NodeType.SWEEP },
@@ -118,6 +115,12 @@ const NodeLibrary: React.FC = () => {
         { label: 'Array Grid', type: NodeType.ARRAY_GRID },
         { label: 'Array Polar', type: NodeType.ARRAY_POLAR },
       ]
+    },
+    {
+      label: 'Organization',
+      items: [
+        { label: 'Group', type: NodeType.GROUP },
+      ]
     }
   ];
 
@@ -133,6 +136,7 @@ const NodeLibrary: React.FC = () => {
               key={cat.label} 
               title={cat.label} 
               items={cat.items} 
+              t={t}
             />
          ))}
       </div>
@@ -140,4 +144,4 @@ const NodeLibrary: React.FC = () => {
   );
 };
 
-export default NodeLibrary;
+export default React.memo(NodeLibrary);

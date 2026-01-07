@@ -3,9 +3,9 @@ import NodeCanvas from './components/NodeEditor/NodeCanvas';
 import NodeTree from './components/NodeEditor/NodeTree';
 import Viewer3D from './components/Viewport/Viewer3D';
 import { GraphProvider, useGraph } from './store/GraphStore';
-import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe } from 'lucide-react';
+import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2 } from 'lucide-react';
 
-const LogPanel: React.FC = () => {
+const LogPanel = React.memo(() => {
   const { logs, t } = useGraph();
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -39,31 +39,38 @@ const LogPanel: React.FC = () => {
       </div>
     </div>
   );
-};
+});
 
-const MainLayout: React.FC = () => {
-  const [leftWidth, setLeftWidth] = useState(250); 
-  const [rightSplit, setRightSplit] = useState(70); 
-  const { kernelReady, toggleLanguage, t } = useGraph();
-
-  return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden text-gray-100 bg-[#1a1a1a]">
-      {/* Loading Overlay */}
-      {!kernelReady && (
-         <div className="absolute inset-0 z-50 bg-[#1a1a1a] flex flex-col items-center justify-center space-y-4">
-             <div className="flex items-center gap-2 text-blue-500">
-                 <Loader2 size={40} className="animate-spin" />
-             </div>
-             <div className="text-gray-300 font-bold text-lg">{t('Initializing...')}</div>
-             <div className="text-gray-500 text-xs">{t('Loading Kernel')}</div>
-         </div>
-      )}
-
-      {/* Header */}
+const Header: React.FC = () => {
+    const { kernelReady, toggleLanguage, t, undo, redo, canUndo, canRedo } = useGraph();
+    return (
       <header className="h-10 bg-[#2a2a2a] border-b border-black flex items-center px-4 justify-between shrink-0 z-10 shadow-md">
-        <div className="flex items-center gap-2">
-          <Boxes className="text-blue-500" size={20} />
-          <h1 className="font-bold text-base tracking-wide text-gray-100">ParaCad <span className="text-[10px] bg-blue-600 text-white px-1 rounded ml-1 font-bold">Three.js</span></h1>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Boxes className="text-blue-500" size={20} />
+            <h1 className="font-bold text-base tracking-wide text-gray-100">ParaCad <span className="text-[10px] bg-blue-600 text-white px-1 rounded ml-1 font-bold">Three.js</span></h1>
+          </div>
+          
+          <div className="h-4 w-px bg-white/10 mx-2" />
+          
+          <div className="flex gap-1">
+              <button 
+                  onClick={undo} 
+                  disabled={!canUndo}
+                  className={`p-1.5 rounded transition-colors ${canUndo ? 'text-gray-200 hover:bg-gray-600 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
+                  title={t('Undo') + " (Ctrl+Z)"}
+              >
+                  <Undo2 size={16} />
+              </button>
+              <button 
+                  onClick={redo} 
+                  disabled={!canRedo}
+                  className={`p-1.5 rounded transition-colors ${canRedo ? 'text-gray-200 hover:bg-gray-600 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
+                  title={t('Redo') + " (Ctrl+Y)"}
+              >
+                  <Redo2 size={16} />
+              </button>
+          </div>
         </div>
         
         <button 
@@ -75,6 +82,47 @@ const MainLayout: React.FC = () => {
             {t('Language')}
         </button>
       </header>
+    );
+};
+
+const MainLayout: React.FC = () => {
+  const [leftWidth, setLeftWidth] = useState(250); 
+  const [rightSplit, setRightSplit] = useState(70); 
+  const { kernelReady, t } = useGraph();
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!kernelReady) {
+        let p = 0;
+        const interval = setInterval(() => {
+            p += Math.random() * 5;
+            if (p > 90) p = 90;
+            setProgress(p);
+        }, 50);
+        return () => clearInterval(interval);
+    } else {
+        setProgress(100);
+    }
+  }, [kernelReady]);
+
+  return (
+    <div className="flex flex-col h-screen w-screen overflow-hidden text-gray-100 bg-[#1a1a1a]">
+      {/* Loading Overlay */}
+      {!kernelReady && (
+         <div className="absolute inset-0 z-50 bg-[#1a1a1a] flex flex-col items-center justify-center space-y-6">
+             <div className="relative">
+                <Boxes size={50} className="text-blue-500 animate-pulse" />
+             </div>
+             <div className="text-gray-300 font-bold text-lg">{t('Initializing...')}</div>
+             
+             <div className="w-64 h-1 bg-gray-800 rounded overflow-hidden">
+                 <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+             </div>
+             <div className="text-gray-500 text-xs font-mono">{t('Loading Kernel')}... {Math.floor(progress)}%</div>
+         </div>
+      )}
+
+      <Header />
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative">

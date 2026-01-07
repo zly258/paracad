@@ -5,29 +5,11 @@ import { useGraph } from '../../store/GraphStore';
 import * as THREE from 'three';
 import { RefreshCw, Scan } from 'lucide-react';
 
-// Fix for missing JSX types in the current environment
+// Fix for missing JSX types in the current environment.
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      group: any;
-      primitive: any;
-      ambientLight: any;
-      pointLight: any;
-      directionalLight: any;
-      orthographicCamera: any;
-    }
-  }
-}
-
-declare module 'react' {
-  namespace JSX {
-    interface IntrinsicElements {
-      group: any;
-      primitive: any;
-      ambientLight: any;
-      pointLight: any;
-      directionalLight: any;
-      orthographicCamera: any;
+      [elemName: string]: any;
     }
   }
 }
@@ -38,17 +20,14 @@ const InfiniteAxes: React.FC = () => {
     const materialY = new THREE.LineBasicMaterial({ color: 0x22aa22, opacity: 0.6, transparent: true });
     const materialZ = new THREE.LineBasicMaterial({ color: 0x2222aa, opacity: 0.6, transparent: true });
 
-    // X Axis (Red)
     const pointsX = [new THREE.Vector3(-10000, 0, 0), new THREE.Vector3(10000, 0, 0)];
     const geomX = new THREE.BufferGeometry().setFromPoints(pointsX);
     const lineX = new THREE.Line(geomX, materialX);
 
-    // Y Axis (Green)
     const pointsY = [new THREE.Vector3(0, -10000, 0), new THREE.Vector3(0, 10000, 0)];
     const geomY = new THREE.BufferGeometry().setFromPoints(pointsY);
     const lineY = new THREE.Line(geomY, materialY);
 
-    // Z Axis (Blue) - Vertical
     const pointsZ = [new THREE.Vector3(0, 0, -10000), new THREE.Vector3(0, 0, 10000)];
     const geomZ = new THREE.BufferGeometry().setFromPoints(pointsZ);
     const lineZ = new THREE.Line(geomZ, materialZ);
@@ -67,6 +46,7 @@ interface SceneContentProps {
   computedResults: Map<string, any>;
 }
 
+// Extract SceneContent to be pure
 const SceneContent: React.FC<SceneContentProps> = ({ computedResults }) => {
   const meshesToRender = useMemo(() => {
     const items: React.ReactNode[] = [];
@@ -115,52 +95,67 @@ const SceneContent: React.FC<SceneContentProps> = ({ computedResults }) => {
   );
 };
 
+interface Viewer3DPresenterProps {
+    computedResults: Map<string, any>;
+    onTriggerCompute: () => void;
+}
+
+// Memoized Presenter Component
+const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Viewer3DPresenterProps) => {
+    const controlsRef = useRef<any>(null);
+    
+    useEffect(() => {
+        if (THREE.Object3D && (THREE.Object3D as any).DefaultUp) {
+           (THREE.Object3D as any).DefaultUp.set(0, 0, 1);
+        }
+      }, []);
+    
+      const handleFitView = () => {
+         if (controlsRef.current) {
+             controlsRef.current.reset();
+         }
+      };
+
+    return (
+        <div className="w-full h-full bg-[#050505] relative group border-l border-black">
+          {/* Scene Toolbar */}
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+               <button onClick={onTriggerCompute} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="刷新场景">
+                   <RefreshCw size={14} />
+               </button>
+               <button onClick={handleFitView} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="充满视图">
+                   <Scan size={14} />
+               </button>
+          </div>
+    
+          <Canvas shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true }}>
+            <OrthographicCamera makeDefault position={[50, -50, 50]} up={[0, 0, 1]} zoom={10} near={-2000} far={2000} />
+            
+            <SceneContent computedResults={computedResults} />
+            
+            <OrbitControls 
+                ref={controlsRef}
+                makeDefault 
+                enableRotate={true} 
+                enableZoom={true} 
+                enablePan={true}
+                target={[0,0,0]}
+                enableDamping={false} 
+            />
+          </Canvas>
+        </div>
+      );
+}, (prev, next) => prev.computedResults === next.computedResults); 
+// Custom comparison: Only re-render if computedResults reference changes
+
 const Viewer3D: React.FC = () => {
   const { computedResults, triggerCompute } = useGraph(); 
-  const controlsRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (THREE.Object3D && (THREE.Object3D as any).DefaultUp) {
-       (THREE.Object3D as any).DefaultUp.set(0, 0, 1);
-    }
-  }, []);
-
-  const handleFitView = () => {
-     if (controlsRef.current) {
-         controlsRef.current.reset();
-         // In a real app, we would calculate bbox of all objects and fit
-     }
-  };
-
-  return (
-    <div className="w-full h-full bg-[#050505] relative group border-l border-black">
-      {/* Scene Toolbar */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
-           <button onClick={() => triggerCompute()} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="刷新场景">
-               <RefreshCw size={14} />
-           </button>
-           <button onClick={handleFitView} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="充满视图">
-               <Scan size={14} />
-           </button>
-      </div>
-
-      <Canvas shadows>
-        <OrthographicCamera makeDefault position={[50, -50, 50]} up={[0, 0, 1]} zoom={10} near={-2000} far={2000} />
-        
-        <SceneContent computedResults={computedResults} />
-        
-        <OrbitControls 
-            ref={controlsRef}
-            makeDefault 
-            enableRotate={true} 
-            enableZoom={true} 
-            enablePan={true}
-            target={[0,0,0]}
-            enableDamping={false} 
-        />
-      </Canvas>
-    </div>
-  );
+  
+  // We pass the data down to the memoized component.
+  // Even if 'useGraph' triggers a re-render of this container due to Pan/Zoom/NodeMove,
+  // 'Viewer3DPresenter' will NOT re-render because 'computedResults' reference remains stable 
+  // until a computation actually finishes.
+  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} />;
 };
 
 export default Viewer3D;

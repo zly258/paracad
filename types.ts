@@ -2,9 +2,9 @@ import * as THREE from 'three';
 
 export enum NodeType {
   // Global Params & Logic
-  PARAMETER = 'PARAMETER', // Enhanced: Supports Number, Vector, Boolean
+  PARAMETER = 'PARAMETER', 
   EXPRESSION = 'EXPRESSION', 
-  CUSTOM = 'CUSTOM', // New: Encapsulated Logic Node
+  CUSTOM = 'CUSTOM', 
 
   // 2D Primitives
   LINE = 'LINE',
@@ -14,10 +14,9 @@ export enum NodeType {
   ELLIPSE = 'ELLIPSE',
   POLYGON = 'POLYGON',
   STAR = 'STAR', 
-  // TEXT Node Removed
 
   // 3D Primitives
-  BOX = 'BOX',
+  BOX = 'BOX', // Restored Box
   SPHERE = 'SPHERE',
   ELLIPSOID = 'ELLIPSOID',
   CYLINDER = 'CYLINDER',
@@ -25,11 +24,12 @@ export enum NodeType {
   TRUNCATED_CONE = 'TRUNCATED_CONE',
   TORUS = 'TORUS',
   CAPSULE = 'CAPSULE', 
-  TETRAHEDRON = 'TETRAHEDRON', 
-  OCTAHEDRON = 'OCTAHEDRON', 
-  ICOSAHEDRON = 'ICOSAHEDRON', 
+  // Removed Polyhedrons
 
   // Features / Operations
+  GROUP = 'GROUP', 
+  FILLET = 'FILLET', // Generic Fillet
+  // Removed MAKE_FACE
   EXTRUDE = 'EXTRUDE',
   REVOLVE = 'REVOLVE',
   SWEEP = 'SWEEP',
@@ -46,7 +46,7 @@ export enum NodeType {
   ARRAY_POLAR = 'ARRAY_POLAR'
 }
 
-export type SocketType = 'number' | 'geometry' | 'vector' | 'boolean' | 'shape2d' | 'curve' | 'any';
+export type SocketType = 'number' | 'geometry' | 'vector' | 'boolean' | 'shape2d' | 'curve' | 'any' | 'color';
 
 export interface NodeSocket {
   id: string;
@@ -62,7 +62,7 @@ export interface NodeData {
   inputs: NodeSocket[];
   outputs: NodeSocket[];
   label: string;
-  params: Record<string, any>; // Stores internal values for unconnected inputs
+  params: Record<string, any>; 
 }
 
 export interface Connection {
@@ -79,6 +79,8 @@ export interface ConnectionDraft {
   sourceType: SocketType;
   isInput: boolean;
   currentPos: { x: number, y: number };
+  snappedNodeId?: string;
+  snappedSocketId?: string;
 }
 
 export interface LogEntry {
