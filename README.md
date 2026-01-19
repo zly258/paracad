@@ -5,7 +5,8 @@
 **基于 Web 的节点式可视化参数化建模系统**  
 **Web-based Node Visual Parametric Modeling System**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Live Demo](https://img.shields.io/badge/🔗-Live_Demo-blue?style=for-the-badge)](https://zly258.github.io/paracad/)
+[![License](https://img.shields.io/badge/License-Non--Commercial-green.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-19.2.3-blue.svg)](https://reactjs.org/)
 [![Three.js](https://img.shields.io/badge/Three.js-0.174.0-orange.svg)](https://threejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue.svg)](https://www.typescriptlang.org/)
@@ -60,6 +61,12 @@ ParaCad is a web-based node visual parametric modeling system, similar to Rhino/
 
 ### Getting Started
 
+#### 🚀 Live Preview
+
+You can try ParaCad online without installing anything:
+
+[**🔗 Try Online Demo**](https://zly258.github.io/paracad/)
+
 #### Prerequisites
 - Node.js (latest LTS version recommended)
 - npm or yarn package manager
@@ -97,6 +104,15 @@ ParaCad is a web-based node visual parametric modeling system, similar to Rhino/
 npm run build
 npm run preview
 ```
+
+#### Deploy to GitHub Pages
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+
+Quick setup:
+1. Push to GitHub
+2. Go to Settings → Pages → Set Source to `GitHub Actions`
+3. Deployment will run automatically on pushes to main branch
 
 ### Project Structure
 
@@ -145,7 +161,12 @@ We welcome contributions! Please feel free to submit a Pull Request.
 
 ### License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under a modified MIT License with non-commercial use restrictions. See the [LICENSE](LICENSE) file for details.
+
+**Key Points:**
+- ✅ Free for personal and educational use
+- ❌ Commercial use is prohibited
+- 📝 Attribution to the original author is required
 
 ---
 
@@ -193,6 +214,12 @@ ParaCad 是一个基于 Web 的节点式可视化参数化建模系统，类似�
 
 ### 快速开始
 
+#### 🚀 在线预览
+
+无需安装任何工具即可在线体验 ParaCad：
+
+[**🔗 在线体验 Demo**](https://zly258.github.io/paracad/)
+
 #### 环境要求
 - Node.js（推荐使用最新 LTS 版本）
 - npm 或 yarn 包管理器
@@ -230,6 +257,15 @@ ParaCad 是一个基于 Web 的节点式可视化参数化建模系统，类似�
 npm run build
 npm run preview
 ```
+
+#### 部署到 GitHub Pages
+
+详细部署指南请参见 [DEPLOYMENT.md](DEPLOYMENT.md)。
+
+快速设置：
+1. 推送代码到 GitHub
+2. 进入 Settings → Pages → 将 Source 设置为 `GitHub Actions`
+3. 推送到 main 分支会自动触发部署
 
 ### 项目结构
 
@@ -278,7 +314,12 @@ paracad/
 
 ### 许可证
 
-本项目基于 MIT 许可证开源 - 详见 [LICENSE](LICENSE) 文件。
+本项目基于修改版 MIT 许可证，包含非商业使用限制。详见 [LICENSE](LICENSE) 文件。
+
+**要点：**
+- ✅ 个人和教育用途免费
+- ❌ 禁止商业用途
+- 📝 必须注明原作者
 
 ---
 
