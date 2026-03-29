@@ -19,6 +19,7 @@ import {
   buildOcctLinePath,
   buildOcctPolygonProfile,
 } from './occtSketch';
+import { transformOcctShape } from './occtTransforms';
 import {
   buildLoftGeometry,
   cloneObject,
@@ -67,22 +68,6 @@ const tryOcct = async (
 
 const extractOcctShape = (input: any) => input?.userData?.occtShape;
 const extractOcctWire = (input: any) => input?.userData?.occtWire || input?.userData?.occtShape;
-
-const transformOcctShape = async (
-  node: NodeData,
-  color: string,
-  sourceShape: any,
-  detail: string,
-  buildTrsf: (oc: any, trsf: any) => void,
-) => {
-  if (!sourceShape) return null;
-
-  return tryOcct(node, color, (oc) => {
-    const trsf = new oc.gp_Trsf_1();
-    buildTrsf(oc, trsf);
-    return new oc.BRepBuilderAPI_Transform_2(sourceShape, trsf, true).Shape();
-  }, detail);
-};
 
 // 节点执行器：负责把“节点类型 + 输入参数”翻译成几何结果。
 // 当前主要承担浏览器预览职责，后续可逐步替换为 OCCT BRep 路径。
@@ -495,7 +480,7 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.TRANSLATION: {
       const occtShape = extractOcctShape(inputs.geometry);
       const v = getVec('vector', inputs, p);
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-move', (oc, trsf) => {
+      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-move', getKernelStatus(), (oc, trsf) => {
         trsf.SetTranslation_1(createOcctVec(oc, v.x, v.y, v.z));
       });
       if (occtObject) return [occtObject];
@@ -512,7 +497,7 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       const occtShape = extractOcctShape(inputs.geometry);
       const axis = getVec('axis', inputs, p);
       const angleRad = THREE.MathUtils.degToRad(getNum('angle', inputs, p, 45));
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-rotate', (oc, trsf) => {
+      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-rotate', getKernelStatus(), (oc, trsf) => {
         const dir = createOcctDir(oc, axis.x || 0, axis.y || 0, axis.z || 1);
         const ax1 = new oc.gp_Ax1_2(createOcctPoint(oc, 0, 0, 0), dir);
         trsf.SetRotation_1(ax1, angleRad);
@@ -530,7 +515,7 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.SCALE: {
       const occtShape = extractOcctShape(inputs.geometry);
       const factor = getNum('factor', inputs, p, 1);
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-scale', (oc, trsf) => {
+      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-scale', getKernelStatus(), (oc, trsf) => {
         trsf.SetScale(createOcctPoint(oc, 0, 0, 0), factor);
       });
       if (occtObject) return [occtObject];
@@ -544,7 +529,7 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.MIRROR: {
       const occtShape = extractOcctShape(inputs.geometry);
       const normalVec = getVec('plane_normal', inputs, p);
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-mirror', (oc, trsf) => {
+      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-mirror', getKernelStatus(), (oc, trsf) => {
         const dir = createOcctDir(oc, normalVec.x || 1, normalVec.y || 0, normalVec.z || 0);
         const ax2 = new oc.gp_Ax2_3(createOcctPoint(oc, 0, 0, 0), dir);
         trsf.SetMirror_3(ax2);
