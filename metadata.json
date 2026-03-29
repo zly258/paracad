@@ -1,5 +1,5 @@
 {
   "name": "ParaCad",
-  "description": "基于Web的节点式可视化参数化建模系统，类似Rhino/Grasshopper的Web实现，使用原生Three.js内核。",
+  "description": "基于 Web 的节点式参数化建模系统，采用 OCCT.js + Three.js 混合内核架构。",
   "requestFramePermissions": []
 }

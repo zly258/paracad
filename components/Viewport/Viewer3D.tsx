@@ -119,7 +119,8 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
     return (
         <div className="w-full h-full bg-[#050505] relative group border-l border-black">
           {/* Scene Toolbar */}
-          <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <div className="viewer-label">实时视图</div>
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
                <button onClick={onTriggerCompute} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="刷新场景">
                    <RefreshCw size={14} />
                </button>

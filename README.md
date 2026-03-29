@@ -1,332 +1,52 @@
-# ParaCad - 节点式参数化建模系统 / Node-based Parametric Modeling System
+# ParaCad — 以节点驱动的 Web 参数化建模平台
 
-<div align="center">
+ParaCad 是一套运行于浏览器的节点式参数化建模平台，面向需要在 Web 端快速迭代几何构型的团队。项目以 Three.js 与 React 构建，为文本逻辑、图形关系、3D 可视化提供统一链路。
 
-**基于 Web 的节点式可视化参数化建模系统**  
-**Web-based Node Visual Parametric Modeling System**
+## 项目概述
+1. **内核定位**：当前已接入 `OCCT.js` 作为内核初始化入口，并采用 `OCCT.js + Three.js` 的混合架构；布尔与可视化求解先由 Three 路径稳定承载，为后续更深层的 BRep 能力迁移预留接口。
+2. **界面体验**：节点画布、侧边库、3D 视口、日志面板共享统一皮肤，所有交互与文案均以中文为主，并保留英文切换。
+3. **核心工作流**：参数 → 图元 → 特征 → 变换 → 结果，可保存为自定义“组合节点”，并通过 3D 视口实时预览。
 
-[![Live Demo](https://img.shields.io/badge/🔗-Live_Demo-blue?style=for-the-badge)](https://zly258.github.io/paracad/)
-[![License](https://img.shields.io/badge/License-Non--Commercial-green.svg)](LICENSE)
-[![React](https://img.shields.io/badge/React-19.2.3-blue.svg)](https://reactjs.org/)
-[![Three.js](https://img.shields.io/badge/Three.js-0.174.0-orange.svg)](https://threejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8.2-blue.svg)](https://www.typescriptlang.org/)
+## 核心能力
+- **自定义参数**：支持数值、向量、布尔、颜色、表达式等参数类型，自动记录历史并可撤销/重做。
+- **丰富节点**：2D 轮廓、3D 实体、特征操作、布尔/阵列、几何变换、表达式与自定义集合。
+- **自动计算管线**：GraphStore 统一管理节点、连接、全局参数，computeGraph 负责迭代求解并将 Three.js 实例注入视图。
+- **可定制化**：可保存自定义组合（Custom Node），可在 docs/plan.md 中找到未来节点评估与开发计划。
 
-[English](#english) | [中文](#chinese)
+## 技术与架构
+详细模块结构与数据流请阅读 `docs/architecture.md`。该文档说明了状态管理、节点引擎、节点注册方式、视图渲染链路，以及未来 OCCT.js 迁移点。
 
-</div>
+## 快速启动
+1. 切换到项目目录并安装依赖：`npm install`
+2. 启动开发服务器：`npm run dev`
+3. 浏览器访问 `http://localhost:5173`
+4. 若需构建生产包：`npm run build`
+5. 若需预览构建：`npm run preview`
+6. node_modules 依赖项包括 `three`, `@react-three/fiber`, `three-bvh-csg`, `dagre` 等；请优先采用 Node 18+ 环境。
 
----
+## 协作与流程
+1. **文档基础**：架构、计划、Git 提交规范均在 `docs/` 目录下，协助多阶段开发回顾。
+2. **技能与多 agent 协作**：
+   - `.codex/skills/paracad-coordination`：描述本项目的协作规则、常见任务模板（如“扩展节点”、“接入 OCCT.js”、“前端提效”）。
+   - `.codex/agents/overview.md`：记录当前多 agent 分工建议、互相调用的技能名称以及输出约定。
+3. **Git 提交规范**：所有协作人员应遵守 `docs/git-commit.md` 里约定的标题、类型与描述要求，便于 multi-agent 自动生成规范化变更。
 
-## <span id="english">English</span>
-
-### Overview
-
-ParaCad is a web-based node visual parametric modeling system, similar to Rhino/Grasshopper but implemented in the browser using native Three.js. It provides an intuitive node-based interface for creating complex 3D parametric models through visual programming.
-
-### Key Features
-
-#### 🎨 **Visual Node Editor**
-- Drag-and-drop node interface
-- Real-time parameter connections
-- Node categorization (Basic, 2D Shapes, 3D Solids, Features, Transforms)
-- Multi-language support (Chinese/English)
-
-#### 🔧 **Rich Node Library**
-- **Parameters & Logic**: Parameter, Expression, Custom nodes
-- **2D Primitives**: Line, Rectangle, Circle, Arc, Ellipse, Polygon, Star
-- **3D Solids**: Box, Sphere, Capsule, Cylinder, Cone, Frustum, Torus
-- **Polyhedrons**: Tetrahedron, Octahedron, Icosahedron
-- **Transforms**: Translation, Rotation, Scale, Array operations
-
-#### 🌐 **3D Visualization**
-- Real-time 3D rendering with Three.js
-- Interactive viewport controls
-- Material and lighting support
-- Performance optimized with BVH acceleration
-
-#### 📊 **Advanced Features**
-- Graph-based dependency management
-- Automatic layout algorithms
-- Geometric operations and CSG
-- Export capabilities
-
-### Technology Stack
-
-- **Frontend**: React 19 + TypeScript
-- **3D Engine**: Three.js with React Three Fiber
-- **UI Components**: Lucide React Icons
-- **Layout**: Dagre for automatic graph layout
-- **Geometry**: Three-Mesh-BVH for performance
-- **Build Tool**: Vite
-
-### Getting Started
-
-#### 🚀 Live Preview
-
-You can try ParaCad online without installing anything:
-
-[**🔗 Try Online Demo**](https://zly258.github.io/paracad/)
-
-#### Prerequisites
-- Node.js (latest LTS version recommended)
-- npm or yarn package manager
-
-#### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd paracad
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open your browser**
-   Navigate to `http://localhost:5173`
-
-#### Building for Production
-
-```bash
-npm run build
-npm run preview
-```
-
-#### Deploy to GitHub Pages
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
-
-Quick setup:
-1. Push to GitHub
-2. Go to Settings → Pages → Set Source to `GitHub Actions`
-3. Deployment will run automatically on pushes to main branch
-
-### Project Structure
-
+## 目录结构概览
 ```
 paracad/
-├── components/
-│   ├── NodeEditor/          # Node-based editor components
-│   │   ├── NodeCanvas.tsx   # Main canvas component
-│   │   ├── NodeComponent.tsx # Individual node component
-│   │   ├── NodeTree.tsx     # Node tree/sidebar
-│   │   └── ConnectionLayer.tsx # Connection management
-│   └── Viewport/            # 3D viewport components
-│       └── Viewer3D.tsx     # 3D scene viewer
-├── store/                   # State management
-│   └── GraphStore.tsx       # Graph state management
-├── utils/                   # Utility functions
-│   ├── autoLayout.ts        # Automatic layout algorithms
-│   └── geometryEngine.ts    # Geometric operations
-├── App.tsx                  # Main application component
-├── types.ts                 # TypeScript type definitions
-├── translations.ts          # Multi-language translations
-└── constants.ts             # Application constants
+├── components/         # 节点编辑、视口等可视化模块
+├── store/              # GraphStore 负责节点状态与历史
+├── utils/              # 几何引擎与布局算法
+├── docs/               # 架构、计划、Git 规范
+├── .codex/skills/       # 项目协作技能（Skill）
+├── .codex/agents/       # 多 agent 协作说明与角色
+├── App.tsx             # 应用入口
+└── index.tsx           # React 渲染入口
 ```
 
-### Usage Guide
+## 下一步建议
+1. 阅读 `docs/architecture.md` 了解当前引擎拓扑与扩展点；
+2. 根据 `docs/plan.md` 选定短期任务（如节点扩展、OCCT.js 适配、界面优化）并在 `Saved Custom Node` 中记录；
+3. 所有 PR 需参考 `docs/git-commit.md` 书写标准化提交，再由 `.codex/skills/paracad-coordination` 提供 review 模板。
 
-#### Creating Your First Model
 
-1. **Add Parameters**: Start by adding parameter nodes to define your variables
-2. **Connect Nodes**: Drag connections between nodes to establish relationships
-3. **Add Geometry**: Use 2D and 3D primitive nodes to create basic shapes
-4. **Transform Objects**: Apply transformations like translation, rotation, and scaling
-5. **View Results**: Switch to the 3D viewport to see your parametric model
-
-#### Node Categories
-
-- **基础 & 参数 (Basic & Params)**: Fundamental nodes for parameters and logic
-- **2D 线框 (2D Shapes)**: Two-dimensional geometric primitives
-- **3D 实体 (3D Solids)**: Three-dimensional solid geometry
-- **特征建模 (Features)**: Advanced modeling operations
-- **变换 & 阵列 (Transforms)**: Transformation and array operations
-
-### Contributing
-
-We welcome contributions! Please feel free to submit a Pull Request.
-
-### License
-
-This project is licensed under a modified MIT License with non-commercial use restrictions. See the [LICENSE](LICENSE) file for details.
-
-**Key Points:**
-- ✅ Free for personal and educational use
-- ❌ Commercial use is prohibited
-- 📝 Attribution to the original author is required
-
----
-
-## <span id="chinese">中文</span>
-
-### 项目概述
-
-ParaCad 是一个基于 Web 的节点式可视化参数化建模系统，类似于 Rhino/Grasshopper，但在浏览器中使用原生 Three.js 实现。它通过可视化编程提供了直观的节点式界面，用于创建复杂的 3D 参数化模型。
-
-### 核心功能
-
-#### 🎨 **可视化节点编辑器**
-- 拖拽式节点界面
-- 实时参数连接
-- 节点分类（基础、2D形状、3D实体、特征、变换）
-- 多语言支持（中文/英文）
-
-#### 🔧 **丰富的节点库**
-- **参数和逻辑**: 参数、表达式、自定义节点
-- **2D 图元**: 直线、矩形、圆、圆弧、椭圆、多边形、星形
-- **3D 实体**: 立方体、球体、胶囊体、圆柱、圆锥、圆台、圆环体
-- **多面体**: 四面体、八面体、二十面体
-- **变换**: 平移、旋转、缩放、阵列操作
-
-#### 🌐 **3D 可视化**
-- 基于 Three.js 的实时 3D 渲染
-- 交互式视口控制
-- 材质和光照支持
-- 使用 BVH 加速优化性能
-
-#### 📊 **高级功能**
-- 基于图的依赖关系管理
-- 自动布局算法
-- 几何操作和 CSG
-- 导出功能
-
-### 技术栈
-
-- **前端**: React 19 + TypeScript
-- **3D 引擎**: Three.js + React Three Fiber
-- **UI 组件**: Lucide React 图标
-- **布局**: Dagre 自动图布局
-- **几何**: Three-Mesh-BVH 性能优化
-- **构建工具**: Vite
-
-### 快速开始
-
-#### 🚀 在线预览
-
-无需安装任何工具即可在线体验 ParaCad：
-
-[**🔗 在线体验 Demo**](https://zly258.github.io/paracad/)
-
-#### 环境要求
-- Node.js（推荐使用最新 LTS 版本）
-- npm 或 yarn 包管理器
-
-#### 安装步骤
-
-1. **克隆仓库**
-   ```bash
-   git clone <repository-url>
-   cd paracad
-   ```
-
-2. **安装依赖**
-   ```bash
-   npm install
-   ```
-
-3. **设置环境变量**
-   在根目录创建 `.env.local` 文件：
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-
-4. **运行开发服务器**
-   ```bash
-   npm run dev
-   ```
-
-5. **打开浏览器**
-   访问 `http://localhost:5173`
-
-#### 构建生产版本
-
-```bash
-npm run build
-npm run preview
-```
-
-#### 部署到 GitHub Pages
-
-详细部署指南请参见 [DEPLOYMENT.md](DEPLOYMENT.md)。
-
-快速设置：
-1. 推送代码到 GitHub
-2. 进入 Settings → Pages → 将 Source 设置为 `GitHub Actions`
-3. 推送到 main 分支会自动触发部署
-
-### 项目结构
-
-```
-paracad/
-├── components/
-│   ├── NodeEditor/          # 节点编辑器组件
-│   │   ├── NodeCanvas.tsx   # 主画布组件
-│   │   ├── NodeComponent.tsx # 单个节点组件
-│   │   ├── NodeTree.tsx     # 节点树/侧边栏
-│   │   └── ConnectionLayer.tsx # 连接管理
-│   └── Viewport/            # 3D 视口组件
-│       └── Viewer3D.tsx     # 3D 场景查看器
-├── store/                   # 状态管理
-│   └── GraphStore.tsx       # 图形状态管理
-├── utils/                   # 工具函数
-│   ├── autoLayout.ts        # 自动布局算法
-│   └── geometryEngine.ts    # 几何操作
-├── App.tsx                  # 主应用组件
-├── types.ts                 # TypeScript 类型定义
-├── translations.ts          # 多语言翻译
-└── constants.ts             # 应用常量
-```
-
-### 使用指南
-
-#### 创建你的第一个模型
-
-1. **添加参数**: 首先添加参数节点来定义变量
-2. **连接节点**: 拖拽连接节点建立关系
-3. **添加几何体**: 使用 2D 和 3D 图元节点创建基本形状
-4. **变换对象**: 应用平移、旋转、缩放等变换
-5. **查看结果**: 切换到 3D 视口查看参数化模型
-
-#### 节点分类
-
-- **基础 & 参数**: 参数和逻辑的基础节点
-- **2D 线框**: 二维几何图元
-- **3D 实体**: 三维实体几何
-- **特征建模**: 高级建模操作
-- **变换 & 阵列**: 变换和阵列操作
-
-### 贡献
-
-我们欢迎贡献！请随时提交 Pull Request。
-
-### 许可证
-
-本项目基于修改版 MIT 许可证，包含非商业使用限制。详见 [LICENSE](LICENSE) 文件。
-
-**要点：**
-- ✅ 个人和教育用途免费
-- ❌ 禁止商业用途
-- 📝 必须注明原作者
-
----
-
-<div align="center">
-
-**Made with ❤️ using React + Three.js**
-
-[⬆ 回到顶部 / Back to Top](#paracad---节点式参数化建模系统--node-based-parametric-modeling-system)
-
-</div>

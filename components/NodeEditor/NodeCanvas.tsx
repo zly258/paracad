@@ -3,7 +3,7 @@ import { useGraph } from '../../store/GraphStore';
 import NodeComponent from './NodeComponent';
 import ConnectionLayer from './ConnectionLayer';
 import { NodeType, NodeData, SocketType, ConnectionDraft } from '../../types';
-import { Maximize, Trash2, Copy, Scan, LayoutGrid, Download, Upload, Undo2, Redo2 } from 'lucide-react';
+import { Trash2, Copy, Scan, LayoutGrid, Download, Upload, Undo2, Redo2 } from 'lucide-react';
 import { performAutoLayout } from '../../utils/autoLayout';
 import { NODE_WIDTH, calculateSocketPosition } from '../../constants';
 
@@ -308,11 +308,10 @@ const NodeCanvas: React.FC = () => {
       )}
 
       {/* Canvas Toolbar */}
-      <div className="absolute top-4 right-4 flex gap-2">
+      <div className="canvas-toolbar">
          <button 
              onClick={undo} 
              disabled={!canUndo}
-             className={`p-2 rounded backdrop-blur border border-white/10 transition-colors ${canUndo ? 'bg-black/50 hover:bg-black/80 text-white' : 'bg-black/30 text-gray-600 cursor-not-allowed'}`}
              title={t('Undo') + " (Ctrl+Z)"}
          >
              <Undo2 size={16} />
@@ -320,17 +319,14 @@ const NodeCanvas: React.FC = () => {
          <button 
              onClick={redo} 
              disabled={!canRedo}
-             className={`p-2 rounded backdrop-blur border border-white/10 transition-colors ${canRedo ? 'bg-black/50 hover:bg-black/80 text-white' : 'bg-black/30 text-gray-600 cursor-not-allowed'}`}
              title={t('Redo') + " (Ctrl+Y)"}
          >
              <Redo2 size={16} />
          </button>
-         <div className="w-px bg-white/10 mx-1 h-8"></div>
-         <button onClick={() => setNodes(performAutoLayout(nodes, connections))} className="bg-black/50 hover:bg-black/80 text-white p-2 rounded backdrop-blur border border-white/10 transition-colors" title="自动布局"><LayoutGrid size={16} /></button>
-         <button onClick={() => {if(containerRef.current) fitView(containerRef.current.clientWidth, containerRef.current.clientHeight)}} className="bg-black/50 hover:bg-black/80 text-white p-2 rounded backdrop-blur border border-white/10 transition-colors" title="充满画布"><Scan size={16} /></button>
-         <div className="w-px bg-white/10 mx-1 h-8"></div>
-         <button onClick={saveGraph} className="bg-black/50 hover:bg-black/80 text-white p-2 rounded backdrop-blur border border-white/10 transition-colors" title="导出 JSON"><Download size={16} /></button>
-         <button onClick={() => fileInputRef.current?.click()} className="bg-black/50 hover:bg-black/80 text-white p-2 rounded backdrop-blur border border-white/10 transition-colors" title="导入 JSON"><Upload size={16} /></button>
+         <button onClick={() => setNodes(performAutoLayout(nodes, connections))} title="自动布局"><LayoutGrid size={16} /></button>
+         <button onClick={() => {if(containerRef.current) fitView(containerRef.current.clientWidth, containerRef.current.clientHeight)}} title="充满画布"><Scan size={16} /></button>
+         <button onClick={saveGraph} title="导出 JSON"><Download size={16} /></button>
+         <button onClick={() => fileInputRef.current?.click()} title="导入 JSON"><Upload size={16} /></button>
          <input type="file" ref={fileInputRef} onChange={(e) => { if(e.target.files?.[0]) loadGraph(e.target.files[0]); e.target.value = ''; }} className="hidden" accept=".json" />
       </div>
 

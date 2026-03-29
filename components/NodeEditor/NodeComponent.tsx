@@ -147,16 +147,17 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
 
   return (
     <div 
-      className={`absolute flex flex-col rounded-lg shadow-xl overflow-hidden border node-component transition-shadow select-none ${isSelected ? 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]' : 'border-gray-800 shadow-black/60'}`}
+      className={`node-card node-component ${isSelected ? 'node-card-active' : ''}`}
       style={{
+        position: 'absolute',
         width: NODE_WIDTH,
         transform: `translate(${node.position.x}px, ${node.position.y}px)`,
-        backgroundColor: '#1f1f1f'
+        backgroundColor: 'transparent'
       }}
     >
       {/* Header */}
       <div 
-        className={`flex items-center justify-between pl-3 pr-1 cursor-grab active:cursor-grabbing border-b shrink-0 ${isSelected ? 'bg-yellow-900/40 border-yellow-600' : 'bg-[#2a2a2a] border-gray-800'}`}
+        className={`node-card-header flex items-center justify-between cursor-grab active:cursor-grabbing ${isSelected ? 'bg-yellow-900/40 border-yellow-600' : ''}`}
         style={{ height: HEADER_HEIGHT }}
         onMouseDown={handleMouseDown}
       >

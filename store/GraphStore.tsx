@@ -2,8 +2,10 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { NodeData, Connection, NodeType, GraphState, LogEntry, ConnectionDraft } from '../types';
 import { createDefaultNode, NODE_WIDTH, HEADER_HEIGHT } from '../constants';
 import { computeGraph, initOCCT } from '../utils/geometryEngine';
+import { KernelBackend } from '../core/kernel';
 import { v4 as uuidv4 } from 'uuid';
 import { translations } from '../translations';
+import { cloneGraphSnapshot, loadCustomNodeStorage, saveCustomNodeStorage } from './graphPersistence';
 
 export interface CustomNodeDef {
   id: string;
@@ -41,6 +43,8 @@ interface GraphContextType extends GraphState {
   triggerCompute: () => void; 
   isComputing: boolean;
   kernelReady: boolean;
+  kernelBackend: KernelBackend;
+  kernelMessage: string;
   savedCustomNodes: CustomNodeDef[];
   saveAsCustomNode: (name: string) => void;
   deleteCustomNode: (id: string) => void;
@@ -74,6 +78,8 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isComputing, setIsComputing] = useState(false);
   const [computeTrigger, setComputeTrigger] = useState(0); 
   const [kernelReady, setKernelReady] = useState(false); 
+  const [kernelBackend, setKernelBackend] = useState<KernelBackend>('three-fallback');
+  const [kernelMessage, setKernelMessage] = useState('内核尚未初始化');
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
 
   // History
@@ -108,7 +114,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const recordHistory = useCallback(() => {
       setHistory(prev => {
-          const snapshot = { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)) };
+          const snapshot = cloneGraphSnapshot(nodes, connections);
           return [...prev.slice(-19), snapshot];
       });
       setFuture([]);
@@ -117,7 +123,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const undo = useCallback(() => {
       if (history.length === 0) return;
       const previous = history[history.length - 1];
-      const current = { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)) };
+      const current = cloneGraphSnapshot(nodes, connections);
       
       setFuture(prev => [current, ...prev]);
       setNodesState(previous.nodes);
@@ -129,7 +135,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const redo = useCallback(() => {
       if (future.length === 0) return;
       const next = future[0];
-      const current = { nodes: JSON.parse(JSON.stringify(nodes)), connections: JSON.parse(JSON.stringify(connections)) };
+      const current = cloneGraphSnapshot(nodes, connections);
 
       setHistory(prev => [...prev, current]);
       setNodesState(next.nodes);
@@ -138,20 +144,22 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addLog('Redo', 'info');
   }, [future, nodes, connections, addLog]);
 
+  // 启动时恢复本地保存的自定义节点。
   useEffect(() => {
-    const stored = localStorage.getItem('paracad_custom_nodes');
-    if (stored) {
-      try {
-        setSavedCustomNodes(JSON.parse(stored));
-      } catch (e) { console.error("Failed to load custom nodes", e); }
+    try {
+      setSavedCustomNodes(loadCustomNodeStorage<CustomNodeDef>());
+    } catch (e) {
+      console.error("Failed to load custom nodes", e);
     }
   }, []);
-
+  // 内核初始化与回退逻辑统一放在 store 层，界面只消费状态。
   useEffect(() => {
       const init = async () => {
-          await initOCCT();
+          const status = await initOCCT();
           setKernelReady(true);
-          addLog("Three.js Engine Ready", 'success');
+          setKernelBackend(status.backend);
+          setKernelMessage(status.message);
+          addLog(status.message, status.backend === 'occt.js' ? 'success' : 'warning');
       };
       init();
   }, [addLog]);
@@ -164,6 +172,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setComputeTrigger(prev => prev + 1);
   }, []);
 
+  // 任意图修改都会触发重新求解；这里仅负责调度，不承载具体几何算法。
   useEffect(() => {
     if (!kernelReady) return; 
 
@@ -373,7 +382,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       };
       setSavedCustomNodes(prev => {
           const updated = [...prev, newDef];
-          localStorage.setItem('paracad_custom_nodes', JSON.stringify(updated));
+          saveCustomNodeStorage(updated);
           return updated;
       });
       addLog(`Component "${name}" saved`, 'success');
@@ -382,20 +391,20 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteCustomNode = useCallback((id: string) => {
       setSavedCustomNodes(prev => {
           const updated = prev.filter(n => n.id !== id);
-          localStorage.setItem('paracad_custom_nodes', JSON.stringify(updated));
+          saveCustomNodeStorage(updated);
           return updated;
       });
       addLog('Custom component deleted', 'info');
   }, [addLog]);
 
   const contextValue = useMemo(() => ({
-      nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, savedCustomNodes, language,
+      nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, kernelBackend, kernelMessage, savedCustomNodes, language,
       history, future, canUndo: history.length > 0, canRedo: future.length > 0,
       addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
       addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, 
       saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
   }), [
-      nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, savedCustomNodes, language, history, future,
+      nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, kernelBackend, kernelMessage, savedCustomNodes, language, history, future,
       addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
       addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, 
       saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
@@ -408,3 +417,6 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 export default GraphProvider;
+
+
+

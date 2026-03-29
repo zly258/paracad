@@ -3,7 +3,8 @@ import NodeCanvas from './components/NodeEditor/NodeCanvas';
 import NodeTree from './components/NodeEditor/NodeTree';
 import Viewer3D from './components/Viewport/Viewer3D';
 import { GraphProvider, useGraph } from './store/GraphStore';
-import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2 } from 'lucide-react';
+import { Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2, RefreshCw, Scan } from 'lucide-react';
+import './styles/workbench.css';
 
 const LogPanel = React.memo(() => {
   const { logs, t } = useGraph();
@@ -14,186 +15,189 @@ const LogPanel = React.memo(() => {
   }, [logs]);
 
   return (
-    <div className="flex flex-col h-full bg-[#111] font-mono text-xs overflow-hidden">
-      <div className="h-6 bg-[#222] border-b border-black flex items-center px-2 gap-2 text-gray-400">
-        <Terminal size={12} />
-        <span className="font-bold">{t('Console')}</span>
-      </div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {logs.map((log) => (
-          <div key={log.id} className="flex gap-2 border-b border-white/5 pb-1 last:border-0">
-            <span className="text-gray-600 shrink-0">[{log.timestamp.toLocaleTimeString()}]</span>
-            <span className={`flex items-center gap-1 ${
-              log.type === 'error' ? 'text-red-400' : 
-              log.type === 'success' ? 'text-green-400' : 
-              log.type === 'warning' ? 'text-yellow-400' : 'text-gray-300'
-            }`}>
-              {log.type === 'error' && <AlertCircle size={10} />}
-              {log.type === 'success' && <CheckCircle size={10} />}
-              {log.type === 'info' && <Info size={10} />}
-              {log.message}
-            </span>
-          </div>
-        ))}
-        <div ref={endRef} />
+    <div className="log-card">
+      <header>
+        <div className="flex items-center gap-2">
+          <Terminal size={14} />
+          <span>{t('Console')}</span>
+        </div>
+        <span>{logs.length} 条记录</span>
+      </header>
+      <div className="log-panel">
+        <div className="flex-1 overflow-y-auto px-2 space-y-2 h-full">
+          {logs.map((log) => (
+            <div key={log.id} className="flex gap-2 border-b border-white/5 pb-1 last:border-0">
+              <span className="text-xs text-gray-500 shrink-0">[{log.timestamp.toLocaleTimeString()}]</span>
+              <span className={`flex items-center gap-1 text-[11px] ${
+                log.type === 'error' ? 'text-red-400' : 
+                log.type === 'success' ? 'text-green-400' : 
+                log.type === 'warning' ? 'text-yellow-400' : 'text-gray-300'
+              }`}>
+                {log.type === 'error' && <AlertCircle size={10} />}
+                {log.type === 'success' && <CheckCircle size={10} />}
+                {log.type === 'info' && <Info size={10} />}
+                {log.message}
+              </span>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
       </div>
     </div>
   );
 });
 
 const Header: React.FC = () => {
-    const { kernelReady, toggleLanguage, t, undo, redo, canUndo, canRedo } = useGraph();
-    return (
-      <header className="h-10 bg-[#2a2a2a] border-b border-black flex items-center px-4 justify-between shrink-0 z-10 shadow-md">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Boxes className="text-blue-500" size={20} />
-            <h1 className="font-bold text-base tracking-wide text-gray-100">ParaCad <span className="text-[10px] bg-blue-600 text-white px-1 rounded ml-1 font-bold">Three.js</span></h1>
-          </div>
-          
-          <div className="h-4 w-px bg-white/10 mx-2" />
-          
-          <div className="flex gap-1">
-              <button 
-                  onClick={undo} 
-                  disabled={!canUndo}
-                  className={`p-1.5 rounded transition-colors ${canUndo ? 'text-gray-200 hover:bg-gray-600 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
-                  title={t('Undo') + " (Ctrl+Z)"}
-              >
-                  <Undo2 size={16} />
-              </button>
-              <button 
-                  onClick={redo} 
-                  disabled={!canRedo}
-                  className={`p-1.5 rounded transition-colors ${canRedo ? 'text-gray-200 hover:bg-gray-600 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
-                  title={t('Redo') + " (Ctrl+Y)"}
-              >
-                  <Redo2 size={16} />
-              </button>
-          </div>
+  const { kernelReady, kernelBackend, toggleLanguage, t, undo, redo, canUndo, canRedo } = useGraph();
+  return (
+    <header className="workbench-header">
+      <div className="workbench-brand">
+        <div>
+          <div className="text-sm text-gray-300">{t('ParaCad')}</div>
+          <h1>参数化工作台</h1>
         </div>
-        
-        <button 
-           onClick={toggleLanguage} 
-           className="flex items-center gap-1 bg-[#333] hover:bg-[#444] text-gray-200 px-2 py-1 rounded text-xs border border-gray-600 transition-colors"
-           title="Switch Language"
-        >
-            <Globe size={12} />
-            {t('Language')}
+        <div className="tagline">OCCT JS 探索 · 节点驱动 · 专业 CAD</div>
+      </div>
+      <div className="workbench-actions">
+        <button className="status-pill" aria-label="Kernel status">
+          内核 {kernelReady ? (kernelBackend === 'occt.js' ? 'OCCT.js' : 'Three Fallback') : '启动中'}
         </button>
-      </header>
-    );
+        <div className="flex gap-1">
+          <button onClick={undo} disabled={!canUndo} className="action-chip" title={t('Undo') + ' (Ctrl+Z)'}>
+            <Undo2 size={14} />
+            {t('Undo')}
+          </button>
+          <button onClick={redo} disabled={!canRedo} className="action-chip" title={t('Redo') + ' (Ctrl+Y)'}>
+            <Redo2 size={14} />
+            {t('Redo')}
+          </button>
+        </div>
+        <button onClick={toggleLanguage} className="action-chip">
+          <Globe size={14} />
+          {t('Language')}
+        </button>
+      </div>
+    </header>
+  );
 };
 
 const MainLayout: React.FC = () => {
-  const [leftWidth, setLeftWidth] = useState(250); 
-  const [rightSplit, setRightSplit] = useState(70); 
-  const { kernelReady, t } = useGraph();
+  const [leftWidth, setLeftWidth] = useState(280);
+  const [rightSplit, setRightSplit] = useState(70);
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const { kernelReady, kernelMessage, t, nodes, connections, logs, triggerCompute, fitView } = useGraph();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (!kernelReady) {
-        let p = 0;
-        const interval = setInterval(() => {
-            p += Math.random() * 5;
-            if (p > 90) p = 90;
-            setProgress(p);
-        }, 50);
-        return () => clearInterval(interval);
-    } else {
-        setProgress(100);
+      let p = 0;
+      const interval = setInterval(() => {
+        p += Math.random() * 6;
+        if (p > 95) p = 95;
+        setProgress(p);
+      }, 60);
+      return () => clearInterval(interval);
     }
+    setProgress(100);
   }, [kernelReady]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden text-gray-100 bg-[#1a1a1a]">
-      {/* Loading Overlay */}
+    <div className="workbench-shell">
       {!kernelReady && (
-         <div className="absolute inset-0 z-50 bg-[#1a1a1a] flex flex-col items-center justify-center space-y-6">
-             <div className="relative">
-                <Boxes size={50} className="text-blue-500 animate-pulse" />
-             </div>
-             <div className="text-gray-300 font-bold text-lg">{t('Initializing...')}</div>
-             
-             <div className="w-64 h-1 bg-gray-800 rounded overflow-hidden">
-                 <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }}></div>
-             </div>
-             <div className="text-gray-500 text-xs font-mono">{t('Loading Kernel')}... {Math.floor(progress)}%</div>
-         </div>
+        <div className="overlay-loading">
+          <Loader2 size={32} className="animate-spin" />
+          <div className="text-sm">{t('Initializing...')}</div>
+          <div className="loader-bar"><span style={{ width: `${Math.min(progress + 12, 100)}%` }} /></div>
+          <div className="text-xs text-gray-400">{t('Loading Kernel')} {Math.floor(progress)}%</div>
+          <div className="text-xs text-gray-500">{kernelMessage}</div>
+        </div>
       )}
 
       <Header />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden relative">
-        
-        {/* Left Panel: Node Tree */}
-        <div style={{ width: leftWidth }} className="shrink-0 relative z-10">
+      <div className="workbench-body">
+        <div className="workbench-panel node-tree-panel" style={{ width: leftWidth }}>
+          <div className="panel-header">
+            <h2>{t('Node Library')}</h2>
+            <div className="header-subtitle">算术 · 几何 · 特征 · 阵列</div>
+          </div>
+          <div className="panel-body">
             <NodeTree />
-            <div 
-              className="absolute right-0 top-0 h-full w-1 hover:bg-blue-600 cursor-col-resize z-20"
-              onMouseDown={(e) => {
-                const startX = e.clientX;
-                const startW = leftWidth;
-                const onMove = (mv: MouseEvent) => setLeftWidth(Math.max(150, Math.min(400, startW + (mv.clientX - startX))));
-                const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('mouseup', onUp);
-              }}
-            />
+          </div>
+          <div className="panel-footer">
+            {nodes.length} 个节点 · {connections.length} 条连接 · {logs.length} 条日志
+          </div>
+          <div
+            className="absolute right-0 top-0 h-full w-1"
+            style={{ cursor: 'ew-resize' }}
+            onMouseDown={(e) => {
+              const startX = e.clientX;
+              const startW = leftWidth;
+              const onMove = (mv: MouseEvent) => setLeftWidth(Math.max(220, Math.min(420, startW + (mv.clientX - startX))));
+              const onUp = () => {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+              };
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
+            }}
+          />
         </div>
 
-        {/* Center Panel: Node Editor */}
-        <div 
-          className="h-full relative z-0 flex flex-col border-l border-r border-black" 
-          style={{ flex: 1 }}
-        >
-          <div className="flex-1 relative">
+        <div className="workbench-panel workbench-main">
+          <div className="canvas-stage">
             <NodeCanvas />
           </div>
         </div>
 
-        {/* Right Panel: 3D View & Logs */}
-        <div 
-           className="h-full flex flex-col relative z-0 shrink-0"
-           style={{ width: '40%' }} // Fixed roughly or dynamic
-        >
-          <div style={{ height: `${rightSplit}%` }} className="relative">
-             <Viewer3D />
+        <div className="right-panel">
+          <div className="viewer-shell" style={{ flexGrow: rightSplit / 100 }} ref={viewerRef}>
+            <div className="viewer-toolbar">
+              <button onClick={triggerCompute} title="刷新场景">
+                <RefreshCw size={16} />
+              </button>
+              <button title="视角归零" onClick={() => {
+                const rect = viewerRef.current?.getBoundingClientRect();
+                fitView(rect?.width ?? 1200, rect?.height ?? 800);
+              }}>
+                <Scan size={16} />
+              </button>
+            </div>
+            <Viewer3D />
           </div>
 
-          <div 
-            className="h-1 bg-[#000] hover:bg-blue-600 cursor-row-resize z-20 transition-colors opacity-50 hover:opacity-100"
+          <div className="log-host" style={{ flexGrow: (100 - rightSplit) / 100 }}>
+            <LogPanel />
+          </div>
+          <div
+            className="split-handle"
+            style={{ height: 4, cursor: 'ns-resize', background: 'transparent' }}
             onMouseDown={(e) => {
-               const startY = e.clientY;
-               const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-               if (!rect) return;
-               const onMove = (mv: MouseEvent) => {
-                 const relY = mv.clientY - rect.top;
-                 setRightSplit(Math.max(20, Math.min(80, (relY / rect.height) * 100)));
-               };
-               const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-               window.addEventListener('mousemove', onMove);
-               window.addEventListener('mouseup', onUp);
+              const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+              if (!rect) return;
+              const onMove = (mv: MouseEvent) => {
+                const relY = mv.clientY - rect.top;
+                const percent = (relY / rect.height) * 100;
+                setRightSplit(Math.max(30, Math.min(80, percent)));
+              };
+              const onUp = () => {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+              };
+              window.addEventListener('mousemove', onMove);
+              window.addEventListener('mouseup', onUp);
             }}
           />
-
-          <div className="flex-1 bg-[#111] overflow-hidden">
-             <LogPanel />
-          </div>
         </div>
-
       </div>
     </div>
   );
 };
 
-const App: React.FC = () => {
-  return (
-    <GraphProvider>
-      <MainLayout />
-    </GraphProvider>
-  );
-};
+const App: React.FC = () => (
+  <GraphProvider>
+    <MainLayout />
+  </GraphProvider>
+);
 
 export default App;
