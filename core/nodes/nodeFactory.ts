@@ -188,6 +188,38 @@ export const createDefaultNode = (
         outputs: [createSocket('list', 'any')],
         params: {},
       };
+    case NodeType.LIST_SLICE:
+      return {
+        ...baseNode,
+        label: 'List Slice',
+        inputs: [createSocket('list', 'any'), createSocket('start_index', 'number'), createSocket('end_index', 'number')],
+        outputs: [createSocket('list', 'any')],
+        params: { start_index: 0, end_index: 2 },
+      };
+    case NodeType.LIST_REVERSE:
+      return {
+        ...baseNode,
+        label: 'List Reverse',
+        inputs: [createSocket('list', 'any')],
+        outputs: [createSocket('list', 'any')],
+        params: {},
+      };
+    case NodeType.LIST_UNIQUE:
+      return {
+        ...baseNode,
+        label: 'List Unique',
+        inputs: [createSocket('list', 'any')],
+        outputs: [createSocket('list', 'any')],
+        params: {},
+      };
+    case NodeType.LIST_REPEAT:
+      return {
+        ...baseNode,
+        label: 'List Repeat',
+        inputs: [createSocket('item', 'any'), createSocket('count', 'number')],
+        outputs: [createSocket('list', 'any')],
+        params: { item: 0, count: 3 },
+      };
     case NodeType.VECTOR_CREATE:
       return {
         ...baseNode,
@@ -251,6 +283,30 @@ export const createDefaultNode = (
         inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
         outputs: [createSocket('vector', 'vector')],
         params: { a: { x: 1, y: 0, z: 0 }, b: { x: 0, y: 1, z: 0 } },
+      };
+    case NodeType.VECTOR_DISTANCE:
+      return {
+        ...baseNode,
+        label: 'Vector Distance',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
+        outputs: [createSocket('result', 'number')],
+        params: { a: { x: 0, y: 0, z: 0 }, b: { x: 10, y: 0, z: 0 } },
+      };
+    case NodeType.VECTOR_ANGLE:
+      return {
+        ...baseNode,
+        label: 'Vector Angle',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
+        outputs: [createSocket('angle', 'number')],
+        params: { a: { x: 1, y: 0, z: 0 }, b: { x: 0, y: 1, z: 0 } },
+      };
+    case NodeType.VECTOR_LERP:
+      return {
+        ...baseNode,
+        label: 'Vector Lerp',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector'), createSocket('t', 'number')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { a: { x: 0, y: 0, z: 0 }, b: { x: 10, y: 0, z: 0 }, t: 0.5 },
       };
     case NodeType.TRANSLATION:
       return { ...baseNode, label: 'Move', inputs: [createSocket('geometry', 'geometry'), createSocket('vector', 'vector')], outputs: [createSocket('geometry', 'geometry')], params: { vector: { x: 10, y: 0, z: 0 } } };

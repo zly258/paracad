@@ -11,6 +11,8 @@ const flattenList = (list: any): any[] => {
   return list.flatMap((item) => flattenList(item));
 };
 
+const normalizeListInput = (value: any) => (Array.isArray(value) ? value : [value]);
+
 // 数据流节点保持纯值计算，方便后续继续扩展 Dynamo 风格的列表处理与批量驱动能力。
 export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => {
   const p = node.params;
@@ -75,9 +77,32 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
     case NodeType.LIST_JOIN: {
       const listA = getVal('list_a', inputs, p, []);
       const listB = getVal('list_b', inputs, p, []);
-      const normalizedA = Array.isArray(listA) ? listA : [listA];
-      const normalizedB = Array.isArray(listB) ? listB : [listB];
+      const normalizedA = normalizeListInput(listA);
+      const normalizedB = normalizeListInput(listB);
       return [[...normalizedA, ...normalizedB].filter((item) => item !== undefined && item !== null)];
+    }
+    case NodeType.LIST_SLICE: {
+      const list = getVal('list', inputs, p, []);
+      const normalized = normalizeListInput(list);
+      const startIndex = Math.max(0, Math.floor(getNum('start_index', inputs, p, 0)));
+      const endIndex = Math.floor(getNum('end_index', inputs, p, normalized.length));
+      return [normalized.slice(startIndex, Math.max(startIndex, endIndex))];
+    }
+    case NodeType.LIST_REVERSE: {
+      const list = getVal('list', inputs, p, []);
+      return [normalizeListInput(list).slice().reverse()];
+    }
+    case NodeType.LIST_UNIQUE: {
+      const list = getVal('list', inputs, p, []);
+      const uniqueItems = normalizeListInput(list).filter((item, index, source) =>
+        source.findIndex((candidate) => JSON.stringify(candidate) === JSON.stringify(item)) === index,
+      );
+      return [uniqueItems];
+    }
+    case NodeType.LIST_REPEAT: {
+      const item = getVal('item', inputs, p, null);
+      const count = Math.max(0, Math.floor(getNum('count', inputs, p, 3)));
+      return [Array.from({ length: count }, () => item)];
     }
     case NodeType.VECTOR_CREATE: {
       return [{
@@ -123,6 +148,31 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
         x: a.y * b.z - a.z * b.y,
         y: a.z * b.x - a.x * b.z,
         z: a.x * b.y - a.y * b.x,
+      }];
+    }
+    case NodeType.VECTOR_DISTANCE: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      return [Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2)];
+    }
+    case NodeType.VECTOR_ANGLE: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      const dot = a.x * b.x + a.y * b.y + a.z * b.z;
+      const lengthA = Math.sqrt(a.x ** 2 + a.y ** 2 + a.z ** 2);
+      const lengthB = Math.sqrt(b.x ** 2 + b.y ** 2 + b.z ** 2);
+      if (lengthA === 0 || lengthB === 0) return [0];
+      const cosTheta = Math.min(1, Math.max(-1, dot / (lengthA * lengthB)));
+      return [Number(((Math.acos(cosTheta) * 180) / Math.PI).toFixed(6))];
+    }
+    case NodeType.VECTOR_LERP: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      const t = getNum('t', inputs, p, 0.5);
+      return [{
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        z: a.z + (b.z - a.z) * t,
       }];
     }
     default:

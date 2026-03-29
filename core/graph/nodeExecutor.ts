@@ -107,6 +107,10 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.LIST_FIRST:
     case NodeType.LIST_LAST:
     case NodeType.LIST_JOIN:
+    case NodeType.LIST_SLICE:
+    case NodeType.LIST_REVERSE:
+    case NodeType.LIST_UNIQUE:
+    case NodeType.LIST_REPEAT:
     case NodeType.LIST_GET_ITEM:
     case NodeType.VECTOR_CREATE:
     case NodeType.VECTOR_ADD:
@@ -115,7 +119,10 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.VECTOR_LENGTH:
     case NodeType.VECTOR_NORMALIZE:
     case NodeType.VECTOR_DOT:
-    case NodeType.VECTOR_CROSS: {
+    case NodeType.VECTOR_CROSS:
+    case NodeType.VECTOR_DISTANCE:
+    case NodeType.VECTOR_ANGLE:
+    case NodeType.VECTOR_LERP: {
       const dataResult = executeDataNode({ node, inputs });
       if (dataResult) return dataResult;
       return [null];
