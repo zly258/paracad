@@ -180,6 +180,14 @@ export const createDefaultNode = (
         outputs: [createSocket('item', 'any')],
         params: {},
       };
+    case NodeType.LIST_JOIN:
+      return {
+        ...baseNode,
+        label: 'List Join',
+        inputs: [createSocket('list_a', 'any'), createSocket('list_b', 'any')],
+        outputs: [createSocket('list', 'any')],
+        params: {},
+      };
     case NodeType.VECTOR_CREATE:
       return {
         ...baseNode,
@@ -211,6 +219,38 @@ export const createDefaultNode = (
         inputs: [createSocket('vector', 'vector'), createSocket('factor', 'number')],
         outputs: [createSocket('vector', 'vector')],
         params: { vector: { x: 10, y: 0, z: 0 }, factor: 2 },
+      };
+    case NodeType.VECTOR_LENGTH:
+      return {
+        ...baseNode,
+        label: 'Vector Length',
+        inputs: [createSocket('vector', 'vector')],
+        outputs: [createSocket('length', 'number')],
+        params: { vector: { x: 10, y: 0, z: 0 } },
+      };
+    case NodeType.VECTOR_NORMALIZE:
+      return {
+        ...baseNode,
+        label: 'Vector Normalize',
+        inputs: [createSocket('vector', 'vector')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { vector: { x: 10, y: 0, z: 0 } },
+      };
+    case NodeType.VECTOR_DOT:
+      return {
+        ...baseNode,
+        label: 'Vector Dot',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
+        outputs: [createSocket('result', 'number')],
+        params: { a: { x: 1, y: 0, z: 0 }, b: { x: 0, y: 1, z: 0 } },
+      };
+    case NodeType.VECTOR_CROSS:
+      return {
+        ...baseNode,
+        label: 'Vector Cross',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { a: { x: 1, y: 0, z: 0 }, b: { x: 0, y: 1, z: 0 } },
       };
     case NodeType.TRANSLATION:
       return { ...baseNode, label: 'Move', inputs: [createSocket('geometry', 'geometry'), createSocket('vector', 'vector')], outputs: [createSocket('geometry', 'geometry')], params: { vector: { x: 10, y: 0, z: 0 } } };

@@ -82,3 +82,4 @@
 16. 变换分类拆分：已新增 [core/graph/transformHandlers.ts](D:/workspace/nodejs/paracad/core/graph/transformHandlers.ts)，将 `Group / Translation / Rotation / Scale / Mirror / Array` 相关节点从主执行器中独立出来。
 17. 数据流节点增强：已新增 [core/graph/dataHandlers.ts](D:/workspace/nodejs/paracad/core/graph/dataHandlers.ts)，补充 `Number Range / List Create / List Length / List Get Item`，为 Dynamo 风格的批量驱动做准备。
 18. 数据与向量继续增强：已补充 `Range By Count / List Flatten / List First / List Last / Vector Create / Vector Add / Vector Subtract / Vector Scale`，继续完善参数驱动与批量建模基础能力。
+19. 列表与向量分析增强：已补充 `List Join / Vector Length / Vector Normalize / Vector Dot / Vector Cross`，继续向 Dynamo 风格的规则驱动节点靠拢。

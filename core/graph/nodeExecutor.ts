@@ -106,11 +106,16 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.LIST_FLATTEN:
     case NodeType.LIST_FIRST:
     case NodeType.LIST_LAST:
+    case NodeType.LIST_JOIN:
     case NodeType.LIST_GET_ITEM:
     case NodeType.VECTOR_CREATE:
     case NodeType.VECTOR_ADD:
     case NodeType.VECTOR_SUBTRACT:
-    case NodeType.VECTOR_SCALE: {
+    case NodeType.VECTOR_SCALE:
+    case NodeType.VECTOR_LENGTH:
+    case NodeType.VECTOR_NORMALIZE:
+    case NodeType.VECTOR_DOT:
+    case NodeType.VECTOR_CROSS: {
       const dataResult = executeDataNode({ node, inputs });
       if (dataResult) return dataResult;
       return [null];

@@ -72,6 +72,13 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
       const list = getVal('list', inputs, p, []);
       return [Array.isArray(list) && list.length > 0 ? list[list.length - 1] : null];
     }
+    case NodeType.LIST_JOIN: {
+      const listA = getVal('list_a', inputs, p, []);
+      const listB = getVal('list_b', inputs, p, []);
+      const normalizedA = Array.isArray(listA) ? listA : [listA];
+      const normalizedB = Array.isArray(listB) ? listB : [listB];
+      return [[...normalizedA, ...normalizedB].filter((item) => item !== undefined && item !== null)];
+    }
     case NodeType.VECTOR_CREATE: {
       return [{
         x: getNum('x', inputs, p, 0),
@@ -93,6 +100,30 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
       const vector = getVec('vector', inputs, p);
       const factor = getNum('factor', inputs, p, 1);
       return [{ x: vector.x * factor, y: vector.y * factor, z: vector.z * factor }];
+    }
+    case NodeType.VECTOR_LENGTH: {
+      const vector = getVec('vector', inputs, p);
+      return [Math.sqrt(vector.x ** 2 + vector.y ** 2 + vector.z ** 2)];
+    }
+    case NodeType.VECTOR_NORMALIZE: {
+      const vector = getVec('vector', inputs, p);
+      const length = Math.sqrt(vector.x ** 2 + vector.y ** 2 + vector.z ** 2);
+      if (length === 0) return [{ x: 0, y: 0, z: 0 }];
+      return [{ x: vector.x / length, y: vector.y / length, z: vector.z / length }];
+    }
+    case NodeType.VECTOR_DOT: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      return [a.x * b.x + a.y * b.y + a.z * b.z];
+    }
+    case NodeType.VECTOR_CROSS: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      return [{
+        x: a.y * b.z - a.z * b.y,
+        y: a.z * b.x - a.x * b.z,
+        z: a.x * b.y - a.y * b.x,
+      }];
     }
     default:
       return null;
