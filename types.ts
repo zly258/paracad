@@ -35,6 +35,10 @@ export enum NodeType {
   SWEEP = 'SWEEP',
   LOFT = 'LOFT',
   BOOLEAN_OP = 'BOOLEAN_OP', 
+  BOUNDING_BOX = 'BOUNDING_BOX',
+  SURFACE_AREA = 'SURFACE_AREA',
+  VOLUME = 'VOLUME',
+  CENTROID = 'CENTROID',
   
   // Transformation
   TRANSLATION = 'TRANSLATION',

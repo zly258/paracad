@@ -84,6 +84,38 @@ export const createDefaultNode = (
       return { ...baseNode, label: 'Loft', inputs: [createSocket('section_a', 'shape2d'), createSocket('section_b', 'shape2d')], outputs: [createSocket('geometry', 'geometry')], params: { steps: 1, ...geomParams } };
     case NodeType.BOOLEAN_OP:
       return { ...baseNode, label: 'Boolean', inputs: [createSocket('object_a', 'geometry'), createSocket('object_b', 'geometry')], outputs: [createSocket('geometry', 'geometry')], params: { operation: 'UNION', ...geomParams } };
+    case NodeType.BOUNDING_BOX:
+      return {
+        ...baseNode,
+        label: 'Bounding Box',
+        inputs: [createSocket('geometry', 'geometry')],
+        outputs: [createSocket('min', 'vector'), createSocket('max', 'vector'), createSocket('size', 'vector'), createSocket('center', 'vector')],
+        params: {},
+      };
+    case NodeType.SURFACE_AREA:
+      return {
+        ...baseNode,
+        label: 'Surface Area',
+        inputs: [createSocket('geometry', 'geometry')],
+        outputs: [createSocket('area', 'number')],
+        params: {},
+      };
+    case NodeType.VOLUME:
+      return {
+        ...baseNode,
+        label: 'Volume',
+        inputs: [createSocket('geometry', 'geometry')],
+        outputs: [createSocket('volume', 'number')],
+        params: {},
+      };
+    case NodeType.CENTROID:
+      return {
+        ...baseNode,
+        label: 'Centroid',
+        inputs: [createSocket('geometry', 'geometry')],
+        outputs: [createSocket('centroid', 'vector')],
+        params: {},
+      };
     case NodeType.TRANSLATION:
       return { ...baseNode, label: 'Move', inputs: [createSocket('geometry', 'geometry'), createSocket('vector', 'vector')], outputs: [createSocket('geometry', 'geometry')], params: { vector: { x: 10, y: 0, z: 0 } } };
     case NodeType.ROTATION:

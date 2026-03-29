@@ -1,3 +1,4 @@
+export * from './analysisHandlers';
 export * from './occtBoolean';
 export * from './computeGraph';
 export * from './featureHandlers';

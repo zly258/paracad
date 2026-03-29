@@ -18,6 +18,7 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
   - `sketchHandlers.ts`：2D 草图与开放路径节点执行器分组。
   - `featureHandlers.ts`：特征节点执行器分组。
   - `solidHandlers.ts`：基础体与实体节点执行器分组。
+  - `analysisHandlers.ts`：分析读取节点执行器分组。
   - `runtimeUtils.ts`：参数读取、对象标记、Three 侧辅助工具。
 - `core/nodes/`：节点定义层。
   - `nodeFactory.ts`：默认节点与 socket 初始化。
@@ -61,6 +62,7 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - `core/graph/sketchHandlers.ts` 负责把草图节点从主执行器中拆开，作为后续按类别注册的第一步。
 - `core/graph/featureHandlers.ts` 负责 `Fillet / Extrude / Revolve / Sweep / Loft` 等特征节点的分类执行。
 - `core/graph/solidHandlers.ts` 负责基础体节点的分类执行，便于后续继续补导出、分析与体属性节点。
+- `core/graph/analysisHandlers.ts` 负责 Dynamo 风格的分析读取节点，比如包围盒、面积、体积与质心。
 
 ## 4. 模块职责约束
 - `computeGraph.ts` 不写节点细节。

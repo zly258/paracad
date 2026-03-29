@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
 import { NodeData, NodeType } from '../../types';
+import { executeAnalysisNode } from './analysisHandlers';
 import { getKernelStatus } from '../kernel';
 import {
   createOcctDir,
@@ -95,6 +96,14 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.TORUS: {
       const solidResult = await executeSolidNode({ node, inputs });
       if (solidResult) return solidResult;
+      return [null];
+    }
+    case NodeType.BOUNDING_BOX:
+    case NodeType.SURFACE_AREA:
+    case NodeType.VOLUME:
+    case NodeType.CENTROID: {
+      const analysisResult = await executeAnalysisNode({ node, inputs });
+      if (analysisResult) return analysisResult;
       return [null];
     }
     case NodeType.BOOLEAN_OP: {

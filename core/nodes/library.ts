@@ -50,6 +50,15 @@ export const NODE_LIBRARY_CATEGORIES: NodeLibraryCategory[] = [
     ],
   },
   {
+    label: 'Analysis',
+    items: [
+      { label: 'Bounding Box', type: NodeType.BOUNDING_BOX },
+      { label: 'Surface Area', type: NodeType.SURFACE_AREA },
+      { label: 'Volume', type: NodeType.VOLUME },
+      { label: 'Centroid', type: NodeType.CENTROID },
+    ],
+  },
+  {
     label: 'Transforms',
     items: [
       { label: 'Move', type: NodeType.TRANSLATION },
