@@ -77,3 +77,4 @@
 11. 运行时与布尔桥拆分：已新增 [core/graph/occtRuntime.ts](D:/workspace/nodejs/paracad/core/graph/occtRuntime.ts) 与 [core/graph/occtBoolean.ts](D:/workspace/nodejs/paracad/core/graph/occtBoolean.ts)，继续压缩执行器主文件职责。
 12. 节点分类拆分：已新增 [core/graph/sketchHandlers.ts](D:/workspace/nodejs/paracad/core/graph/sketchHandlers.ts)，将 2D 草图与路径节点从主执行器中独立出来。
 13. 特征分类拆分：已新增 [core/graph/featureHandlers.ts](D:/workspace/nodejs/paracad/core/graph/featureHandlers.ts)，将 `Fillet / Extrude / Revolve / Sweep / Loft` 从主执行器中独立出来。
+14. 实体分类拆分：已新增 [core/graph/solidHandlers.ts](D:/workspace/nodejs/paracad/core/graph/solidHandlers.ts)，将基础体节点从主执行器中独立出来。
