@@ -100,9 +100,17 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       return [null];
     }
     case NodeType.NUMBER_RANGE:
+    case NodeType.RANGE_BY_COUNT:
     case NodeType.LIST_CREATE:
     case NodeType.LIST_LENGTH:
-    case NodeType.LIST_GET_ITEM: {
+    case NodeType.LIST_FLATTEN:
+    case NodeType.LIST_FIRST:
+    case NodeType.LIST_LAST:
+    case NodeType.LIST_GET_ITEM:
+    case NodeType.VECTOR_CREATE:
+    case NodeType.VECTOR_ADD:
+    case NodeType.VECTOR_SUBTRACT:
+    case NodeType.VECTOR_SCALE: {
       const dataResult = executeDataNode({ node, inputs });
       if (dataResult) return dataResult;
       return [null];

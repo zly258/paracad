@@ -1,10 +1,15 @@
 import { NodeData, NodeType } from '../../types';
-import { getNum, getVal } from './runtimeUtils';
+import { getNum, getVal, getVec } from './runtimeUtils';
 
 interface DataContext {
   node: NodeData;
   inputs: Record<string, any>;
 }
+
+const flattenList = (list: any): any[] => {
+  if (!Array.isArray(list)) return [list];
+  return list.flatMap((item) => flattenList(item));
+};
 
 // 数据流节点保持纯值计算，方便后续继续扩展 Dynamo 风格的列表处理与批量驱动能力。
 export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => {
@@ -29,6 +34,15 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
       }
       return [values];
     }
+    case NodeType.RANGE_BY_COUNT: {
+      const start = getNum('start', inputs, p, 0);
+      const end = getNum('end', inputs, p, 100);
+      const count = Math.max(1, Math.floor(getNum('count', inputs, p, 5)));
+      if (count === 1) return [[Number(start.toFixed(6))]];
+      const step = (end - start) / (count - 1);
+      const values = Array.from({ length: count }, (_, index) => Number((start + step * index).toFixed(6)));
+      return [values];
+    }
     case NodeType.LIST_CREATE: {
       const list = ['item_1', 'item_2', 'item_3', 'item_4']
         .map((key) => inputs[key])
@@ -45,6 +59,40 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
       if (!Array.isArray(list) || list.length === 0) return [null];
       const safeIndex = Math.min(Math.max(index, 0), list.length - 1);
       return [list[safeIndex]];
+    }
+    case NodeType.LIST_FLATTEN: {
+      const list = getVal('list', inputs, p, []);
+      return [Array.isArray(list) ? flattenList(list) : [list]];
+    }
+    case NodeType.LIST_FIRST: {
+      const list = getVal('list', inputs, p, []);
+      return [Array.isArray(list) && list.length > 0 ? list[0] : null];
+    }
+    case NodeType.LIST_LAST: {
+      const list = getVal('list', inputs, p, []);
+      return [Array.isArray(list) && list.length > 0 ? list[list.length - 1] : null];
+    }
+    case NodeType.VECTOR_CREATE: {
+      return [{
+        x: getNum('x', inputs, p, 0),
+        y: getNum('y', inputs, p, 0),
+        z: getNum('z', inputs, p, 0),
+      }];
+    }
+    case NodeType.VECTOR_ADD: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      return [{ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }];
+    }
+    case NodeType.VECTOR_SUBTRACT: {
+      const a = getVec('a', inputs, p);
+      const b = getVec('b', inputs, p);
+      return [{ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z }];
+    }
+    case NodeType.VECTOR_SCALE: {
+      const vector = getVec('vector', inputs, p);
+      const factor = getNum('factor', inputs, p, 1);
+      return [{ x: vector.x * factor, y: vector.y * factor, z: vector.z * factor }];
     }
     default:
       return null;

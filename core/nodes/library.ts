@@ -62,9 +62,17 @@ export const NODE_LIBRARY_CATEGORIES: NodeLibraryCategory[] = [
     label: 'Data Flow',
     items: [
       { label: 'Number Range', type: NodeType.NUMBER_RANGE },
+      { label: 'Range By Count', type: NodeType.RANGE_BY_COUNT },
       { label: 'List Create', type: NodeType.LIST_CREATE },
       { label: 'List Length', type: NodeType.LIST_LENGTH },
       { label: 'List Get Item', type: NodeType.LIST_GET_ITEM },
+      { label: 'List Flatten', type: NodeType.LIST_FLATTEN },
+      { label: 'List First', type: NodeType.LIST_FIRST },
+      { label: 'List Last', type: NodeType.LIST_LAST },
+      { label: 'Vector Create', type: NodeType.VECTOR_CREATE },
+      { label: 'Vector Add', type: NodeType.VECTOR_ADD },
+      { label: 'Vector Subtract', type: NodeType.VECTOR_SUBTRACT },
+      { label: 'Vector Scale', type: NodeType.VECTOR_SCALE },
     ],
   },
   {

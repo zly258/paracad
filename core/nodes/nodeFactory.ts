@@ -124,6 +124,14 @@ export const createDefaultNode = (
         outputs: [createSocket('list', 'any')],
         params: { start: 0, end: 100, step: 10 },
       };
+    case NodeType.RANGE_BY_COUNT:
+      return {
+        ...baseNode,
+        label: 'Range By Count',
+        inputs: [createSocket('start', 'number'), createSocket('end', 'number'), createSocket('count', 'number')],
+        outputs: [createSocket('list', 'any')],
+        params: { start: 0, end: 100, count: 5 },
+      };
     case NodeType.LIST_CREATE:
       return {
         ...baseNode,
@@ -147,6 +155,62 @@ export const createDefaultNode = (
         inputs: [createSocket('list', 'any'), createSocket('index', 'number')],
         outputs: [createSocket('item', 'any')],
         params: { index: 0 },
+      };
+    case NodeType.LIST_FLATTEN:
+      return {
+        ...baseNode,
+        label: 'List Flatten',
+        inputs: [createSocket('list', 'any')],
+        outputs: [createSocket('list', 'any')],
+        params: {},
+      };
+    case NodeType.LIST_FIRST:
+      return {
+        ...baseNode,
+        label: 'List First',
+        inputs: [createSocket('list', 'any')],
+        outputs: [createSocket('item', 'any')],
+        params: {},
+      };
+    case NodeType.LIST_LAST:
+      return {
+        ...baseNode,
+        label: 'List Last',
+        inputs: [createSocket('list', 'any')],
+        outputs: [createSocket('item', 'any')],
+        params: {},
+      };
+    case NodeType.VECTOR_CREATE:
+      return {
+        ...baseNode,
+        label: 'Vector Create',
+        inputs: [createSocket('x', 'number'), createSocket('y', 'number'), createSocket('z', 'number')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { x: 0, y: 0, z: 0 },
+      };
+    case NodeType.VECTOR_ADD:
+      return {
+        ...baseNode,
+        label: 'Vector Add',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { a: { x: 0, y: 0, z: 0 }, b: { x: 10, y: 0, z: 0 } },
+      };
+    case NodeType.VECTOR_SUBTRACT:
+      return {
+        ...baseNode,
+        label: 'Vector Subtract',
+        inputs: [createSocket('a', 'vector'), createSocket('b', 'vector')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { a: { x: 10, y: 0, z: 0 }, b: { x: 0, y: 0, z: 0 } },
+      };
+    case NodeType.VECTOR_SCALE:
+      return {
+        ...baseNode,
+        label: 'Vector Scale',
+        inputs: [createSocket('vector', 'vector'), createSocket('factor', 'number')],
+        outputs: [createSocket('vector', 'vector')],
+        params: { vector: { x: 10, y: 0, z: 0 }, factor: 2 },
       };
     case NodeType.TRANSLATION:
       return { ...baseNode, label: 'Move', inputs: [createSocket('geometry', 'geometry'), createSocket('vector', 'vector')], outputs: [createSocket('geometry', 'geometry')], params: { vector: { x: 10, y: 0, z: 0 } } };
