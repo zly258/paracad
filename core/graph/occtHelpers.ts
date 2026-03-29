@@ -34,10 +34,12 @@ export const createOcctDir = (oc: any, x: number, y: number, z: number) =>
 export const createOcctVec = (oc: any, x: number, y: number, z: number) =>
   createOcctInstance(oc, ['gp_Vec_4', 'gp_Vec_3', 'gp_Vec_2', 'gp_Vec_1'], [x, y, z]);
 
-export const getOcctShapeEnum = (oc: any, key: 'EDGE' | 'SHAPE') => {
+export const getOcctShapeEnum = (oc: any, key: 'EDGE' | 'FACE' | 'SHAPE') => {
   if (typeof oc[`TopAbs_${key}`] === 'number') return oc[`TopAbs_${key}`];
   if (oc.TopAbs_ShapeEnum?.[`TopAbs_${key}`] !== undefined) return oc.TopAbs_ShapeEnum[`TopAbs_${key}`];
-  return key === 'EDGE' ? 6 : 8;
+  if (key === 'EDGE') return 6;
+  if (key === 'FACE') return 4;
+  return 8;
 };
 
 export const planeToPoint = (plane: string, center: { x: number; y: number; z: number }) => {

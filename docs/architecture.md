@@ -37,7 +37,7 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - 草图轮廓载体：`Star / Rectangle / Circle / Polygon / Ellipse`
 - 开放路径载体：`Line / Arc`
 - 特征：`Extrude / Revolve / Sweep / Loft`
-- 特征尝试：`Fillet` 已接入 OCCT 优先路径，运行失败时回退到预览圆角逻辑
+- 特征尝试：`Fillet / Chamfer` 已接入 OCCT 优先路径，运行失败时回退到预览特征逻辑
 
 说明：
 - 所有 OCCT 路径都保留了失败回退逻辑，避免浏览器预览被运行时差异直接打断。

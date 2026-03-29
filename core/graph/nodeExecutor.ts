@@ -216,6 +216,20 @@ const collectOcctEdges = (oc: any, shape: any) => {
   return edges;
 };
 
+const collectOcctFaces = (oc: any, shape: any) => {
+  const explorer = createOcctInstance(oc, ['TopExp_Explorer_2', 'TopExp_Explorer_1', 'TopExp_Explorer'], [
+    shape,
+    getOcctShapeEnum(oc, 'FACE'),
+    getOcctShapeEnum(oc, 'SHAPE'),
+  ]);
+  const faces: any[] = [];
+  while (explorer.More()) {
+    faces.push(explorer.Current());
+    explorer.Next();
+  }
+  return faces;
+};
+
 const buildOcctFilletShape = (oc: any, sourceShape: any, radius: number) => {
   const filletBuilder = createOcctInstance(oc, ['BRepFilletAPI_MakeFillet_2', 'BRepFilletAPI_MakeFillet_1', 'BRepFilletAPI_MakeFillet'], [sourceShape]);
   const edges = collectOcctEdges(oc, sourceShape);
@@ -236,6 +250,35 @@ const buildOcctFilletShape = (oc: any, sourceShape: any, radius: number) => {
   }
 
   return callOcctMethod(filletBuilder, ['Shape'], []);
+};
+
+const buildOcctChamferShape = (oc: any, sourceShape: any, distance: number) => {
+  const chamferBuilder = createOcctInstance(oc, ['BRepFilletAPI_MakeChamfer_2', 'BRepFilletAPI_MakeChamfer_1', 'BRepFilletAPI_MakeChamfer'], [sourceShape]);
+  const edges = collectOcctEdges(oc, sourceShape);
+  const faces = collectOcctFaces(oc, sourceShape);
+  if (!edges.length || !faces.length) return null;
+
+  let added = 0;
+  for (const face of faces) {
+    for (const edge of edges) {
+      try {
+        callOcctMethod(chamferBuilder, ['Add_3', 'Add_2', 'Add_1', 'Add'], [distance, edge, face]);
+        added += 1;
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  if (!added) return null;
+
+  try {
+    callOcctMethod(chamferBuilder, ['Build'], []);
+  } catch {
+    // 与圆角保持一致，尽量允许不同绑定在 Shape() 时自行构建。
+  }
+
+  return callOcctMethod(chamferBuilder, ['Shape'], []);
 };
 
 const transformOcctShape = async (
@@ -314,9 +357,11 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       const radius = getNum('radius', inputs, p, 1);
       const occtShape = extractOcctShape(inputs.geometry);
       const occtObject = await tryOcct(node, color, (oc) => {
-        if (!occtShape || p.filletType === 'chamfer') return null;
-        // 先优先打通真实圆角；倒角仍保留现有预览回退，后续再接 MakeChamfer。
-        return buildOcctFilletShape(oc, occtShape, radius);
+        if (!occtShape) return null;
+        // 真实特征优先：圆角和倒角都先尝试 BRep 路径，失败后退回预览几何。
+        return p.filletType === 'chamfer'
+          ? buildOcctChamferShape(oc, occtShape, radius)
+          : buildOcctFilletShape(oc, occtShape, radius);
       }, 'occt-fillet');
       if (occtObject) return [occtObject];
 
