@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
 import { NodeData, NodeType } from '../../types';
 import { executeAnalysisNode } from './analysisHandlers';
+import { executeDataNode } from './dataHandlers';
 import { getKernelStatus } from '../kernel';
 import {
   createOcctDir,
@@ -96,6 +97,14 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.CENTROID: {
       const analysisResult = await executeAnalysisNode({ node, inputs });
       if (analysisResult) return analysisResult;
+      return [null];
+    }
+    case NodeType.NUMBER_RANGE:
+    case NodeType.LIST_CREATE:
+    case NodeType.LIST_LENGTH:
+    case NodeType.LIST_GET_ITEM: {
+      const dataResult = executeDataNode({ node, inputs });
+      if (dataResult) return dataResult;
       return [null];
     }
     case NodeType.GROUP:

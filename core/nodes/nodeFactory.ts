@@ -116,6 +116,38 @@ export const createDefaultNode = (
         outputs: [createSocket('centroid', 'vector')],
         params: {},
       };
+    case NodeType.NUMBER_RANGE:
+      return {
+        ...baseNode,
+        label: 'Number Range',
+        inputs: [createSocket('start', 'number'), createSocket('end', 'number'), createSocket('step', 'number')],
+        outputs: [createSocket('list', 'any')],
+        params: { start: 0, end: 100, step: 10 },
+      };
+    case NodeType.LIST_CREATE:
+      return {
+        ...baseNode,
+        label: 'List Create',
+        inputs: [createSocket('item_1', 'any'), createSocket('item_2', 'any'), createSocket('item_3', 'any'), createSocket('item_4', 'any')],
+        outputs: [createSocket('list', 'any')],
+        params: {},
+      };
+    case NodeType.LIST_LENGTH:
+      return {
+        ...baseNode,
+        label: 'List Length',
+        inputs: [createSocket('list', 'any')],
+        outputs: [createSocket('length', 'number')],
+        params: {},
+      };
+    case NodeType.LIST_GET_ITEM:
+      return {
+        ...baseNode,
+        label: 'List Get Item',
+        inputs: [createSocket('list', 'any'), createSocket('index', 'number')],
+        outputs: [createSocket('item', 'any')],
+        params: { index: 0 },
+      };
     case NodeType.TRANSLATION:
       return { ...baseNode, label: 'Move', inputs: [createSocket('geometry', 'geometry'), createSocket('vector', 'vector')], outputs: [createSocket('geometry', 'geometry')], params: { vector: { x: 10, y: 0, z: 0 } } };
     case NodeType.ROTATION:

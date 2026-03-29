@@ -59,6 +59,15 @@ export const NODE_LIBRARY_CATEGORIES: NodeLibraryCategory[] = [
     ],
   },
   {
+    label: 'Data Flow',
+    items: [
+      { label: 'Number Range', type: NodeType.NUMBER_RANGE },
+      { label: 'List Create', type: NodeType.LIST_CREATE },
+      { label: 'List Length', type: NodeType.LIST_LENGTH },
+      { label: 'List Get Item', type: NodeType.LIST_GET_ITEM },
+    ],
+  },
+  {
     label: 'Transforms',
     items: [
       { label: 'Move', type: NodeType.TRANSLATION },

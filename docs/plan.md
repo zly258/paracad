@@ -80,3 +80,4 @@
 14. 实体分类拆分：已新增 [core/graph/solidHandlers.ts](D:/workspace/nodejs/paracad/core/graph/solidHandlers.ts)，将基础体节点从主执行器中独立出来。
 15. 分析节点增强：已新增 [core/graph/analysisHandlers.ts](D:/workspace/nodejs/paracad/core/graph/analysisHandlers.ts)，补充 `Bounding Box / Surface Area / Volume / Centroid`。
 16. 变换分类拆分：已新增 [core/graph/transformHandlers.ts](D:/workspace/nodejs/paracad/core/graph/transformHandlers.ts)，将 `Group / Translation / Rotation / Scale / Mirror / Array` 相关节点从主执行器中独立出来。
+17. 数据流节点增强：已新增 [core/graph/dataHandlers.ts](D:/workspace/nodejs/paracad/core/graph/dataHandlers.ts)，补充 `Number Range / List Create / List Length / List Get Item`，为 Dynamo 风格的批量驱动做准备。
