@@ -10,6 +10,8 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
   - `computeGraph.ts`：只做图迭代调度。
   - `nodeExecutor.ts`：只做单节点执行。
   - `occtHelpers.ts`：OCCT 构造器、方法重载与坐标映射兼容层。
+  - `occtRuntime.ts`：OCCT 运行时可用性判断、shape 可视化转换与统一回退日志。
+  - `occtBoolean.ts`：真实布尔运算桥。
   - `occtSketch.ts`：草图轮廓与路径的 OCCT 构建辅助。
   - `occtFeatures.ts`：Fillet / Chamfer 等 OCCT 特征构建辅助。
   - `occtTransforms.ts`：BRep 级平移、旋转、缩放、镜像变换桥。
@@ -48,6 +50,8 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - 2D 草图节点当前会优先挂载闭合面的 `occtShape`，作为后续实体特征的统一输入载体。
 - 需要保留给扫掠、放样使用的轮廓时，会额外挂载 `occtWire`，避免后续节点只能消费面而不能消费线框。
 - `core/graph/occtHelpers.ts` 负责吸收 OCCT 重载构造器、方法名和坐标映射的兼容细节。
+- `core/graph/occtRuntime.ts` 负责把 OCCT shape 统一转换为前端可消费对象，并挂载统一元数据。
+- `core/graph/occtBoolean.ts` 负责真实布尔路径，便于后续继续补容差和诊断信息。
 - `core/graph/occtSketch.ts` 负责草图轮廓、开放路径与后续工作平面输入的统一构建。
 - `core/graph/occtFeatures.ts` 负责真实特征能力的聚合，避免执行器主文件继续膨胀。
 - `core/graph/occtTransforms.ts` 负责把 `gp_Trsf` 变换桥封装成可复用能力，便于后续继续扩展坐标系变换。

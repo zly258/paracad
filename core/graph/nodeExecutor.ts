@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { NodeData, NodeType } from '../../types';
-import { getKernelStatus, occtShapeToThreeObject } from '../kernel';
+import { getKernelStatus } from '../kernel';
 import {
   createOcctDir,
   createOcctInstance,
@@ -10,6 +10,7 @@ import {
   createOcctVec,
   planeToNormal,
 } from './occtHelpers';
+import { buildOcctBooleanShape } from './occtBoolean';
 import { buildOcctChamferShape, buildOcctFilletShape } from './occtFeatures';
 import {
   attachOcctProfileData,
@@ -19,6 +20,7 @@ import {
   buildOcctLinePath,
   buildOcctPolygonProfile,
 } from './occtSketch';
+import { tryOcct } from './occtRuntime';
 import { transformOcctShape } from './occtTransforms';
 import {
   buildLoftGeometry,
@@ -40,31 +42,6 @@ export interface NodeExecutionContext {
   inputs: Record<string, any>;
   globalParams: Record<string, any>;
 }
-
-const withOcctMetadata = (obj: THREE.Object3D, shape: any, node: NodeData, detail: string) => {
-  obj.userData.occtShape = shape;
-  return tagKernel(obj, node, detail);
-};
-
-const tryOcct = async (
-  node: NodeData,
-  color: string,
-  builder: (oc: any) => any,
-  detail: string,
-) => {
-  const kernel = getKernelStatus();
-  if (kernel.backend !== 'occt.js' || !kernel.occt) return null;
-
-  try {
-    const shape = builder(kernel.occt);
-    if (!shape) return null;
-    const object = await occtShapeToThreeObject(kernel.occt, shape, color);
-    return withOcctMetadata(object, shape, node, detail);
-  } catch (error) {
-    console.warn(`OCCT execution failed for ${node.label}, fallback to Three path.`, error);
-    return null;
-  }
-};
 
 const extractOcctShape = (input: any) => input?.userData?.occtShape;
 const extractOcctWire = (input: any) => input?.userData?.occtWire || input?.userData?.occtShape;
@@ -452,10 +429,8 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       const occtShapeB = extractOcctShape(inputs.object_b);
       if (occtShapeA && occtShapeB && getKernelStatus().backend === 'occt.js' && getKernelStatus().occt) {
         const occtObject = await tryOcct(node, color, (oc) => {
-          const op = p.operation || 'UNION';
-          if (op === 'SUBTRACT') return new oc.BRepAlgoAPI_Cut_3(occtShapeA, occtShapeB, new oc.Message_ProgressRange_1()).Shape();
-          if (op === 'INTERSECT') return new oc.BRepAlgoAPI_Common_3(occtShapeA, occtShapeB, new oc.Message_ProgressRange_1()).Shape();
-          return new oc.BRepAlgoAPI_Fuse_3(occtShapeA, occtShapeB, new oc.Message_ProgressRange_1()).Shape();
+          const op = (p.operation || 'UNION') as 'UNION' | 'SUBTRACT' | 'INTERSECT';
+          return buildOcctBooleanShape(oc, occtShapeA, occtShapeB, op);
         }, `occt-boolean-${(p.operation || 'UNION').toLowerCase()}`);
         if (occtObject) return [occtObject];
       }

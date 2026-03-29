@@ -1,5 +1,7 @@
+export * from './occtBoolean';
 export * from './computeGraph';
 export * from './occtFeatures';
+export * from './occtRuntime';
 export * from './occtSketch';
 export * from './occtTransforms';
 export * from './nodeExecutor';

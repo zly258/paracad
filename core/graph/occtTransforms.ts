@@ -1,11 +1,6 @@
 import type { NodeData } from '../../types';
 import { occtShapeToThreeObject } from '../kernel';
-import { tagKernel } from './runtimeUtils';
-
-const withOcctMetadata = (obj: any, shape: any, node: NodeData, detail: string) => {
-  obj.userData.occtShape = shape;
-  return tagKernel(obj, node, detail);
-};
+import { withOcctMetadata } from './occtRuntime';
 
 // BRep 级变换桥：输入源 shape + gp_Trsf 构造逻辑，输出可继续参与节点链的 Three 对象。
 export const transformOcctShape = async (
