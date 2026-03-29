@@ -8,6 +8,7 @@ export * from './occtSketch';
 export * from './occtTransforms';
 export * from './sketchHandlers';
 export * from './solidHandlers';
+export * from './transformHandlers';
 export * from './nodeExecutor';
 export * from './occtHelpers';
 export * from './runtimeUtils';

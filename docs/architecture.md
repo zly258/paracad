@@ -19,6 +19,7 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
   - `featureHandlers.ts`：特征节点执行器分组。
   - `solidHandlers.ts`：基础体与实体节点执行器分组。
   - `analysisHandlers.ts`：分析读取节点执行器分组。
+  - `transformHandlers.ts`：分组、变换与阵列节点执行器分组。
   - `runtimeUtils.ts`：参数读取、对象标记、Three 侧辅助工具。
 - `core/nodes/`：节点定义层。
   - `nodeFactory.ts`：默认节点与 socket 初始化。
@@ -63,6 +64,7 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - `core/graph/featureHandlers.ts` 负责 `Fillet / Extrude / Revolve / Sweep / Loft` 等特征节点的分类执行。
 - `core/graph/solidHandlers.ts` 负责基础体节点的分类执行，便于后续继续补导出、分析与体属性节点。
 - `core/graph/analysisHandlers.ts` 负责 Dynamo 风格的分析读取节点，比如包围盒、面积、体积与质心。
+- `core/graph/transformHandlers.ts` 负责分组、空间变换与阵列复制节点的分类执行，避免这些节点继续堆积在主执行器中。
 
 ## 4. 模块职责约束
 - `computeGraph.ts` 不写节点细节。
@@ -78,6 +80,6 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 
 ## 6. 下一步扩展点
 1. 在 `core/kernel/` 下新增 `brepPrimitives.ts`，先迁移基础体节点。
-2. 在 `core/graph/` 下引入执行注册表，把 `switch(node.type)` 继续拆成多文件执行器。
+2. 在 `core/graph/` 下引入执行注册表，把 `switch(node.type)` 继续收敛为多文件执行器分发入口。
 3. 在 `store/` 下拆出 `history`、`persistence`、`kernel-state` 子模块，降低单文件复杂度。
 4. 在 `components/NodeEditor/` 下进一步拆分工具条、面板头部、上下文菜单。
