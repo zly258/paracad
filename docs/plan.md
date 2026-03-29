@@ -70,3 +70,5 @@
 4. 草图与特征：`Star / Rectangle / Circle / Polygon / Ellipse` 已能挂载 OCCT 轮廓，`Extrude / Revolve` 已优先尝试真实 OCCT。
 5. 开放路径：`Line / Arc` 已能挂载 OCCT 路径载体，供后续扫掠类节点复用。
 6. 曲面主链：`Sweep / Loft` 已增加 OCCT 优先路径，并保留 Three 回退。
+7. 特征尝试：`Fillet` 已增加“真实 OCCT 优先、预览圆角回退”的执行路径。
+8. 结构治理：已抽出 [core/graph/occtHelpers.ts](D:/workspace/nodejs/paracad/core/graph/occtHelpers.ts) 统一管理 OCCT 构造器与坐标辅助逻辑。

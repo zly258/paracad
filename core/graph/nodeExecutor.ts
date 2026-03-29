@@ -4,6 +4,17 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { NodeData, NodeType } from '../../types';
 import { getKernelStatus, occtShapeToThreeObject } from '../kernel';
 import {
+  callOcctMethod,
+  createOcctDir,
+  createOcctInstance,
+  createOcctPoint,
+  createOcctVec,
+  getOcctShapeEnum,
+  planeLocalPointToWorld,
+  planeToNormal,
+  planeToPoint,
+} from './occtHelpers';
+import {
   buildLoftGeometry,
   cloneObject,
   create2DObject,
@@ -49,56 +60,8 @@ const tryOcct = async (
   }
 };
 
-const createOcctPoint = (oc: any, x: number, y: number, z: number) => new oc.gp_Pnt_3(x, y, z);
-const createOcctInstance = (oc: any, names: string[], args: any[]) => {
-  for (const name of names) {
-    const Ctor = oc[name];
-    if (!Ctor) continue;
-    try {
-      return new Ctor(...args);
-    } catch {
-      continue;
-    }
-  }
-  throw new Error(`Unable to resolve OCCT constructor: ${names.join(', ')}`);
-};
-
-const createOcctDir = (oc: any, x: number, y: number, z: number) =>
-  createOcctInstance(oc, ['gp_Dir_4', 'gp_Dir_3', 'gp_Dir_2', 'gp_Dir_1'], [x, y, z]);
-
-const createOcctVec = (oc: any, x: number, y: number, z: number) =>
-  createOcctInstance(oc, ['gp_Vec_4', 'gp_Vec_3', 'gp_Vec_2', 'gp_Vec_1'], [x, y, z]);
-
 const extractOcctShape = (input: any) => input?.userData?.occtShape;
 const extractOcctWire = (input: any) => input?.userData?.occtWire || input?.userData?.occtShape;
-
-const planeToPoint = (plane: string, center: { x: number; y: number; z: number }) => {
-  if (plane === 'XOZ') return { x: center.x, y: center.z, z: center.y };
-  if (plane === 'YOZ') return { x: center.z, y: center.x, z: center.y };
-  return center;
-};
-
-const planeVectorToWorld = (plane: string, x: number, y: number, z = 0) => {
-  if (plane === 'XOZ') return { x, y: z, z: y };
-  if (plane === 'YOZ') return { x: z, y: x, z: y };
-  return { x, y, z };
-};
-
-const planeLocalPointToWorld = (plane: string, center: { x: number; y: number; z: number }, x: number, y: number, z = 0) => {
-  const mappedCenter = planeToPoint(plane, center);
-  const mappedOffset = planeVectorToWorld(plane, x, y, z);
-  return {
-    x: mappedCenter.x + mappedOffset.x,
-    y: mappedCenter.y + mappedOffset.y,
-    z: mappedCenter.z + mappedOffset.z,
-  };
-};
-
-const planeToNormal = (plane: string) => {
-  if (plane === 'XOZ') return { x: 0, y: 1, z: 0 };
-  if (plane === 'YOZ') return { x: 1, y: 0, z: 0 };
-  return { x: 0, y: 0, z: 1 };
-};
 
 const buildOcctAxis3 = (oc: any, plane: string, center: { x: number; y: number; z: number }) => {
   const origin = planeToPoint(plane, center);
@@ -239,6 +202,42 @@ const attachOcctProfileData = (
   return object;
 };
 
+const collectOcctEdges = (oc: any, shape: any) => {
+  const explorer = createOcctInstance(oc, ['TopExp_Explorer_2', 'TopExp_Explorer_1', 'TopExp_Explorer'], [
+    shape,
+    getOcctShapeEnum(oc, 'EDGE'),
+    getOcctShapeEnum(oc, 'SHAPE'),
+  ]);
+  const edges: any[] = [];
+  while (explorer.More()) {
+    edges.push(explorer.Current());
+    explorer.Next();
+  }
+  return edges;
+};
+
+const buildOcctFilletShape = (oc: any, sourceShape: any, radius: number) => {
+  const filletBuilder = createOcctInstance(oc, ['BRepFilletAPI_MakeFillet_2', 'BRepFilletAPI_MakeFillet_1', 'BRepFilletAPI_MakeFillet'], [sourceShape]);
+  const edges = collectOcctEdges(oc, sourceShape);
+  if (!edges.length) return null;
+
+  for (const edge of edges) {
+    try {
+      callOcctMethod(filletBuilder, ['Add_2', 'Add_1', 'Add'], [radius, edge]);
+    } catch {
+      continue;
+    }
+  }
+
+  try {
+    callOcctMethod(filletBuilder, ['Build'], []);
+  } catch {
+    // 有些绑定在 Shape() 前不要求显式 Build，这里容错即可。
+  }
+
+  return callOcctMethod(filletBuilder, ['Shape'], []);
+};
+
 const transformOcctShape = async (
   node: NodeData,
   color: string,
@@ -312,11 +311,20 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       return [object];
     }
     case NodeType.FILLET: {
+      const radius = getNum('radius', inputs, p, 1);
+      const occtShape = extractOcctShape(inputs.geometry);
+      const occtObject = await tryOcct(node, color, (oc) => {
+        if (!occtShape || p.filletType === 'chamfer') return null;
+        // 先优先打通真实圆角；倒角仍保留现有预览回退，后续再接 MakeChamfer。
+        return buildOcctFilletShape(oc, occtShape, radius);
+      }, 'occt-fillet');
+      if (occtObject) return [occtObject];
+
       const geom = inputs.geometry as THREE.Mesh;
       if (!geom?.isMesh) return [null];
       if (geom.geometry.type === 'BoxGeometry') {
         const g = geom.geometry as any;
-        const rounded = new RoundedBoxGeometry(g.parameters.width, g.parameters.height, g.parameters.depth, p.filletType === 'chamfer' ? 1 : 4, getNum('radius', inputs, p, 1));
+        const rounded = new RoundedBoxGeometry(g.parameters.width, g.parameters.height, g.parameters.depth, p.filletType === 'chamfer' ? 1 : 4, radius);
         const mesh = createMesh(rounded, 'fillet');
         mesh.position.copy(geom.position);
         mesh.rotation.copy(geom.rotation);

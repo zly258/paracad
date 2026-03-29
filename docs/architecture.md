@@ -37,11 +37,13 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - 草图轮廓载体：`Star / Rectangle / Circle / Polygon / Ellipse`
 - 开放路径载体：`Line / Arc`
 - 特征：`Extrude / Revolve / Sweep / Loft`
+- 特征尝试：`Fillet` 已接入 OCCT 优先路径，运行失败时回退到预览圆角逻辑
 
 说明：
 - 所有 OCCT 路径都保留了失败回退逻辑，避免浏览器预览被运行时差异直接打断。
 - 2D 草图节点当前会优先挂载闭合面的 `occtShape`，作为后续实体特征的统一输入载体。
 - 需要保留给扫掠、放样使用的轮廓时，会额外挂载 `occtWire`，避免后续节点只能消费面而不能消费线框。
+- `core/graph/occtHelpers.ts` 负责吸收 OCCT 重载构造器、方法名和坐标映射的兼容细节，降低执行器主文件复杂度。
 
 ## 4. 模块职责约束
 - `computeGraph.ts` 不写节点细节。
