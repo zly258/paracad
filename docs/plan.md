@@ -75,3 +75,4 @@
 9. 执行器拆分：已新增 [core/graph/occtSketch.ts](D:/workspace/nodejs/paracad/core/graph/occtSketch.ts) 与 [core/graph/occtFeatures.ts](D:/workspace/nodejs/paracad/core/graph/occtFeatures.ts)，开始把 `nodeExecutor` 中的 OCCT 细节下沉。
 10. 变换桥拆分：已新增 [core/graph/occtTransforms.ts](D:/workspace/nodejs/paracad/core/graph/occtTransforms.ts)，将 BRep 级变换逻辑从执行器中分离。
 11. 运行时与布尔桥拆分：已新增 [core/graph/occtRuntime.ts](D:/workspace/nodejs/paracad/core/graph/occtRuntime.ts) 与 [core/graph/occtBoolean.ts](D:/workspace/nodejs/paracad/core/graph/occtBoolean.ts)，继续压缩执行器主文件职责。
+12. 节点分类拆分：已新增 [core/graph/sketchHandlers.ts](D:/workspace/nodejs/paracad/core/graph/sketchHandlers.ts)，将 2D 草图与路径节点从主执行器中独立出来。
