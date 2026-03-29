@@ -9,7 +9,10 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - `core/graph/`：图求解层。
   - `computeGraph.ts`：只做图迭代调度。
   - `nodeExecutor.ts`：只做单节点执行。
-  - `runtimeUtils.ts`：参数读取、对象标记、几何辅助工具。
+  - `occtHelpers.ts`：OCCT 构造器、方法重载与坐标映射兼容层。
+  - `occtSketch.ts`：草图轮廓与路径的 OCCT 构建辅助。
+  - `occtFeatures.ts`：Fillet / Chamfer 等 OCCT 特征构建辅助。
+  - `runtimeUtils.ts`：参数读取、对象标记、Three 侧辅助工具。
 - `core/nodes/`：节点定义层。
   - `nodeFactory.ts`：默认节点与 socket 初始化。
   - `library.ts`：节点库分类与展示源。
@@ -43,7 +46,9 @@ ParaCad 当前采用“节点图调度 + 内核适配 + 视图渲染”三层架
 - 所有 OCCT 路径都保留了失败回退逻辑，避免浏览器预览被运行时差异直接打断。
 - 2D 草图节点当前会优先挂载闭合面的 `occtShape`，作为后续实体特征的统一输入载体。
 - 需要保留给扫掠、放样使用的轮廓时，会额外挂载 `occtWire`，避免后续节点只能消费面而不能消费线框。
-- `core/graph/occtHelpers.ts` 负责吸收 OCCT 重载构造器、方法名和坐标映射的兼容细节，降低执行器主文件复杂度。
+- `core/graph/occtHelpers.ts` 负责吸收 OCCT 重载构造器、方法名和坐标映射的兼容细节。
+- `core/graph/occtSketch.ts` 负责草图轮廓、开放路径与后续工作平面输入的统一构建。
+- `core/graph/occtFeatures.ts` 负责真实特征能力的聚合，避免执行器主文件继续膨胀。
 
 ## 4. 模块职责约束
 - `computeGraph.ts` 不写节点细节。

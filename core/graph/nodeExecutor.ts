@@ -4,16 +4,21 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { NodeData, NodeType } from '../../types';
 import { getKernelStatus, occtShapeToThreeObject } from '../kernel';
 import {
-  callOcctMethod,
   createOcctDir,
   createOcctInstance,
   createOcctPoint,
   createOcctVec,
-  getOcctShapeEnum,
-  planeLocalPointToWorld,
   planeToNormal,
-  planeToPoint,
 } from './occtHelpers';
+import { buildOcctChamferShape, buildOcctFilletShape } from './occtFeatures';
+import {
+  attachOcctProfileData,
+  buildOcctArcPath,
+  buildOcctCircleProfile,
+  buildOcctEllipseProfile,
+  buildOcctLinePath,
+  buildOcctPolygonProfile,
+} from './occtSketch';
 import {
   buildLoftGeometry,
   cloneObject,
@@ -62,224 +67,6 @@ const tryOcct = async (
 
 const extractOcctShape = (input: any) => input?.userData?.occtShape;
 const extractOcctWire = (input: any) => input?.userData?.occtWire || input?.userData?.occtShape;
-
-const buildOcctAxis3 = (oc: any, plane: string, center: { x: number; y: number; z: number }) => {
-  const origin = planeToPoint(plane, center);
-  const normal = planeToNormal(plane);
-  const ax3 = createOcctInstance(oc, ['gp_Ax3_2', 'gp_Ax3_1'], [
-    createOcctPoint(oc, origin.x, origin.y, origin.z),
-    createOcctDir(oc, normal.x, normal.y, normal.z),
-  ]);
-  return { ax3, origin, normal };
-};
-
-const buildOcctAxis2 = (oc: any, plane: string, center: { x: number; y: number; z: number }) => {
-  const origin = planeToPoint(plane, center);
-  const normal = planeToNormal(plane);
-  const ax2 = createOcctInstance(oc, ['gp_Ax2_3', 'gp_Ax2_2', 'gp_Ax2_1'], [
-    createOcctPoint(oc, origin.x, origin.y, origin.z),
-    createOcctDir(oc, normal.x, normal.y, normal.z),
-  ]);
-  return { ax2, origin, normal };
-};
-
-const makeOcctEdge = (oc: any, ...args: any[]) =>
-  createOcctInstance(oc, ['BRepBuilderAPI_MakeEdge_30', 'BRepBuilderAPI_MakeEdge_29', 'BRepBuilderAPI_MakeEdge_24', 'BRepBuilderAPI_MakeEdge_9', 'BRepBuilderAPI_MakeEdge_8', 'BRepBuilderAPI_MakeEdge_1'], args);
-
-const makeOcctWire = (oc: any, ...args: any[]) =>
-  createOcctInstance(oc, ['BRepBuilderAPI_MakeWire_4', 'BRepBuilderAPI_MakeWire_1', 'BRepBuilderAPI_MakeWire'], args);
-
-const buildOcctPolygonProfile = (
-  oc: any,
-  points: Array<{ x: number; y: number }>,
-  plane: string,
-  center: { x: number; y: number; z: number },
-) => {
-  const { ax3, origin } = buildOcctAxis3(oc, plane, center);
-  // 轮廓节点统一优先产出闭合面，便于后续挤出、旋转等实体特征直接复用。
-  const polygon = createOcctInstance(oc, ['BRepBuilderAPI_MakePolygon_1', 'BRepBuilderAPI_MakePolygon'], []);
-  for (const point of points) {
-    polygon.Add_1(createOcctPoint(oc, origin.x + point.x, origin.y + point.y, origin.z));
-  }
-  polygon.Close();
-
-  const wire = polygon.Wire();
-  const faceBuilder = createOcctInstance(oc, ['BRepBuilderAPI_MakeFace_15', 'BRepBuilderAPI_MakeFace_16', 'BRepBuilderAPI_MakeFace_1'], [wire, true]);
-  const face = faceBuilder.Face ? faceBuilder.Face() : faceBuilder.Shape();
-  return { wire, face, axis: ax3 };
-};
-
-const buildOcctCircleProfile = (
-  oc: any,
-  radius: number,
-  plane: string,
-  center: { x: number; y: number; z: number },
-) => {
-  const { ax3 } = buildOcctAxis3(oc, plane, center);
-  const circleBuilder = createOcctInstance(oc, ['GC_MakeCircle_6', 'GC_MakeCircle_5', 'GC_MakeCircle_1', 'GC_MakeCircle'], [ax3, radius]);
-  const circle = circleBuilder.Value ? circleBuilder.Value() : circleBuilder;
-  const edgeBuilder = makeOcctEdge(oc, circle);
-  const edge = edgeBuilder.Edge ? edgeBuilder.Edge() : edgeBuilder.Shape();
-  const wireBuilder = makeOcctWire(oc, edge);
-  const wire = wireBuilder.Wire ? wireBuilder.Wire() : wireBuilder.Shape();
-  const faceBuilder = createOcctInstance(oc, ['BRepBuilderAPI_MakeFace_15', 'BRepBuilderAPI_MakeFace_16', 'BRepBuilderAPI_MakeFace_1'], [wire, true]);
-  const face = faceBuilder.Face ? faceBuilder.Face() : faceBuilder.Shape();
-  return { wire, face, axis: ax3 };
-};
-
-const buildOcctEllipseProfile = (
-  oc: any,
-  radiusX: number,
-  radiusY: number,
-  plane: string,
-  center: { x: number; y: number; z: number },
-) => {
-  const major = Math.max(radiusX, radiusY);
-  const minor = Math.min(radiusX, radiusY);
-  const { ax2 } = buildOcctAxis2(oc, plane, center);
-  const ellipseBuilder = createOcctInstance(oc, ['GC_MakeEllipse_5', 'GC_MakeEllipse_4', 'GC_MakeEllipse_1', 'GC_MakeEllipse'], [ax2, major, minor]);
-  const ellipse = ellipseBuilder.Value ? ellipseBuilder.Value() : ellipseBuilder;
-  const edgeBuilder = makeOcctEdge(oc, ellipse);
-  const edge = edgeBuilder.Edge ? edgeBuilder.Edge() : edgeBuilder.Shape();
-  const wireBuilder = makeOcctWire(oc, edge);
-  const wire = wireBuilder.Wire ? wireBuilder.Wire() : wireBuilder.Shape();
-  const faceBuilder = createOcctInstance(oc, ['BRepBuilderAPI_MakeFace_15', 'BRepBuilderAPI_MakeFace_16', 'BRepBuilderAPI_MakeFace_1'], [wire, true]);
-  const face = faceBuilder.Face ? faceBuilder.Face() : faceBuilder.Shape();
-  return { wire, face };
-};
-
-const buildOcctLinePath = (
-  oc: any,
-  start: { x: number; y: number; z: number },
-  end: { x: number; y: number; z: number },
-) => {
-  const edgeBuilder = makeOcctEdge(
-    oc,
-    createOcctPoint(oc, start.x, start.y, start.z),
-    createOcctPoint(oc, end.x, end.y, end.z),
-  );
-  const edge = edgeBuilder.Edge ? edgeBuilder.Edge() : edgeBuilder.Shape();
-  const wireBuilder = makeOcctWire(oc, edge);
-  const wire = wireBuilder.Wire ? wireBuilder.Wire() : wireBuilder.Shape();
-  return { edge, wire };
-};
-
-const buildOcctArcPath = (
-  oc: any,
-  plane: string,
-  center: { x: number; y: number; z: number },
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-) => {
-  const middleAngle = (startAngle + endAngle) / 2;
-  const start = planeLocalPointToWorld(plane, center, Math.cos(startAngle) * radius, Math.sin(startAngle) * radius);
-  const middle = planeLocalPointToWorld(plane, center, Math.cos(middleAngle) * radius, Math.sin(middleAngle) * radius);
-  const end = planeLocalPointToWorld(plane, center, Math.cos(endAngle) * radius, Math.sin(endAngle) * radius);
-  const arcBuilder = createOcctInstance(oc, ['GC_MakeArcOfCircle_4', 'GC_MakeArcOfCircle_3', 'GC_MakeArcOfCircle_1', 'GC_MakeArcOfCircle'], [
-    createOcctPoint(oc, start.x, start.y, start.z),
-    createOcctPoint(oc, middle.x, middle.y, middle.z),
-    createOcctPoint(oc, end.x, end.y, end.z),
-  ]);
-  const arc = arcBuilder.Value ? arcBuilder.Value() : arcBuilder;
-  const edgeBuilder = makeOcctEdge(oc, arc);
-  const edge = edgeBuilder.Edge ? edgeBuilder.Edge() : edgeBuilder.Shape();
-  const wireBuilder = makeOcctWire(oc, edge);
-  const wire = wireBuilder.Wire ? wireBuilder.Wire() : wireBuilder.Shape();
-  return { edge, wire };
-};
-
-const attachOcctProfileData = (
-  object: THREE.Object3D,
-  built: { face?: any; wire?: any; edge?: any } | null,
-  plane: string,
-  center: { x: number; y: number; z: number },
-) => {
-  if (built?.face) object.userData.occtShape = built.face;
-  if (built?.wire) object.userData.occtWire = built.wire;
-  object.userData.profilePlane = plane;
-  object.userData.profileCenter = center;
-  return object;
-};
-
-const collectOcctEdges = (oc: any, shape: any) => {
-  const explorer = createOcctInstance(oc, ['TopExp_Explorer_2', 'TopExp_Explorer_1', 'TopExp_Explorer'], [
-    shape,
-    getOcctShapeEnum(oc, 'EDGE'),
-    getOcctShapeEnum(oc, 'SHAPE'),
-  ]);
-  const edges: any[] = [];
-  while (explorer.More()) {
-    edges.push(explorer.Current());
-    explorer.Next();
-  }
-  return edges;
-};
-
-const collectOcctFaces = (oc: any, shape: any) => {
-  const explorer = createOcctInstance(oc, ['TopExp_Explorer_2', 'TopExp_Explorer_1', 'TopExp_Explorer'], [
-    shape,
-    getOcctShapeEnum(oc, 'FACE'),
-    getOcctShapeEnum(oc, 'SHAPE'),
-  ]);
-  const faces: any[] = [];
-  while (explorer.More()) {
-    faces.push(explorer.Current());
-    explorer.Next();
-  }
-  return faces;
-};
-
-const buildOcctFilletShape = (oc: any, sourceShape: any, radius: number) => {
-  const filletBuilder = createOcctInstance(oc, ['BRepFilletAPI_MakeFillet_2', 'BRepFilletAPI_MakeFillet_1', 'BRepFilletAPI_MakeFillet'], [sourceShape]);
-  const edges = collectOcctEdges(oc, sourceShape);
-  if (!edges.length) return null;
-
-  for (const edge of edges) {
-    try {
-      callOcctMethod(filletBuilder, ['Add_2', 'Add_1', 'Add'], [radius, edge]);
-    } catch {
-      continue;
-    }
-  }
-
-  try {
-    callOcctMethod(filletBuilder, ['Build'], []);
-  } catch {
-    // 有些绑定在 Shape() 前不要求显式 Build，这里容错即可。
-  }
-
-  return callOcctMethod(filletBuilder, ['Shape'], []);
-};
-
-const buildOcctChamferShape = (oc: any, sourceShape: any, distance: number) => {
-  const chamferBuilder = createOcctInstance(oc, ['BRepFilletAPI_MakeChamfer_2', 'BRepFilletAPI_MakeChamfer_1', 'BRepFilletAPI_MakeChamfer'], [sourceShape]);
-  const edges = collectOcctEdges(oc, sourceShape);
-  const faces = collectOcctFaces(oc, sourceShape);
-  if (!edges.length || !faces.length) return null;
-
-  let added = 0;
-  for (const face of faces) {
-    for (const edge of edges) {
-      try {
-        callOcctMethod(chamferBuilder, ['Add_3', 'Add_2', 'Add_1', 'Add'], [distance, edge, face]);
-        added += 1;
-      } catch {
-        continue;
-      }
-    }
-  }
-
-  if (!added) return null;
-
-  try {
-    callOcctMethod(chamferBuilder, ['Build'], []);
-  } catch {
-    // 与圆角保持一致，尽量允许不同绑定在 Shape() 时自行构建。
-  }
-
-  return callOcctMethod(chamferBuilder, ['Shape'], []);
-};
 
 const transformOcctShape = async (
   node: NodeData,

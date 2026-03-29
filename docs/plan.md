@@ -72,3 +72,4 @@
 6. 曲面主链：`Sweep / Loft` 已增加 OCCT 优先路径，并保留 Three 回退。
 7. 特征尝试：`Fillet / Chamfer` 已增加“真实 OCCT 优先、预览几何回退”的执行路径。
 8. 结构治理：已抽出 [core/graph/occtHelpers.ts](D:/workspace/nodejs/paracad/core/graph/occtHelpers.ts) 统一管理 OCCT 构造器与坐标辅助逻辑。
+9. 执行器拆分：已新增 [core/graph/occtSketch.ts](D:/workspace/nodejs/paracad/core/graph/occtSketch.ts) 与 [core/graph/occtFeatures.ts](D:/workspace/nodejs/paracad/core/graph/occtFeatures.ts)，开始把 `nodeExecutor` 中的 OCCT 细节下沉。
