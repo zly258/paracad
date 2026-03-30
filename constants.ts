@@ -4,14 +4,14 @@ export { createDefaultNode } from './core/nodes/nodeFactory';
 export const GRID_SIZE = 20;
 export const NODE_WIDTH = 240;
 export const HEADER_HEIGHT = 32;
-export const SOCKET_ROW_HEIGHT = 30;
-export const VECTOR_ROW_HEIGHT = 30;
-export const OUTPUT_ROW_HEIGHT = 30;
-export const CONTENT_PADDING_TOP = 4;
-export const INPUT_OUTPUT_GAP = 6;
+export const SOCKET_ROW_HEIGHT = 28;
+export const VECTOR_ROW_HEIGHT = 28;
+export const OUTPUT_ROW_HEIGHT = 26;
+export const CONTENT_PADDING_TOP = 2;
+export const INPUT_OUTPUT_GAP = 2;
 export const NODE_BORDER_WIDTH = 1;
-export const INPUT_CONTAINER_PADDING = 5;
-export const GEOMETRY_PARAMS_HEIGHT = 33;
+export const INPUT_CONTAINER_PADDING = 2;
+export const GEOMETRY_PARAMS_HEIGHT = 28;
 
 export const SOCKET_COLORS = {
   number: 'bg-blue-500',
@@ -26,9 +26,9 @@ export const SOCKET_COLORS = {
 
 export const getInnerBodyHeight = (type: NodeType): number => {
   switch (type) {
-    case NodeType.PARAMETER: return 120;
-    case NodeType.EXPRESSION: return 100;
-    case NodeType.BOOLEAN_OP: return 36;
+    case NodeType.PARAMETER: return 102;
+    case NodeType.EXPRESSION: return 82;
+    case NodeType.BOOLEAN_OP: return 30;
     case NodeType.RECTANGLE:
     case NodeType.CIRCLE:
     case NodeType.ARC:
@@ -36,7 +36,7 @@ export const getInnerBodyHeight = (type: NodeType): number => {
     case NodeType.POLYGON:
     case NodeType.STAR:
     case NodeType.FILLET:
-      return 32;
+      return 28;
     default: return 0;
   }
 };
