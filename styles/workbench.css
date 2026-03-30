@@ -80,6 +80,27 @@ html[data-theme='light'] body {
   color: #20324d;
   background: radial-gradient(circle at top, rgba(40, 108, 186, 0.08), transparent 36%), var(--workbench-bg);
 }
+
+html[data-theme='light'] * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(63, 104, 172, 0.45) rgba(26, 56, 103, 0.08);
+}
+
+html[data-theme='light'] *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+html[data-theme='light'] *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(74, 119, 191, 0.55), rgba(53, 89, 149, 0.5));
+  border-radius: 999px;
+  border: 2px solid rgba(244, 247, 255, 0.95);
+}
+
+html[data-theme='light'] *::-webkit-scrollbar-track {
+  background: rgba(29, 61, 116, 0.08);
+  border-radius: 999px;
+}
 .workbench-shell {
   min-height: 100vh;
   display: flex;

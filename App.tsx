@@ -116,7 +116,7 @@ const MainLayout: React.FC = () => {
   const [leftWidth, setLeftWidth] = useState(280);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('paracad-theme');
-    return saved === 'light' ? 'light' : 'dark';
+    return saved === 'dark' ? 'dark' : 'light';
   });
   const { kernelReady, t } = useGraph();
   const [progress, setProgress] = useState(0);
