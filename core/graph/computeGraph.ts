@@ -17,8 +17,14 @@ export const computeGraph = async (
     return results;
   }
 
-  const consumedNodeIds = new Set<string>();
-  connections.forEach((conn) => consumedNodeIds.add(conn.sourceNodeId));
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+  const hiddenByGeometryConsumerIds = new Set<string>();
+  connections.forEach((conn) => {
+    const targetNode = nodeMap.get(conn.targetNodeId);
+    if (!targetNode) return;
+    const targetProducesGeometry = targetNode.outputs.some((output) => output.type === 'geometry');
+    if (targetProducesGeometry) hiddenByGeometryConsumerIds.add(conn.sourceNodeId);
+  });
 
   const globalParams: Record<string, any> = {};
   nodes.forEach((node) => {
@@ -58,7 +64,7 @@ export const computeGraph = async (
           const result = outputs[idx];
           if (result instanceof THREE.Object3D) {
             result.userData.nodeId = node.id;
-            result.userData.visible = depth === 0 ? !consumedNodeIds.has(node.id) : true;
+            result.userData.visible = depth === 0 ? !hiddenByGeometryConsumerIds.has(node.id) : true;
             result.castShadow = true;
             result.receiveShadow = true;
           }
