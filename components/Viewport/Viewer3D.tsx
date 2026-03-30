@@ -99,6 +99,7 @@ interface Viewer3DPresenterProps {
     computedResults: Map<string, any>;
     onTriggerCompute: () => void;
     onAddLog: (message: string, type?: 'info' | 'success' | 'error' | 'warning') => void;
+    kernelBackend: 'occt.js' | 'three-fallback';
 }
 
 const collectRenderableObjects = (computedResults: Map<string, any>) => {
@@ -120,7 +121,7 @@ const collectRenderableObjects = (computedResults: Map<string, any>) => {
 };
 
 // Memoized Presenter Component
-const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAddLog }: Viewer3DPresenterProps) => {
+const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAddLog, kernelBackend }: Viewer3DPresenterProps) => {
     const controlsRef = useRef<any>(null);
     const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
     const exportFormatRef = useRef<ExportFormat>('glb');
@@ -178,6 +179,10 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
 
       const handleExport = async () => {
         const format = exportFormatRef.current;
+        if ((format === 'stp' || format === 'igs') && kernelBackend !== 'occt.js') {
+          onAddLog('当前为 Three.js 回退内核，请先切换到 OCCT 内核再导出 STP/IGS', 'warning');
+          return;
+        }
         try {
           await exportComputedModel(computedResults, format);
           onAddLog(`导出成功: ${format.toUpperCase()}`, 'success');
@@ -207,8 +212,8 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
                >
                  <option value="glb">GLB</option>
                  <option value="obj">OBJ</option>
-                 <option value="stp">STP</option>
-                 <option value="igs">IGS</option>
+                 <option value="stp" disabled={kernelBackend !== 'occt.js'}>STP</option>
+                 <option value="igs" disabled={kernelBackend !== 'occt.js'}>IGS</option>
                </select>
                <button onClick={handleExport} className="viewer-btn p-1.5 rounded backdrop-blur border transition-colors" title="导出模型">
                  <Download size={14} />
@@ -236,13 +241,13 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
 // Custom comparison: Only re-render if computedResults reference changes
 
 const Viewer3D: React.FC = () => {
-  const { computedResults, triggerCompute, addLog } = useGraph(); 
+  const { computedResults, triggerCompute, addLog, kernelBackend } = useGraph(); 
   
   // We pass the data down to the memoized component.
   // Even if 'useGraph' triggers a re-render of this container due to Pan/Zoom/NodeMove,
   // 'Viewer3DPresenter' will NOT re-render because 'computedResults' reference remains stable 
   // until a computation actually finishes.
-  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} onAddLog={addLog} />;
+  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} onAddLog={addLog} kernelBackend={kernelBackend} />;
 };
 
 export default Viewer3D;

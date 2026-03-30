@@ -94,7 +94,7 @@ const callOcctMethod = (target: any, names: string[], args: any[]) => {
 
 const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs') => {
   const { occt: oc } = getKernelStatus();
-  if (!oc) throw new Error('当前未启用 OCCT，无法导出 STP/IGS');
+  if (!oc) throw new Error('当前未启用 OCCT 内核，无法导出 STP/IGS');
 
   const shapeSet = new Set<any>();
   objects.forEach((obj) => {
@@ -104,7 +104,7 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
     });
   });
   const shapes = Array.from(shapeSet);
-  if (shapes.length === 0) throw new Error('当前模型不含 OCCT Shape，无法导出 STP/IGS');
+  if (shapes.length === 0) throw new Error('当前模型不含 OCCT Shape。请使用 OCCT 几何节点重建后再导出 STP/IGS');
 
   let targetShape = shapes[0];
   if (shapes.length > 1) {
