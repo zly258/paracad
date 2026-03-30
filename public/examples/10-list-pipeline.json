@@ -1,0 +1,17 @@
+{
+  "nodes": [
+    {"id":"d1","type":"NUMBER_RANGE","position":{"x":40,"y":90},"label":"Number Range","inputs":[{"id":"d1i1","name":"start","type":"number"},{"id":"d1i2","name":"end","type":"number"},{"id":"d1i3","name":"step","type":"number"}],"outputs":[{"id":"d1o1","name":"list","type":"any"}],"params":{"start":0,"end":120,"step":15}},
+    {"id":"d2","type":"LIST_REVERSE","position":{"x":300,"y":90},"label":"List Reverse","inputs":[{"id":"d2i1","name":"list","type":"any"}],"outputs":[{"id":"d2o1","name":"list","type":"any"}],"params":{}},
+    {"id":"d3","type":"LIST_SLICE","position":{"x":560,"y":90},"label":"List Slice","inputs":[{"id":"d3i1","name":"list","type":"any"},{"id":"d3i2","name":"start_index","type":"number"},{"id":"d3i3","name":"end_index","type":"number"}],"outputs":[{"id":"d3o1","name":"list","type":"any"}],"params":{"start_index":1,"end_index":6}},
+    {"id":"d4","type":"LIST_GET_ITEM","position":{"x":560,"y":250},"label":"List Get Item","inputs":[{"id":"d4i1","name":"list","type":"any"},{"id":"d4i2","name":"index","type":"number"}],"outputs":[{"id":"d4o1","name":"item","type":"any"}],"params":{"index":2}},
+    {"id":"d5","type":"LIST_LENGTH","position":{"x":820,"y":90},"label":"List Length","inputs":[{"id":"d5i1","name":"list","type":"any"}],"outputs":[{"id":"d5o1","name":"length","type":"number"}],"params":{}},
+    {"id":"d6","type":"LIST_UNIQUE","position":{"x":820,"y":250},"label":"List Unique","inputs":[{"id":"d6i1","name":"list","type":"any"}],"outputs":[{"id":"d6o1","name":"list","type":"any"}],"params":{}}
+  ],
+  "connections": [
+    {"id":"dc1","sourceNodeId":"d1","sourceSocketId":"d1o1","targetNodeId":"d2","targetSocketId":"d2i1"},
+    {"id":"dc2","sourceNodeId":"d2","sourceSocketId":"d2o1","targetNodeId":"d3","targetSocketId":"d3i1"},
+    {"id":"dc3","sourceNodeId":"d3","sourceSocketId":"d3o1","targetNodeId":"d4","targetSocketId":"d4i1"},
+    {"id":"dc4","sourceNodeId":"d3","sourceSocketId":"d3o1","targetNodeId":"d5","targetSocketId":"d5i1"},
+    {"id":"dc5","sourceNodeId":"d3","sourceSocketId":"d3o1","targetNodeId":"d6","targetSocketId":"d6i1"}
+  ]
+}

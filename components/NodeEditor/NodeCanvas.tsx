@@ -13,6 +13,15 @@ const EXAMPLE_PRESETS = [
   { file: '01-parametric-extrude.json', label: '示例1 参数化拉伸' },
   { file: '02-boolean-cut.json', label: '示例2 布尔切割' },
   { file: '03-data-array.json', label: '示例3 数据驱动阵列' },
+  { file: '04-revolve-form.json', label: '示例4 旋转成形' },
+  { file: '05-sweep-path.json', label: '示例5 路径扫掠' },
+  { file: '06-loft-sections.json', label: '示例6 截面放样' },
+  { file: '07-fillet-chamfer.json', label: '示例7 倒圆与倒角' },
+  { file: '08-analysis-pack.json', label: '示例8 几何分析' },
+  { file: '09-vector-math.json', label: '示例9 向量与数学' },
+  { file: '10-list-pipeline.json', label: '示例10 列表管线' },
+  { file: '11-mirror-array.json', label: '示例11 镜像与线阵' },
+  { file: '12-expression-drive.json', label: '示例12 表达式驱动' },
 ];
 
 const isSocketCompatible = (sourceType: SocketType, targetType: SocketType) =>
@@ -362,7 +371,7 @@ const NodeCanvas: React.FC = () => {
          <button onClick={saveGraph} title="导出 JSON"><Download size={16} /></button>
          <button onClick={() => fileInputRef.current?.click()} title="导入 JSON"><Upload size={16} /></button>
          <select
-            className="h-8 rounded bg-black/60 border border-white/15 text-[11px] px-2 text-gray-200"
+            className="toolbar-select"
             value={selectedExample}
             onChange={(e) => setSelectedExample(e.target.value)}
             title={t('Examples')}
@@ -371,7 +380,7 @@ const NodeCanvas: React.FC = () => {
               <option key={preset.file} value={preset.file}>{preset.label}</option>
             ))}
          </select>
-         <button onClick={handleLoadExample} disabled={isLoadingExample} title={t('Load Example')}>
+         <button className="toolbar-load-btn" onClick={handleLoadExample} disabled={isLoadingExample} title={t('Load Example')}>
             <span className="text-[11px] px-1">{isLoadingExample ? '...' : t('Load')}</span>
          </button>
          <input type="file" ref={fileInputRef} onChange={(e) => { if(e.target.files?.[0]) loadGraph(e.target.files[0]); e.target.value = ''; }} className="hidden" accept=".json" />

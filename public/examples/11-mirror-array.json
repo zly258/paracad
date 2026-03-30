@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {"id":"m1","type":"BOX","position":{"x":40,"y":160},"label":"Box","inputs":[{"id":"m1i1","name":"base","type":"vector"},{"id":"m1i2","name":"size_x","type":"number"},{"id":"m1i3","name":"size_y","type":"number"},{"id":"m1i4","name":"size_z","type":"number"}],"outputs":[{"id":"m1o1","name":"geometry","type":"geometry"}],"params":{"base":{"x":0,"y":0,"z":0},"size_x":20,"size_y":30,"size_z":40,"color":"#5ea6ff"}},
+    {"id":"m2","type":"MIRROR","position":{"x":330,"y":160},"label":"Mirror","inputs":[{"id":"m2i1","name":"geometry","type":"geometry"},{"id":"m2i2","name":"plane_normal","type":"vector"},{"id":"m2i3","name":"copy","type":"boolean"}],"outputs":[{"id":"m2o1","name":"geometry","type":"geometry"}],"params":{"plane_normal":{"x":1,"y":0,"z":0},"copy":true}},
+    {"id":"m3","type":"ARRAY_LINEAR","position":{"x":620,"y":160},"label":"Array Linear","inputs":[{"id":"m3i1","name":"geometry","type":"geometry"},{"id":"m3i2","name":"direction","type":"vector"},{"id":"m3i3","name":"count","type":"number"},{"id":"m3i4","name":"spacing","type":"number"}],"outputs":[{"id":"m3o1","name":"geometry","type":"geometry"}],"params":{"direction":{"x":1,"y":0,"z":0},"count":4,"spacing":28}},
+    {"id":"m4","type":"ARRAY_GRID","position":{"x":900,"y":160},"label":"Array Grid","inputs":[{"id":"m4i1","name":"geometry","type":"geometry"},{"id":"m4i2","name":"count_x","type":"number"},{"id":"m4i3","name":"count_y","type":"number"},{"id":"m4i4","name":"spacing","type":"number"}],"outputs":[{"id":"m4o1","name":"geometry","type":"geometry"}],"params":{"count_x":3,"count_y":2,"spacing":36}}
+  ],
+  "connections": [
+    {"id":"mc1","sourceNodeId":"m1","sourceSocketId":"m1o1","targetNodeId":"m2","targetSocketId":"m2i1"},
+    {"id":"mc2","sourceNodeId":"m2","sourceSocketId":"m2o1","targetNodeId":"m3","targetSocketId":"m3i1"},
+    {"id":"mc3","sourceNodeId":"m3","sourceSocketId":"m3o1","targetNodeId":"m4","targetSocketId":"m4i1"}
+  ]
+}

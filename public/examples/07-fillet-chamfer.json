@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    {"id":"f1","type":"BOX","position":{"x":40,"y":170},"label":"Box","inputs":[{"id":"f1i1","name":"base","type":"vector"},{"id":"f1i2","name":"size_x","type":"number"},{"id":"f1i3","name":"size_y","type":"number"},{"id":"f1i4","name":"size_z","type":"number"}],"outputs":[{"id":"f1o1","name":"geometry","type":"geometry"}],"params":{"base":{"x":0,"y":0,"z":0},"size_x":70,"size_y":40,"size_z":28,"color":"#4ca6ff"}},
+    {"id":"f2","type":"FILLET","position":{"x":340,"y":170},"label":"Fillet","inputs":[{"id":"f2i1","name":"geometry","type":"geometry"},{"id":"f2i2","name":"radius","type":"number"}],"outputs":[{"id":"f2o1","name":"geometry","type":"geometry"}],"params":{"radius":4,"filletType":"chamfer","color":"#ffcb6b"}},
+    {"id":"f3","type":"SURFACE_AREA","position":{"x":630,"y":170},"label":"Surface Area","inputs":[{"id":"f3i1","name":"geometry","type":"geometry"}],"outputs":[{"id":"f3o1","name":"area","type":"number"}],"params":{}}
+  ],
+  "connections": [
+    {"id":"fc1","sourceNodeId":"f1","sourceSocketId":"f1o1","targetNodeId":"f2","targetSocketId":"f2i1"},
+    {"id":"fc2","sourceNodeId":"f2","sourceSocketId":"f2o1","targetNodeId":"f3","targetSocketId":"f3i1"}
+  ]
+}

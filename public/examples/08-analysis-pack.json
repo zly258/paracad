@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    {"id":"a1","type":"SPHERE","position":{"x":40,"y":180},"label":"Sphere","inputs":[{"id":"a1i1","name":"center","type":"vector"},{"id":"a1i2","name":"radius","type":"number"}],"outputs":[{"id":"a1o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":24,"color":"#8f7bff"}},
+    {"id":"a2","type":"BOUNDING_BOX","position":{"x":340,"y":80},"label":"Bounding Box","inputs":[{"id":"a2i1","name":"geometry","type":"geometry"}],"outputs":[{"id":"a2o1","name":"min","type":"vector"},{"id":"a2o2","name":"max","type":"vector"},{"id":"a2o3","name":"size","type":"vector"},{"id":"a2o4","name":"center","type":"vector"}],"params":{}},
+    {"id":"a3","type":"SURFACE_AREA","position":{"x":340,"y":180},"label":"Surface Area","inputs":[{"id":"a3i1","name":"geometry","type":"geometry"}],"outputs":[{"id":"a3o1","name":"area","type":"number"}],"params":{}},
+    {"id":"a4","type":"VOLUME","position":{"x":340,"y":280},"label":"Volume","inputs":[{"id":"a4i1","name":"geometry","type":"geometry"}],"outputs":[{"id":"a4o1","name":"volume","type":"number"}],"params":{}},
+    {"id":"a5","type":"CENTROID","position":{"x":340,"y":380},"label":"Centroid","inputs":[{"id":"a5i1","name":"geometry","type":"geometry"}],"outputs":[{"id":"a5o1","name":"centroid","type":"vector"}],"params":{}}
+  ],
+  "connections": [
+    {"id":"ac1","sourceNodeId":"a1","sourceSocketId":"a1o1","targetNodeId":"a2","targetSocketId":"a2i1"},
+    {"id":"ac2","sourceNodeId":"a1","sourceSocketId":"a1o1","targetNodeId":"a3","targetSocketId":"a3i1"},
+    {"id":"ac3","sourceNodeId":"a1","sourceSocketId":"a1o1","targetNodeId":"a4","targetSocketId":"a4i1"},
+    {"id":"ac4","sourceNodeId":"a1","sourceSocketId":"a1o1","targetNodeId":"a5","targetSocketId":"a5i1"}
+  ]
+}

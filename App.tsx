@@ -3,7 +3,7 @@ import NodeCanvas from './components/NodeEditor/NodeCanvas';
 import NodeTree from './components/NodeEditor/NodeTree';
 import Viewer3D from './components/Viewport/Viewer3D';
 import { GraphProvider, useGraph } from './store/GraphStore';
-import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2 } from 'lucide-react';
+import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2, SunMoon } from 'lucide-react';
 import './styles/workbench.css';
 
 const LogPanel = React.memo(() => {
@@ -48,10 +48,10 @@ const LogPanel = React.memo(() => {
   );
 });
 
-const Header: React.FC = () => {
+const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> = ({ theme, onToggleTheme }) => {
   const { kernelReady, kernelBackend, toggleLanguage, t, undo, redo, canUndo, canRedo } = useGraph();
   return (
-    <header className="h-10 bg-[#2a2a2a] border-b border-black flex items-center px-4 justify-between shrink-0 z-10 shadow-md">
+    <header className="app-header h-10 border-b flex items-center px-4 justify-between shrink-0 z-10 shadow-md">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Boxes className="text-blue-500" size={20} />
@@ -82,14 +82,24 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      <button
-        onClick={toggleLanguage}
-        className="flex items-center gap-1 bg-[#333] hover:bg-[#444] text-gray-200 px-2 py-1 rounded text-xs border border-gray-600 transition-colors"
-        title="Switch Language"
-      >
-        <Globe size={12} />
-        {t('Language')}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleTheme}
+          className="app-pill-btn flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors"
+          title={t('Theme Demo')}
+        >
+          <SunMoon size={12} />
+          {theme === 'dark' ? t('Light') : t('Dark')}
+        </button>
+        <button
+          onClick={toggleLanguage}
+          className="app-pill-btn flex items-center gap-1 px-2 py-1 rounded text-xs border transition-colors"
+          title="Switch Language"
+        >
+          <Globe size={12} />
+          {t('Language')}
+        </button>
+      </div>
     </header>
   );
 };
@@ -97,6 +107,10 @@ const Header: React.FC = () => {
 const MainLayout: React.FC = () => {
   const [leftWidth, setLeftWidth] = useState(280);
   const [rightSplit, setRightSplit] = useState(50);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('paracad-theme');
+    return saved === 'light' ? 'light' : 'dark';
+  });
   const { kernelReady, t } = useGraph();
   const [progress, setProgress] = useState(0);
 
@@ -113,8 +127,13 @@ const MainLayout: React.FC = () => {
     setProgress(100);
   }, [kernelReady]);
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('paracad-theme', theme);
+  }, [theme]);
+
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden text-gray-100 bg-[#1a1a1a]">
+    <div className="app-root flex flex-col h-screen w-screen overflow-hidden text-gray-100">
       {!kernelReady && (
         <div className="absolute inset-0 z-50 bg-[#1a1a1a] flex flex-col items-center justify-center space-y-6">
           <div className="relative">
@@ -129,10 +148,10 @@ const MainLayout: React.FC = () => {
         </div>
       )}
 
-      <Header />
+      <Header theme={theme} onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <div style={{ width: leftWidth }} className="shrink-0 relative z-10 h-full bg-[#181818] border-r border-black">
+        <div style={{ width: leftWidth }} className="left-panel shrink-0 relative z-10 h-full border-r">
           <NodeTree />
           <div
             className="absolute right-0 top-0 h-full w-1 hover:bg-blue-600 cursor-col-resize z-20"
@@ -150,19 +169,19 @@ const MainLayout: React.FC = () => {
           />
         </div>
 
-        <div className="h-full relative z-0 flex flex-col border-l border-r border-black" style={{ flex: 1, minWidth: 0 }}>
+        <div className="center-panel h-full relative z-0 flex flex-col border-l border-r" style={{ flex: 1, minWidth: 0 }}>
           <div className="flex-1 relative">
             <NodeCanvas />
           </div>
         </div>
 
-        <div className="h-full flex flex-col relative z-0 shrink-0" style={{ width: '38%', minWidth: 320 }}>
+        <div className="right-panel-shell h-full flex flex-col relative z-0 shrink-0" style={{ width: '38%', minWidth: 320 }}>
           <div style={{ height: `${rightSplit}%` }} className="relative min-h-0">
             <Viewer3D />
           </div>
 
           <div
-            className="h-1 bg-[#000] hover:bg-blue-600 cursor-row-resize z-20 transition-colors opacity-50 hover:opacity-100"
+            className="split-bar h-1 cursor-row-resize z-20 transition-colors opacity-50 hover:opacity-100"
             onMouseDown={(e) => {
               const rect = e.currentTarget.parentElement?.getBoundingClientRect();
               if (!rect) return;
@@ -179,7 +198,7 @@ const MainLayout: React.FC = () => {
             }}
           />
 
-          <div className="flex-1 bg-[#111] overflow-hidden min-h-0">
+          <div className="log-shell flex-1 overflow-hidden min-h-0">
             <LogPanel />
           </div>
         </div>

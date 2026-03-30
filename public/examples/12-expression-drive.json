@@ -1,0 +1,16 @@
+{
+  "nodes": [
+    {"id":"e1","type":"PARAMETER","position":{"x":40,"y":70},"label":"Parameter","inputs":[],"outputs":[{"id":"e1o1","name":"Value","type":"any"}],"params":{"name":"P1","type":"number","value":18,"vecX":0,"vecY":0,"vecZ":0,"boolVal":true,"stringVal":"","colorVal":"#ff0000"}},
+    {"id":"e2","type":"PARAMETER","position":{"x":40,"y":220},"label":"Parameter","inputs":[],"outputs":[{"id":"e2o1","name":"Value","type":"any"}],"params":{"name":"P2","type":"number","value":62,"vecX":0,"vecY":0,"vecZ":0,"boolVal":true,"stringVal":"","colorVal":"#ff0000"}},
+    {"id":"e3","type":"EXPRESSION","position":{"x":320,"y":130},"label":"Expression","inputs":[],"outputs":[{"id":"e3o1","name":"Result","type":"any"}],"params":{"expression":"(P1 + P2) / 4"}},
+    {"id":"e4","type":"MATH_REMAP","position":{"x":600,"y":130},"label":"Remap","inputs":[{"id":"e4i1","name":"value","type":"number"},{"id":"e4i2","name":"in_min","type":"number"},{"id":"e4i3","name":"in_max","type":"number"},{"id":"e4i4","name":"out_min","type":"number"},{"id":"e4i5","name":"out_max","type":"number"}],"outputs":[{"id":"e4o1","name":"result","type":"number"}],"params":{"value":0,"in_min":0,"in_max":30,"out_min":5,"out_max":40}},
+    {"id":"e5","type":"SPHERE","position":{"x":900,"y":130},"label":"Sphere","inputs":[{"id":"e5i1","name":"center","type":"vector"},{"id":"e5i2","name":"radius","type":"number"}],"outputs":[{"id":"e5o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":10,"color":"#ee8fff"}},
+    {"id":"e6","type":"ARRAY_POLAR","position":{"x":900,"y":320},"label":"Array Polar","inputs":[{"id":"e6i1","name":"geometry","type":"geometry"},{"id":"e6i2","name":"center","type":"vector"},{"id":"e6i3","name":"radius","type":"number"},{"id":"e6i4","name":"count","type":"number"},{"id":"e6i5","name":"fill_angle","type":"number"}],"outputs":[{"id":"e6o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":55,"count":6,"fill_angle":360}}
+  ],
+  "connections": [
+    {"id":"ec1","sourceNodeId":"e3","sourceSocketId":"e3o1","targetNodeId":"e4","targetSocketId":"e4i1"},
+    {"id":"ec2","sourceNodeId":"e4","sourceSocketId":"e4o1","targetNodeId":"e5","targetSocketId":"e5i2"},
+    {"id":"ec3","sourceNodeId":"e5","sourceSocketId":"e5o1","targetNodeId":"e6","targetSocketId":"e6i1"},
+    {"id":"ec4","sourceNodeId":"e4","sourceSocketId":"e4o1","targetNodeId":"e6","targetSocketId":"e6i4"}
+  ]
+}
