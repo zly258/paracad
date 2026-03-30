@@ -92,6 +92,46 @@ const callOcctMethod = (target: any, names: string[], args: any[]) => {
   throw new Error(`OCCT method not found: ${names.join(', ')}`);
 };
 
+const getOcctMethodNames = (target: any) => {
+  const names = new Set<string>();
+  let obj = target;
+  let depth = 0;
+  while (obj && depth < 5) {
+    Object.getOwnPropertyNames(obj).forEach((name) => names.add(name));
+    obj = Object.getPrototypeOf(obj);
+    depth += 1;
+  }
+  return Array.from(names).filter((name) => typeof target?.[name] === 'function');
+};
+
+const callOcctMethodByPrefix = (
+  target: any,
+  prefix: string,
+  argsCandidates: any[][],
+  fallbackNames: string[] = [],
+) => {
+  const methodNames = getOcctMethodNames(target);
+  const discovered = methodNames
+    .filter((name) => name.toLowerCase().startsWith(prefix.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
+  const triedNames = Array.from(new Set([...fallbackNames, ...discovered]));
+
+  for (const name of triedNames) {
+    const fn = target?.[name];
+    if (typeof fn !== 'function') continue;
+    for (const args of argsCandidates) {
+      try {
+        return fn.apply(target, args);
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  const sample = methodNames.slice(0, 40).join(', ');
+  throw new Error(`OCCT method not found by prefix "${prefix}". Available sample: ${sample}`);
+};
+
 const createOcctPoint = (oc: any, x: number, y: number, z: number) => {
   const names = ['gp_Pnt_3', 'gp_Pnt_2', 'gp_Pnt_1', 'gp_Pnt'];
   for (const name of names) {
@@ -224,12 +264,21 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
       oc?.STEPControl_StepModelType?.STEPControl_AsIs ??
       oc?.STEPControl_AsIs ??
       0;
-    try {
-      callOcctMethod(writer, ['Transfer', 'Transfer_1', 'Transfer_2'], [targetShape, mode]);
-    } catch {
-      callOcctMethod(writer, ['Transfer', 'Transfer_1', 'Transfer_2'], [targetShape]);
-    }
-    callOcctMethod(writer, ['Write', 'Write_1'], [filename]);
+    callOcctMethodByPrefix(
+      writer,
+      'Transfer',
+      [
+        [targetShape, mode],
+        [targetShape],
+      ],
+      ['Transfer', 'Transfer_1', 'Transfer_2'],
+    );
+    callOcctMethodByPrefix(
+      writer,
+      'Write',
+      [[filename]],
+      ['Write', 'Write_1'],
+    );
     const file = oc.FS.readFile(filename, { encoding: 'binary' });
     downloadBlob(new Blob([file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)], { type: 'model/step' }), `paracad-${Date.now()}.stp`);
     try { oc.FS.unlink(filename); } catch {}
@@ -238,11 +287,26 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
 
   const writer = createOcctInstance(oc, ['IGESControl_Writer', 'IGESControl_Writer_1'], []);
   try {
-    callOcctMethod(writer, ['AddShape', 'AddShape_1'], [targetShape]);
+    callOcctMethodByPrefix(
+      writer,
+      'AddShape',
+      [[targetShape]],
+      ['AddShape', 'AddShape_1'],
+    );
   } catch {
-    callOcctMethod(writer, ['Transfer', 'Transfer_1'], [targetShape]);
+    callOcctMethodByPrefix(
+      writer,
+      'Transfer',
+      [[targetShape]],
+      ['Transfer', 'Transfer_1'],
+    );
   }
-  callOcctMethod(writer, ['Write', 'Write_1'], [filename]);
+  callOcctMethodByPrefix(
+    writer,
+    'Write',
+    [[filename]],
+    ['Write', 'Write_1'],
+  );
   const file = oc.FS.readFile(filename, { encoding: 'binary' });
   downloadBlob(new Blob([file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)], { type: 'model/iges' }), `paracad-${Date.now()}.igs`);
   try { oc.FS.unlink(filename); } catch {}
