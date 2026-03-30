@@ -772,6 +772,39 @@ html[data-theme='light'] .node-card-header .text-xs {
   padding-bottom: 0;
 }
 
+html[data-theme='light'] .node-card input:not([type='color']),
+html[data-theme='light'] .node-card select,
+html[data-theme='light'] .node-card textarea {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(37, 73, 133, 0.28) !important;
+  color: #1f3558 !important;
+}
+
+html[data-theme='light'] .node-card input::placeholder,
+html[data-theme='light'] .node-card textarea::placeholder {
+  color: rgba(64, 98, 153, 0.72) !important;
+}
+
+html[data-theme='light'] .node-card input:not([type='color']):focus,
+html[data-theme='light'] .node-card select:focus,
+html[data-theme='light'] .node-card textarea:focus {
+  border-color: rgba(0, 121, 201, 0.62) !important;
+  box-shadow: 0 0 0 2px rgba(0, 121, 201, 0.14);
+}
+
+html[data-theme='light'] .node-library-search {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(37, 73, 133, 0.2);
+}
+
+html[data-theme='light'] .node-search-input {
+  color: #1f3558;
+}
+
+html[data-theme='light'] .node-search-input::placeholder {
+  color: rgba(64, 98, 153, 0.68);
+}
+
 .node-socket-runner {
   padding: 6px 10px;
   border-radius: 10px;
