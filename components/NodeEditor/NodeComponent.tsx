@@ -118,6 +118,8 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
       return null;
   };
 
+  const isPreviewOutputType = (type: SocketType) => !['geometry', 'shape2d', 'curve'].includes(type);
+
   const is2DNode = [NodeType.RECTANGLE, NodeType.CIRCLE, NodeType.ARC, NodeType.ELLIPSE, NodeType.POLYGON, NodeType.STAR].includes(node.type);
 
   // Common Label Style
@@ -340,6 +342,14 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
         <div className="pb-1 shrink-0">
             {node.outputs.map(output => (
                 <div key={output.id} className="relative flex items-center justify-end px-2.5 group hover:bg-white/5 transition-colors shrink-0" style={{ height: OUTPUT_ROW_HEIGHT }}>
+                    {isPreviewOutputType(output.type) && computedResults.has(output.id) && (
+                        <span
+                          className="text-[10px] leading-none text-cyan-300/90 mr-2 bg-black/30 border border-cyan-900/35 rounded px-1.5 py-0.5 max-w-[90px] truncate"
+                          title={String(computedResults.get(output.id))}
+                        >
+                          {formatLinkedValue(computedResults.get(output.id))}
+                        </span>
+                    )}
                     <span className="text-[10px] text-gray-400 mr-2 select-none group-hover:text-gray-200">{t(output.name)}</span>
                     <div 
                         className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-3 flex items-center justify-center cursor-crosshair hover:scale-125 transition-transform z-10"

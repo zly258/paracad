@@ -30,6 +30,16 @@ const EXAMPLE_PRESETS = [
   { file: '18-loft-twist.json', label: '示例18 放样扭转' },
   { file: '19-math-driven-radius.json', label: '示例19 数学驱动半径' },
   { file: '20-analysis-dashboard.json', label: '示例20 分析仪表盘' },
+  { file: '21-flange-ring.json', label: '示例21 法兰盘（简化）' },
+  { file: '22-bolt-simple.json', label: '示例22 螺栓（简化）' },
+  { file: '23-nut-simple.json', label: '示例23 螺母（简化）' },
+  { file: '24-door-frame.json', label: '示例24 门框与门板' },
+  { file: '25-i-beam-section.json', label: '示例25 工字钢截面（简化）' },
+  { file: '26-c-channel-section.json', label: '示例26 槽钢截面（简化）' },
+  { file: '27-angle-steel-section.json', label: '示例27 角钢截面（简化）' },
+  { file: '28-tube-column-base.json', label: '示例28 方管立柱底座' },
+  { file: '29-bracket-l-shape.json', label: '示例29 L型支架' },
+  { file: '30-plate-with-holes.json', label: '示例30 多孔板' },
 ];
 
 const isSocketCompatible = (sourceType: SocketType, targetType: SocketType) =>

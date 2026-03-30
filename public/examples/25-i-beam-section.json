@@ -1,0 +1,18 @@
+{
+  "nodes": [
+    {"id":"i1","type":"BOX","position":{"x":40,"y":70},"label":"Box","inputs":[{"id":"i1i1","name":"base","type":"vector"},{"id":"i1i2","name":"size_x","type":"number"},{"id":"i1i3","name":"size_y","type":"number"},{"id":"i1i4","name":"size_z","type":"number"}],"outputs":[{"id":"i1o1","name":"geometry","type":"geometry"}],"params":{"base":{"x":0,"y":0,"z":0},"size_x":14,"size_y":30,"size_z":120,"color":"#90a4ae"}},
+    {"id":"i2","type":"BOX","position":{"x":40,"y":220},"label":"Box","inputs":[{"id":"i2i1","name":"base","type":"vector"},{"id":"i2i2","name":"size_x","type":"number"},{"id":"i2i3","name":"size_y","type":"number"},{"id":"i2i4","name":"size_z","type":"number"}],"outputs":[{"id":"i2o1","name":"geometry","type":"geometry"}],"params":{"base":{"x":0,"y":0,"z":0},"size_x":60,"size_y":30,"size_z":12,"color":"#78909c"}},
+    {"id":"i3","type":"TRANSLATION","position":{"x":330,"y":220},"label":"Move","inputs":[{"id":"i3i1","name":"geometry","type":"geometry"},{"id":"i3i2","name":"vector","type":"vector"}],"outputs":[{"id":"i3o1","name":"geometry","type":"geometry"}],"params":{"vector":{"x":0,"y":0,"z":54}}},
+    {"id":"i4","type":"TRANSLATION","position":{"x":330,"y":320},"label":"Move","inputs":[{"id":"i4i1","name":"geometry","type":"geometry"},{"id":"i4i2","name":"vector","type":"vector"}],"outputs":[{"id":"i4o1","name":"geometry","type":"geometry"}],"params":{"vector":{"x":0,"y":0,"z":-54}}},
+    {"id":"i5","type":"BOOLEAN_OP","position":{"x":620,"y":170},"label":"Boolean","inputs":[{"id":"i5i1","name":"object_a","type":"geometry"},{"id":"i5i2","name":"object_b","type":"geometry"}],"outputs":[{"id":"i5o1","name":"geometry","type":"geometry"}],"params":{"operation":"UNION","color":"#78909c"}},
+    {"id":"i6","type":"BOOLEAN_OP","position":{"x":910,"y":220},"label":"Boolean","inputs":[{"id":"i6i1","name":"object_a","type":"geometry"},{"id":"i6i2","name":"object_b","type":"geometry"}],"outputs":[{"id":"i6o1","name":"geometry","type":"geometry"}],"params":{"operation":"UNION","color":"#607d8b"}}
+  ],
+  "connections": [
+    {"id":"ic1","sourceNodeId":"i2","sourceSocketId":"i2o1","targetNodeId":"i3","targetSocketId":"i3i1"},
+    {"id":"ic2","sourceNodeId":"i2","sourceSocketId":"i2o1","targetNodeId":"i4","targetSocketId":"i4i1"},
+    {"id":"ic3","sourceNodeId":"i1","sourceSocketId":"i1o1","targetNodeId":"i5","targetSocketId":"i5i1"},
+    {"id":"ic4","sourceNodeId":"i3","sourceSocketId":"i3o1","targetNodeId":"i5","targetSocketId":"i5i2"},
+    {"id":"ic5","sourceNodeId":"i5","sourceSocketId":"i5o1","targetNodeId":"i6","targetSocketId":"i6i1"},
+    {"id":"ic6","sourceNodeId":"i4","sourceSocketId":"i4o1","targetNodeId":"i6","targetSocketId":"i6i2"}
+  ]
+}

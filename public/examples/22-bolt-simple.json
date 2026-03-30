@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {"id":"b1","type":"CYLINDER","position":{"x":40,"y":80},"label":"Cylinder","inputs":[{"id":"b1i1","name":"center","type":"vector"},{"id":"b1i2","name":"radius","type":"number"},{"id":"b1i3","name":"height","type":"number"}],"outputs":[{"id":"b1o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":5,"height":52,"color":"#9fa8da"}},
+    {"id":"b2","type":"CYLINDER","position":{"x":40,"y":240},"label":"Cylinder","inputs":[{"id":"b2i1","name":"center","type":"vector"},{"id":"b2i2","name":"radius","type":"number"},{"id":"b2i3","name":"height","type":"number"}],"outputs":[{"id":"b2o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":10,"height":8,"color":"#7986cb"}},
+    {"id":"b3","type":"TRANSLATION","position":{"x":330,"y":240},"label":"Move","inputs":[{"id":"b3i1","name":"geometry","type":"geometry"},{"id":"b3i2","name":"vector","type":"vector"}],"outputs":[{"id":"b3o1","name":"geometry","type":"geometry"}],"params":{"vector":{"x":0,"y":0,"z":26}}},
+    {"id":"b4","type":"BOOLEAN_OP","position":{"x":620,"y":170},"label":"Boolean","inputs":[{"id":"b4i1","name":"object_a","type":"geometry"},{"id":"b4i2","name":"object_b","type":"geometry"}],"outputs":[{"id":"b4o1","name":"geometry","type":"geometry"}],"params":{"operation":"UNION","color":"#5c6bc0"}}
+  ],
+  "connections": [
+    {"id":"bc1","sourceNodeId":"b2","sourceSocketId":"b2o1","targetNodeId":"b3","targetSocketId":"b3i1"},
+    {"id":"bc2","sourceNodeId":"b1","sourceSocketId":"b1o1","targetNodeId":"b4","targetSocketId":"b4i1"},
+    {"id":"bc3","sourceNodeId":"b3","sourceSocketId":"b3o1","targetNodeId":"b4","targetSocketId":"b4i2"}
+  ]
+}
