@@ -104,9 +104,28 @@ interface Viewer3DPresenterProps {
     onTriggerCompute: () => void;
 }
 
+const collectRenderableObjects = (computedResults: Map<string, any>) => {
+  const objects: THREE.Object3D[] = [];
+  const visit = (value: any) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    if (value instanceof THREE.Object3D) {
+      const visibleFlag = value.userData?.visible;
+      if (visibleFlag === false) return;
+      objects.push(value);
+    }
+  };
+  computedResults.forEach((value) => visit(value));
+  return objects;
+};
+
 // Memoized Presenter Component
 const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Viewer3DPresenterProps) => {
     const controlsRef = useRef<any>(null);
+    const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
     
     useEffect(() => {
         if (THREE.Object3D && (THREE.Object3D as any).DefaultUp) {
@@ -115,9 +134,48 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
       }, []);
     
       const handleFitView = () => {
-         if (controlsRef.current) {
-             controlsRef.current.reset();
+         const controls = controlsRef.current as any;
+         const camera = cameraRef.current;
+         if (!controls || !camera) return;
+
+         const objects = collectRenderableObjects(computedResults);
+         if (objects.length === 0) {
+           controls.reset();
+           controls.update();
+           return;
          }
+
+         const box = new THREE.Box3();
+         objects.forEach((obj) => box.expandByObject(obj));
+         if (box.isEmpty()) {
+           controls.reset();
+           controls.update();
+           return;
+         }
+
+         const center = box.getCenter(new THREE.Vector3());
+         const size = box.getSize(new THREE.Vector3());
+         const margin = 1.2;
+         const width = Math.max(size.x * margin, 1e-3);
+         const height = Math.max(size.y * margin, 1e-3);
+         const depth = Math.max(size.z * margin, 1e-3);
+         const baseHeight = Math.abs(camera.top - camera.bottom) || 1;
+         const baseWidth = baseHeight * (camera.aspect || 1);
+         const fitZoom = Math.min(baseWidth / width, baseHeight / height);
+         camera.zoom = Math.max(0.05, Math.min(200, fitZoom));
+
+         const direction = new THREE.Vector3().subVectors(camera.position, controls.target);
+         if (direction.lengthSq() < 1e-6) direction.set(1, -1, 1);
+         direction.normalize();
+         const distance = Math.max(120, depth * 2.2);
+
+         camera.position.copy(center.clone().addScaledVector(direction, distance));
+         camera.near = Math.max(0.01, distance - depth * 4);
+         camera.far = distance + depth * 6;
+         camera.updateProjectionMatrix();
+
+         controls.target.copy(center);
+         controls.update();
       };
 
     return (
@@ -134,7 +192,7 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
           </div>
     
           <Canvas shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true }}>
-            <OrthographicCamera makeDefault position={[50, -50, 50]} up={[0, 0, 1]} zoom={10} near={-2000} far={2000} />
+            <OrthographicCamera ref={cameraRef} makeDefault position={[50, -50, 50]} up={[0, 0, 1]} zoom={10} near={0.1} far={4000} />
             
             <SceneContent computedResults={computedResults} />
             

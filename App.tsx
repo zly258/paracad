@@ -106,7 +106,6 @@ const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> =
 
 const MainLayout: React.FC = () => {
   const [leftWidth, setLeftWidth] = useState(280);
-  const [rightSplit, setRightSplit] = useState(50);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('paracad-theme');
     return saved === 'light' ? 'light' : 'dark';
@@ -176,27 +175,11 @@ const MainLayout: React.FC = () => {
         </div>
 
         <div className="right-panel-shell h-full flex flex-col relative z-0 shrink-0" style={{ width: '38%', minWidth: 320 }}>
-          <div style={{ height: `${rightSplit}%` }} className="relative min-h-0">
+          <div style={{ height: '50%' }} className="relative min-h-0">
             <Viewer3D />
           </div>
 
-          <div
-            className="split-bar h-1 cursor-row-resize z-20 transition-colors opacity-50 hover:opacity-100"
-            onMouseDown={(e) => {
-              const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-              if (!rect) return;
-              const onMove = (mv: MouseEvent) => {
-                const relY = mv.clientY - rect.top;
-                setRightSplit(Math.max(30, Math.min(70, (relY / rect.height) * 100)));
-              };
-              const onUp = () => {
-                window.removeEventListener('mousemove', onMove);
-                window.removeEventListener('mouseup', onUp);
-              };
-              window.addEventListener('mousemove', onMove);
-              window.addEventListener('mouseup', onUp);
-            }}
-          />
+          <div className="split-bar h-1 z-20 opacity-50" />
 
           <div className="log-shell flex-1 overflow-hidden min-h-0">
             <LogPanel />
