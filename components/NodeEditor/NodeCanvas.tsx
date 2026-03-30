@@ -9,39 +9,6 @@ import { NODE_WIDTH, calculateSocketPosition, getNodeRenderHeight } from '../../
 
 const SNAP_THRESHOLD = 72;
 
-const EXAMPLE_PRESETS = [
-  { file: '01-parametric-extrude.json', label: '示例1 参数化拉伸' },
-  { file: '02-boolean-cut.json', label: '示例2 布尔切割' },
-  { file: '03-data-array.json', label: '示例3 数据驱动阵列' },
-  { file: '04-revolve-form.json', label: '示例4 旋转成形' },
-  { file: '05-sweep-path.json', label: '示例5 路径扫掠' },
-  { file: '06-loft-sections.json', label: '示例6 截面放样' },
-  { file: '07-fillet-chamfer.json', label: '示例7 倒圆与倒角' },
-  { file: '08-analysis-pack.json', label: '示例8 几何分析' },
-  { file: '09-vector-math.json', label: '示例9 向量与数学' },
-  { file: '10-list-pipeline.json', label: '示例10 列表管线' },
-  { file: '11-mirror-array.json', label: '示例11 镜像与线阵' },
-  { file: '12-expression-drive.json', label: '示例12 表达式驱动' },
-  { file: '13-primitives-gallery.json', label: '示例13 基础实体画廊' },
-  { file: '14-cone-torus-union.json', label: '示例14 圆锥与圆环并集' },
-  { file: '15-shell-offset-stack.json', label: '示例15 偏移叠层' },
-  { file: '16-grid-city.json', label: '示例16 网格阵列城市' },
-  { file: '17-polar-crown.json', label: '示例17 极坐标冠环' },
-  { file: '18-loft-twist.json', label: '示例18 放样扭转' },
-  { file: '19-math-driven-radius.json', label: '示例19 数学驱动半径' },
-  { file: '20-analysis-dashboard.json', label: '示例20 分析仪表盘' },
-  { file: '21-flange-ring.json', label: '示例21 法兰盘（简化）' },
-  { file: '22-bolt-simple.json', label: '示例22 螺栓（简化）' },
-  { file: '23-nut-simple.json', label: '示例23 螺母（简化）' },
-  { file: '24-door-frame.json', label: '示例24 门框与门板' },
-  { file: '25-i-beam-section.json', label: '示例25 工字钢截面（简化）' },
-  { file: '26-c-channel-section.json', label: '示例26 槽钢截面（简化）' },
-  { file: '27-angle-steel-section.json', label: '示例27 角钢截面（简化）' },
-  { file: '28-tube-column-base.json', label: '示例28 方管立柱底座' },
-  { file: '29-bracket-l-shape.json', label: '示例29 L型支架' },
-  { file: '30-plate-with-holes.json', label: '示例30 多孔板' },
-];
-
 const isSocketCompatible = (sourceType: SocketType, targetType: SocketType) =>
   sourceType === targetType || sourceType === 'any' || targetType === 'any';
 
@@ -52,7 +19,7 @@ const NodeCanvas: React.FC = () => {
       removeSelectedNodes, duplicateSelectedNodes, fitView,
       selectedNodeIds, setSelectedNodes,
       connectionDraft, setConnectionDraft, addConnection,
-      saveGraph, loadGraph, loadGraphData,
+      saveGraph, loadGraph,
       updateNodePosition, updateNodeParam, computedResults, t,
       undo, redo, recordHistory, canUndo, canRedo,
       removeNode, removeConnection
@@ -65,8 +32,6 @@ const NodeCanvas: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingCanvas = useRef(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
-  const [selectedExample, setSelectedExample] = useState(EXAMPLE_PRESETS[0].file);
-  const [isLoadingExample, setIsLoadingExample] = useState(false);
 
   const connectionDraftRef = useRef<ConnectionDraft | null>(connectionDraft);
   useEffect(() => {
@@ -284,22 +249,6 @@ const NodeCanvas: React.FC = () => {
       recordHistory();
   }, [recordHistory]);
 
-  const handleLoadExample = useCallback(async () => {
-      try {
-          setIsLoadingExample(true);
-          const url = `${import.meta.env.BASE_URL}examples/${selectedExample}`;
-          const response = await fetch(url, { cache: 'no-store' });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          loadGraphData(data, selectedExample);
-      } catch (error) {
-          console.error('Failed to load example', error);
-      } finally {
-          setIsLoadingExample(false);
-      }
-  }, [loadGraphData, selectedExample]);
-
-
   return (
     <div 
       ref={containerRef}
@@ -384,19 +333,6 @@ const NodeCanvas: React.FC = () => {
          <button onClick={() => {if(containerRef.current) fitView(containerRef.current.clientWidth, containerRef.current.clientHeight)}} title="充满画布"><Scan size={16} /></button>
          <button onClick={saveGraph} title="导出 JSON"><Download size={16} /></button>
          <button onClick={() => fileInputRef.current?.click()} title="导入 JSON"><Upload size={16} /></button>
-         <select
-            className="toolbar-select"
-            value={selectedExample}
-            onChange={(e) => setSelectedExample(e.target.value)}
-            title={t('Examples')}
-         >
-            {EXAMPLE_PRESETS.map((preset) => (
-              <option key={preset.file} value={preset.file}>{preset.label}</option>
-            ))}
-         </select>
-         <button className="toolbar-load-btn" onClick={handleLoadExample} disabled={isLoadingExample} title={t('Load Example')}>
-            <span className="text-[11px] px-1">{isLoadingExample ? '...' : t('Load')}</span>
-         </button>
          <input type="file" ref={fileInputRef} onChange={(e) => { if(e.target.files?.[0]) loadGraph(e.target.files[0]); e.target.value = ''; }} className="hidden" accept=".json" />
       </div>
 

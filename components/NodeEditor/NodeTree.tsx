@@ -1,15 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Trash2, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { NodeType } from '../../types';
 import { useGraph } from '../../store/GraphStore';
 import { NODE_LIBRARY_CATEGORIES } from '../../core/nodes/library';
+import { EXAMPLE_PRESETS } from './examplePresets';
 
 interface LibraryItem {
   label: string;
   type: NodeType;
   description?: string;
-  uniqueId?: string;
-  customData?: any;
 }
 
 const NODE_DESCRIPTIONS: Partial<Record<NodeType, { zh: string; en: string }>> = {
@@ -86,12 +85,10 @@ const NODE_DESCRIPTIONS: Partial<Record<NodeType, { zh: string; en: string }>> =
 const CategoryGroup: React.FC<{
   title: string;
   items: LibraryItem[];
-  isCustom?: boolean;
-  onDelete?: (id: string) => void;
   t: (k: string) => string;
   forceExpanded?: boolean;
   getNodeDescription: (type: NodeType) => string;
-}> = ({ title, items, isCustom, onDelete, t, forceExpanded = false, getNodeDescription }) => {
+}> = ({ title, items, t, forceExpanded = false, getNodeDescription }) => {
   const [expanded, setExpanded] = useState(true);
   const isOpen = forceExpanded || expanded;
 
@@ -108,13 +105,10 @@ const CategoryGroup: React.FC<{
         <div className="category-items">
           {items.map((item) => (
             <div
-              key={item.uniqueId || item.type}
+              key={`${item.type}-${item.label}`}
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setData('nodeType', item.type);
-                if (item.customData) {
-                  e.dataTransfer.setData('customData', JSON.stringify(item.customData));
-                }
                 e.dataTransfer.effectAllowed = 'copy';
               }}
               className="category-button"
@@ -124,18 +118,49 @@ const CategoryGroup: React.FC<{
                 <span className="category-button-name">{t(item.label)}</span>
                 <span className="category-button-desc">{item.description || getNodeDescription(item.type)}</span>
               </div>
-              {isCustom && onDelete && item.uniqueId && (
-                <div
-                  className="absolute top-1 right-1 p-1 bg-black/50 rounded hover:bg-red-600 text-gray-300 hover:text-white transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(item.uniqueId!);
-                  }}
-                  title={t('Delete Component')}
-                >
-                  <Trash2 size={10} />
-                </div>
-              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ExampleScriptsGroup: React.FC<{
+  title: string;
+  items: { file: string; label: string }[];
+  t: (k: string) => string;
+  onLoad: (file: string) => void;
+  isLoadingFile: string | null;
+  forceExpanded?: boolean;
+}> = ({ title, items, t, onLoad, isLoadingFile, forceExpanded = false }) => {
+  const [expanded, setExpanded] = useState(true);
+  const isOpen = forceExpanded || expanded;
+
+  return (
+    <div className="category-group">
+      <div className="category-title" onClick={() => setExpanded(!expanded)}>
+        <span>{t(title)}</span>
+        <span className="flex items-center gap-2">
+          <span className="category-count">{items.length}</span>
+          <span>{isOpen ? '-' : '+'}</span>
+        </span>
+      </div>
+      {isOpen && (
+        <div className="category-items">
+          {items.map((item) => (
+            <div
+              key={item.file}
+              className="category-button cursor-pointer"
+              title={`${t('Double-click to load')} ${item.label}`}
+              onDoubleClick={() => onLoad(item.file)}
+            >
+              <div className="category-button-text">
+                <span className="category-button-name">{item.label}</span>
+                <span className="category-button-desc">
+                  {isLoadingFile === item.file ? `${t('Loading')}...` : t('Double-click to load')}
+                </span>
+              </div>
             </div>
           ))}
         </div>
@@ -145,8 +170,9 @@ const CategoryGroup: React.FC<{
 };
 
 const NodeLibrary: React.FC = () => {
-  const { savedCustomNodes, deleteCustomNode, t, language } = useGraph();
+  const { t, language, loadGraphData } = useGraph();
   const [query, setQuery] = useState('');
+  const [loadingExampleFile, setLoadingExampleFile] = useState<string | null>(null);
 
   const normalizedQuery = query.trim().toLowerCase();
   const getNodeDescription = useCallback((type: NodeType) => {
@@ -171,19 +197,27 @@ const NodeLibrary: React.FC = () => {
       .filter((cat) => cat.items.length > 0);
   }, [getNodeDescription, normalizedQuery, t]);
 
-  const customItems = useMemo(() => {
-    const mapped = savedCustomNodes.map((node) => ({
-      label: node.name,
-      type: NodeType.CUSTOM,
-      description: getNodeDescription(NodeType.CUSTOM),
-      customData: { nodes: node.nodes, connections: node.connections },
-      uniqueId: node.id,
-    }));
-    if (!normalizedQuery) return mapped;
-    return mapped.filter((item) => `${item.label} ${item.description || ''}`.toLowerCase().includes(normalizedQuery));
-  }, [savedCustomNodes, normalizedQuery, getNodeDescription]);
+  const filteredExamples = useMemo(() => {
+    if (!normalizedQuery) return EXAMPLE_PRESETS;
+    return EXAMPLE_PRESETS.filter((item) => item.label.toLowerCase().includes(normalizedQuery));
+  }, [normalizedQuery]);
 
-  const hasResults = filteredCategories.length > 0 || customItems.length > 0;
+  const hasResults = filteredCategories.length > 0 || filteredExamples.length > 0;
+
+  const handleLoadExample = useCallback(async (file: string) => {
+    try {
+      setLoadingExampleFile(file);
+      const url = `${import.meta.env.BASE_URL}examples/${file}`;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      loadGraphData(data, file);
+    } catch (error) {
+      console.error('Failed to load example', error);
+    } finally {
+      setLoadingExampleFile(null);
+    }
+  }, [loadGraphData]);
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -221,33 +255,18 @@ const NodeLibrary: React.FC = () => {
             />
           ))}
 
-          {customItems.length > 0 && (
-            <CategoryGroup
-              title="Custom Nodes"
-              items={customItems}
-              isCustom
-              onDelete={deleteCustomNode}
-              t={t}
-              forceExpanded={!!normalizedQuery}
-              getNodeDescription={getNodeDescription}
-            />
-          )}
-
-          {!normalizedQuery && savedCustomNodes.length === 0 && (
-            <div className="category-group">
-              <div className="category-title">
-                <span>{t('Custom Nodes')}</span>
-                <span>+</span>
-              </div>
-              <div className="category-items">
-                <div className="text-[10px] text-gray-500 text-center italic px-2 py-3">{t('Save in Canvas')}</div>
-              </div>
-            </div>
-          )}
+          <ExampleScriptsGroup
+            title="Example Scripts"
+            items={filteredExamples}
+            t={t}
+            onLoad={handleLoadExample}
+            isLoadingFile={loadingExampleFile}
+            forceExpanded={!!normalizedQuery}
+          />
           <div className="h-3 shrink-0"></div>
         </div>
         <div className="node-tree-footer px-3 py-2 text-[10px] border-t">
-          {filteredCategories.reduce((sum, c) => sum + c.items.length, 0) + customItems.length} items
+          {filteredCategories.reduce((sum, c) => sum + c.items.length, 0) + filteredExamples.length} items
         </div>
       </div>
     </div>
