@@ -175,6 +175,38 @@ export const executeDataNode = ({ node, inputs }: DataContext): any[] | null => 
         z: a.z + (b.z - a.z) * t,
       }];
     }
+    case NodeType.MATH_ADD:
+      return [getNum('value_a', inputs, p, 0) + getNum('value_b', inputs, p, 0)];
+    case NodeType.MATH_SUBTRACT:
+      return [getNum('value_a', inputs, p, 0) - getNum('value_b', inputs, p, 0)];
+    case NodeType.MATH_MULTIPLY:
+      return [getNum('value_a', inputs, p, 0) * getNum('value_b', inputs, p, 0)];
+    case NodeType.MATH_DIVIDE: {
+      const denominator = getNum('value_b', inputs, p, 1);
+      if (Math.abs(denominator) < 1e-9) return [0];
+      return [getNum('value_a', inputs, p, 0) / denominator];
+    }
+    case NodeType.MATH_POWER:
+      return [Math.pow(getNum('value_a', inputs, p, 0), getNum('value_b', inputs, p, 1))];
+    case NodeType.MATH_ABS:
+      return [Math.abs(getNum('value', inputs, p, 0))];
+    case NodeType.MATH_CLAMP: {
+      const value = getNum('value', inputs, p, 0);
+      const min = getNum('min', inputs, p, 0);
+      const max = getNum('max', inputs, p, 1);
+      const [low, high] = min <= max ? [min, max] : [max, min];
+      return [Math.min(high, Math.max(low, value))];
+    }
+    case NodeType.MATH_REMAP: {
+      const value = getNum('value', inputs, p, 0);
+      const inMin = getNum('in_min', inputs, p, 0);
+      const inMax = getNum('in_max', inputs, p, 1);
+      const outMin = getNum('out_min', inputs, p, 0);
+      const outMax = getNum('out_max', inputs, p, 1);
+      if (Math.abs(inMax - inMin) < 1e-9) return [outMin];
+      const t = (value - inMin) / (inMax - inMin);
+      return [outMin + (outMax - outMin) * t];
+    }
     default:
       return null;
   }

@@ -7,7 +7,16 @@ import { Trash2, Copy, Scan, LayoutGrid, Download, Upload, Undo2, Redo2 } from '
 import { performAutoLayout } from '../../utils/autoLayout';
 import { NODE_WIDTH, calculateSocketPosition } from '../../constants';
 
-const SNAP_THRESHOLD = 40; 
+const SNAP_THRESHOLD = 72;
+
+const EXAMPLE_PRESETS = [
+  { file: '01-parametric-extrude.json', label: '示例1 参数化拉伸' },
+  { file: '02-boolean-cut.json', label: '示例2 布尔切割' },
+  { file: '03-data-array.json', label: '示例3 数据驱动阵列' },
+];
+
+const isSocketCompatible = (sourceType: SocketType, targetType: SocketType) =>
+  sourceType === targetType || sourceType === 'any' || targetType === 'any';
 
 const NodeCanvas: React.FC = () => {
   const { 
@@ -16,7 +25,7 @@ const NodeCanvas: React.FC = () => {
       removeSelectedNodes, duplicateSelectedNodes, fitView,
       selectedNodeIds, setSelectedNodes,
       connectionDraft, setConnectionDraft, addConnection,
-      saveGraph, loadGraph,
+      saveGraph, loadGraph, loadGraphData,
       updateNodePosition, updateNodeParam, computedResults, t,
       undo, redo, recordHistory, canUndo, canRedo,
       removeNode, removeConnection
@@ -29,7 +38,8 @@ const NodeCanvas: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingCanvas = useRef(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
-  const isDraggingNode = useRef(false); 
+  const [selectedExample, setSelectedExample] = useState(EXAMPLE_PRESETS[0].file);
+  const [isLoadingExample, setIsLoadingExample] = useState(false);
 
   const connectionDraftRef = useRef<ConnectionDraft | null>(connectionDraft);
   useEffect(() => {
@@ -114,6 +124,7 @@ const NodeCanvas: React.FC = () => {
             const isTargetInput = !connectionDraft.isInput;
 
             candidateSockets.forEach(sock => {
+                if (!isSocketCompatible(connectionDraft.sourceType, sock.type)) return;
                 const pos = calculateSocketPosition(node, sock.id, isTargetInput);
                 if (pos) {
                     const dist = Math.hypot(pos.x - worldX, pos.y - worldY);
@@ -214,29 +225,52 @@ const NodeCanvas: React.FC = () => {
   };
 
   const handleSocketMouseDown = useCallback((nodeId: string, socketId: string, type: SocketType, isInput: boolean, nx: number, ny: number) => {
+      const sourceNode = nodes.find((node) => node.id === nodeId);
+      const sourceSocketPos = sourceNode ? calculateSocketPosition(sourceNode, socketId, isInput) : null;
       setConnectionDraft({
         sourceNodeId: nodeId,
         sourceSocketId: socketId,
         sourceType: type,
         isInput,
-        currentPos: { x: nx, y: ny }
+        currentPos: sourceSocketPos || { x: nx, y: ny }
     });
-  }, [setConnectionDraft]);
+  }, [nodes, setConnectionDraft]);
 
   const handleSocketMouseUpWrapper = useCallback((targetNodeId: string, targetSocketId: string, isInput: boolean) => {
       const draft = connectionDraftRef.current;
       if (draft && !draft.snappedNodeId) { 
         if (draft.sourceNodeId !== targetNodeId && draft.isInput !== isInput) {
-             if (isInput) addConnection(draft.sourceNodeId, draft.sourceSocketId, targetNodeId, targetSocketId);
-             else addConnection(targetNodeId, targetSocketId, draft.sourceNodeId, draft.sourceSocketId);
+             const sourceNode = nodes.find((node) => node.id === (isInput ? draft.sourceNodeId : targetNodeId));
+             const targetNode = nodes.find((node) => node.id === (isInput ? targetNodeId : draft.sourceNodeId));
+             const sourceSocket = sourceNode?.outputs.find((socket) => socket.id === (isInput ? draft.sourceSocketId : targetSocketId));
+             const targetSocket = targetNode?.inputs.find((socket) => socket.id === (isInput ? targetSocketId : draft.sourceSocketId));
+             if (sourceSocket && targetSocket && isSocketCompatible(sourceSocket.type, targetSocket.type)) {
+               if (isInput) addConnection(draft.sourceNodeId, draft.sourceSocketId, targetNodeId, targetSocketId);
+               else addConnection(targetNodeId, targetSocketId, draft.sourceNodeId, draft.sourceSocketId);
+             }
         }
         setConnectionDraft(null);
     }
-  }, [addConnection, setConnectionDraft]);
+  }, [addConnection, nodes, setConnectionDraft]);
 
   const handleNodeDragStart = useCallback(() => {
       recordHistory();
   }, [recordHistory]);
+
+  const handleLoadExample = useCallback(async () => {
+      try {
+          setIsLoadingExample(true);
+          const url = `${import.meta.env.BASE_URL}examples/${selectedExample}`;
+          const response = await fetch(url, { cache: 'no-store' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          loadGraphData(data, selectedExample);
+      } catch (error) {
+          console.error('Failed to load example', error);
+      } finally {
+          setIsLoadingExample(false);
+      }
+  }, [loadGraphData, selectedExample]);
 
 
   return (
@@ -327,6 +361,19 @@ const NodeCanvas: React.FC = () => {
          <button onClick={() => {if(containerRef.current) fitView(containerRef.current.clientWidth, containerRef.current.clientHeight)}} title="充满画布"><Scan size={16} /></button>
          <button onClick={saveGraph} title="导出 JSON"><Download size={16} /></button>
          <button onClick={() => fileInputRef.current?.click()} title="导入 JSON"><Upload size={16} /></button>
+         <select
+            className="h-8 rounded bg-black/60 border border-white/15 text-[11px] px-2 text-gray-200"
+            value={selectedExample}
+            onChange={(e) => setSelectedExample(e.target.value)}
+            title={t('Examples')}
+         >
+            {EXAMPLE_PRESETS.map((preset) => (
+              <option key={preset.file} value={preset.file}>{preset.label}</option>
+            ))}
+         </select>
+         <button onClick={handleLoadExample} disabled={isLoadingExample} title={t('Load Example')}>
+            <span className="text-[11px] px-1">{isLoadingExample ? '...' : t('Load')}</span>
+         </button>
          <input type="file" ref={fileInputRef} onChange={(e) => { if(e.target.files?.[0]) loadGraph(e.target.files[0]); e.target.value = ''; }} className="hidden" accept=".json" />
       </div>
 

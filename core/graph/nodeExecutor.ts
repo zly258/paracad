@@ -122,7 +122,15 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
     case NodeType.VECTOR_CROSS:
     case NodeType.VECTOR_DISTANCE:
     case NodeType.VECTOR_ANGLE:
-    case NodeType.VECTOR_LERP: {
+    case NodeType.MATH_ADD:
+    case NodeType.MATH_SUBTRACT:
+    case NodeType.MATH_MULTIPLY:
+    case NodeType.MATH_DIVIDE:
+    case NodeType.MATH_POWER:
+    case NodeType.MATH_ABS:
+    case NodeType.MATH_CLAMP:
+    case NodeType.VECTOR_LERP:
+    case NodeType.MATH_REMAP: {
       const dataResult = executeDataNode({ node, inputs });
       if (dataResult) return dataResult;
       return [null];

@@ -308,6 +308,76 @@ export const createDefaultNode = (
         outputs: [createSocket('vector', 'vector')],
         params: { a: { x: 0, y: 0, z: 0 }, b: { x: 10, y: 0, z: 0 }, t: 0.5 },
       };
+    case NodeType.MATH_ADD:
+      return {
+        ...baseNode,
+        label: 'Add',
+        inputs: [createSocket('value_a', 'number'), createSocket('value_b', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value_a: 0, value_b: 0 },
+      };
+    case NodeType.MATH_SUBTRACT:
+      return {
+        ...baseNode,
+        label: 'Minus',
+        inputs: [createSocket('value_a', 'number'), createSocket('value_b', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value_a: 10, value_b: 4 },
+      };
+    case NodeType.MATH_MULTIPLY:
+      return {
+        ...baseNode,
+        label: 'Multiply',
+        inputs: [createSocket('value_a', 'number'), createSocket('value_b', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value_a: 2, value_b: 5 },
+      };
+    case NodeType.MATH_DIVIDE:
+      return {
+        ...baseNode,
+        label: 'Divide',
+        inputs: [createSocket('value_a', 'number'), createSocket('value_b', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value_a: 10, value_b: 2 },
+      };
+    case NodeType.MATH_POWER:
+      return {
+        ...baseNode,
+        label: 'Power',
+        inputs: [createSocket('value_a', 'number'), createSocket('value_b', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value_a: 2, value_b: 3 },
+      };
+    case NodeType.MATH_ABS:
+      return {
+        ...baseNode,
+        label: 'Absolute',
+        inputs: [createSocket('value', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value: -10 },
+      };
+    case NodeType.MATH_CLAMP:
+      return {
+        ...baseNode,
+        label: 'Clamp',
+        inputs: [createSocket('value', 'number'), createSocket('min', 'number'), createSocket('max', 'number')],
+        outputs: [createSocket('result', 'number')],
+        params: { value: 1.2, min: 0, max: 1 },
+      };
+    case NodeType.MATH_REMAP:
+      return {
+        ...baseNode,
+        label: 'Remap',
+        inputs: [
+          createSocket('value', 'number'),
+          createSocket('in_min', 'number'),
+          createSocket('in_max', 'number'),
+          createSocket('out_min', 'number'),
+          createSocket('out_max', 'number'),
+        ],
+        outputs: [createSocket('result', 'number')],
+        params: { value: 5, in_min: 0, in_max: 10, out_min: 0, out_max: 1 },
+      };
     case NodeType.TRANSLATION:
       return { ...baseNode, label: 'Move', inputs: [createSocket('geometry', 'geometry'), createSocket('vector', 'vector')], outputs: [createSocket('geometry', 'geometry')], params: { vector: { x: 10, y: 0, z: 0 } } };
     case NodeType.ROTATION:
@@ -321,7 +391,13 @@ export const createDefaultNode = (
     case NodeType.ARRAY_GRID:
       return { ...baseNode, label: 'Array Grid', inputs: [createSocket('geometry', 'geometry'), createSocket('count_x', 'number'), createSocket('count_y', 'number'), createSocket('spacing', 'number')], outputs: [createSocket('geometry', 'geometry')], params: { count_x: 3, count_y: 3, spacing: 20 } };
     case NodeType.ARRAY_POLAR:
-      return { ...baseNode, label: 'Array Polar', inputs: [createSocket('geometry', 'geometry'), createSocket('center', 'vector'), createSocket('count', 'number'), createSocket('fill_angle', 'number')], outputs: [createSocket('geometry', 'geometry')], params: { center: { x: 0, y: 0, z: 0 }, count: 6, fill_angle: 360 } };
+      return {
+        ...baseNode,
+        label: 'Array Polar',
+        inputs: [createSocket('geometry', 'geometry'), createSocket('center', 'vector'), createSocket('radius', 'number'), createSocket('count', 'number'), createSocket('fill_angle', 'number')],
+        outputs: [createSocket('geometry', 'geometry')],
+        params: { center: { x: 0, y: 0, z: 0 }, radius: 20, count: 6, fill_angle: 360 },
+      };
     default:
       return baseNode;
   }

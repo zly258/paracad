@@ -1,0 +1,70 @@
+{
+  "nodes": [
+    {
+      "id": "n-box",
+      "type": "BOX",
+      "position": { "x": 60, "y": 120 },
+      "label": "Box",
+      "inputs": [
+        { "id": "in-box-base", "name": "base", "type": "vector" },
+        { "id": "in-box-x", "name": "size_x", "type": "number" },
+        { "id": "in-box-y", "name": "size_y", "type": "number" },
+        { "id": "in-box-z", "name": "size_z", "type": "number" }
+      ],
+      "outputs": [{ "id": "out-box-geom", "name": "geometry", "type": "geometry" }],
+      "params": { "base": { "x": 0, "y": 0, "z": 0 }, "size_x": 80, "size_y": 60, "size_z": 40, "color": "#57a2ff" }
+    },
+    {
+      "id": "n-cyl",
+      "type": "CYLINDER",
+      "position": { "x": 60, "y": 340 },
+      "label": "Cylinder",
+      "inputs": [
+        { "id": "in-cyl-base", "name": "base", "type": "vector" },
+        { "id": "in-cyl-r", "name": "radius", "type": "number" },
+        { "id": "in-cyl-h", "name": "height", "type": "number" }
+      ],
+      "outputs": [{ "id": "out-cyl-geom", "name": "geometry", "type": "geometry" }],
+      "params": { "base": { "x": 0, "y": 0, "z": 0 }, "radius": 16, "height": 80, "color": "#f09f4a" }
+    },
+    {
+      "id": "n-move",
+      "type": "TRANSLATION",
+      "position": { "x": 360, "y": 340 },
+      "label": "Move",
+      "inputs": [
+        { "id": "in-move-geom", "name": "geometry", "type": "geometry" },
+        { "id": "in-move-v", "name": "vector", "type": "vector" }
+      ],
+      "outputs": [{ "id": "out-move-geom", "name": "geometry", "type": "geometry" }],
+      "params": { "vector": { "x": 20, "y": 0, "z": 0 } }
+    },
+    {
+      "id": "n-bool",
+      "type": "BOOLEAN_OP",
+      "position": { "x": 660, "y": 200 },
+      "label": "Boolean",
+      "inputs": [
+        { "id": "in-bool-a", "name": "object_a", "type": "geometry" },
+        { "id": "in-bool-b", "name": "object_b", "type": "geometry" }
+      ],
+      "outputs": [{ "id": "out-bool-geom", "name": "geometry", "type": "geometry" }],
+      "params": { "operation": "SUBTRACT", "color": "#d2e85d" }
+    },
+    {
+      "id": "n-volume",
+      "type": "VOLUME",
+      "position": { "x": 940, "y": 220 },
+      "label": "Volume",
+      "inputs": [{ "id": "in-vol-geom", "name": "geometry", "type": "geometry" }],
+      "outputs": [{ "id": "out-vol", "name": "volume", "type": "number" }],
+      "params": {}
+    }
+  ],
+  "connections": [
+    { "id": "c1", "sourceNodeId": "n-cyl", "sourceSocketId": "out-cyl-geom", "targetNodeId": "n-move", "targetSocketId": "in-move-geom" },
+    { "id": "c2", "sourceNodeId": "n-box", "sourceSocketId": "out-box-geom", "targetNodeId": "n-bool", "targetSocketId": "in-bool-a" },
+    { "id": "c3", "sourceNodeId": "n-move", "sourceSocketId": "out-move-geom", "targetNodeId": "n-bool", "targetSocketId": "in-bool-b" },
+    { "id": "c4", "sourceNodeId": "n-bool", "sourceSocketId": "out-bool-geom", "targetNodeId": "n-volume", "targetSocketId": "in-vol-geom" }
+  ]
+}

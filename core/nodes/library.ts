@@ -88,6 +88,19 @@ export const NODE_LIBRARY_CATEGORIES: NodeLibraryCategory[] = [
     ],
   },
   {
+    label: 'Math',
+    items: [
+      { label: 'Add', type: NodeType.MATH_ADD },
+      { label: 'Minus', type: NodeType.MATH_SUBTRACT },
+      { label: 'Multiply', type: NodeType.MATH_MULTIPLY },
+      { label: 'Divide', type: NodeType.MATH_DIVIDE },
+      { label: 'Power', type: NodeType.MATH_POWER },
+      { label: 'Absolute', type: NodeType.MATH_ABS },
+      { label: 'Clamp', type: NodeType.MATH_CLAMP },
+      { label: 'Remap', type: NodeType.MATH_REMAP },
+    ],
+  },
+  {
     label: 'Transforms',
     items: [
       { label: 'Move', type: NodeType.TRANSLATION },

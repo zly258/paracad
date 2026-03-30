@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { NodeData, NodeType } from '../../types';
-import { createOcctPoint } from './occtHelpers';
+import { createOcctInstance, createOcctPoint } from './occtHelpers';
 import { tryOcct } from './occtRuntime';
 import { getMaterial, getNum, getVec, tagKernel } from './runtimeUtils';
 
@@ -54,8 +54,30 @@ export const executeSolidNode = async ({ node, inputs }: SolidContext): Promise<
       return [mesh];
     }
     case NodeType.CAPSULE: {
-      const mesh = createMesh(new THREE.CapsuleGeometry(getNum('radius', inputs, p, 5), getNum('length', inputs, p, 20), 8, 16), 'capsule');
       const c = getVec('center', inputs, p);
+      const radius = getNum('radius', inputs, p, 5);
+      const length = getNum('length', inputs, p, 20);
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const bottom = createOcctPoint(oc, c.x, c.y, c.z - length / 2);
+        const top = createOcctPoint(oc, c.x, c.y, c.z + length / 2);
+        const cylinder = new oc.BRepPrimAPI_MakeCylinder_3(bottom, radius, length).Shape();
+        const bottomSphere = new oc.BRepPrimAPI_MakeSphere_5(bottom, radius).Shape();
+        const topSphere = new oc.BRepPrimAPI_MakeSphere_5(top, radius).Shape();
+        const progress = createOcctInstance(oc, ['Message_ProgressRange_1', 'Message_ProgressRange'], []);
+        const fusedBottom = createOcctInstance(oc, ['BRepAlgoAPI_Fuse_3', 'BRepAlgoAPI_Fuse_2', 'BRepAlgoAPI_Fuse'], [
+          cylinder,
+          bottomSphere,
+          progress,
+        ]).Shape();
+        return createOcctInstance(oc, ['BRepAlgoAPI_Fuse_3', 'BRepAlgoAPI_Fuse_2', 'BRepAlgoAPI_Fuse'], [
+          fusedBottom,
+          topSphere,
+          progress,
+        ]).Shape();
+      }, 'occt-capsule');
+      if (occtObject) return [occtObject];
+
+      const mesh = createMesh(new THREE.CapsuleGeometry(getNum('radius', inputs, p, 5), getNum('length', inputs, p, 20), 8, 16), 'capsule');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }

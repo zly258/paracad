@@ -40,6 +40,7 @@ interface GraphContextType extends GraphState {
   setConnectionDraft: (draft: ConnectionDraft | null) => void;
   saveGraph: () => void;
   loadGraph: (file: File) => void;
+  loadGraphData: (data: { nodes: NodeData[]; connections?: Connection[] }, sourceLabel?: string) => void;
   triggerCompute: () => void; 
   isComputing: boolean;
   kernelReady: boolean;
@@ -342,26 +343,30 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addLog('Export JSON Success', 'success');
   }, [nodes, connections, addLog]);
 
-  const loadGraph = useCallback((file: File) => {
+  const loadGraphData = useCallback((data: { nodes: NodeData[]; connections?: Connection[] }, sourceLabel = 'JSON') => {
+      if (!data?.nodes || !Array.isArray(data.nodes)) {
+          addLog('Import Failed', 'error');
+          return;
+      }
       recordHistory();
+      setNodesState(data.nodes);
+      setConnections(Array.isArray(data.connections) ? data.connections : []);
+      addLog(`Imported ${data.nodes.length} nodes from ${sourceLabel}`, 'success');
+  }, [addLog, recordHistory]);
+
+  const loadGraph = useCallback((file: File) => {
       const reader = new FileReader();
       reader.onload = (e) => {
           try {
               const raw = e.target?.result as string;
               const data = JSON.parse(raw);
-              if (data.nodes && Array.isArray(data.nodes)) {
-                  setNodesState(data.nodes);
-                  setConnections(data.connections || []);
-                  addLog(`Imported ${data.nodes.length} nodes`, 'success');
-              } else {
-                  throw new Error("Invalid Format");
-              }
+              loadGraphData(data, file.name);
           } catch(err) {
               addLog('Import Failed', 'error');
           }
       };
       reader.readAsText(file);
-  }, [addLog, recordHistory]);
+  }, [addLog, loadGraphData]);
 
   const saveAsCustomNode = useCallback((name: string) => {
       if (!name) return;
@@ -401,12 +406,12 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, kernelBackend, kernelMessage, savedCustomNodes, language,
       history, future, canUndo: history.length > 0, canRedo: future.length > 0,
       addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
-      addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, 
+      addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, loadGraphData, triggerCompute, 
       saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
   }), [
       nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, kernelBackend, kernelMessage, savedCustomNodes, language, history, future,
       addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
-      addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, triggerCompute, 
+      addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, loadGraphData, triggerCompute, 
       saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
   ]);
 
