@@ -74,7 +74,7 @@ const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> =
           <button
             onClick={undo}
             disabled={!canUndo}
-            className={`p-1.5 rounded transition-colors ${canUndo ? 'text-gray-200 hover:bg-gray-600 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
+            className={`header-icon-btn p-1.5 rounded transition-colors ${canUndo ? 'text-gray-200 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
             title={t('Undo') + ' (Ctrl+Z)'}
           >
             <Undo2 size={16} />
@@ -82,7 +82,7 @@ const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> =
           <button
             onClick={redo}
             disabled={!canRedo}
-            className={`p-1.5 rounded transition-colors ${canRedo ? 'text-gray-200 hover:bg-gray-600 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
+            className={`header-icon-btn p-1.5 rounded transition-colors ${canRedo ? 'text-gray-200 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
             title={t('Redo') + ' (Ctrl+Y)'}
           >
             <Redo2 size={16} />

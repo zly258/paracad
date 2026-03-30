@@ -159,7 +159,7 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
     >
       {/* Header */}
       <div 
-        className={`node-card-header flex items-center justify-between cursor-grab active:cursor-grabbing ${isSelected ? 'bg-yellow-900/40 border-yellow-600' : ''}`}
+        className={`node-card-header flex items-center justify-between cursor-grab active:cursor-grabbing ${isSelected ? 'node-card-header-selected' : ''}`}
         style={{ height: HEADER_HEIGHT }}
         onMouseDown={handleMouseDown}
       >
@@ -295,7 +295,7 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
                     const height = getSocketHeight(input.type);
                     
                     return (
-                        <div key={input.id} className="relative flex px-2.5 group items-center hover:bg-white/5 transition-colors shrink-0" style={{ height: height }}>
+                        <div key={input.id} className="node-row relative flex px-2.5 group items-center transition-colors shrink-0" style={{ height: height }}>
                             {/* Socket Dot - Absolute Positioned */}
                             <div 
                                 className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 flex items-center justify-center cursor-crosshair hover:scale-125 transition-transform z-10"
@@ -341,7 +341,7 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
         {/* Outputs */}
         <div className="pb-1 shrink-0">
             {node.outputs.map(output => (
-                <div key={output.id} className="relative flex items-center justify-end px-2.5 group hover:bg-white/5 transition-colors shrink-0" style={{ height: OUTPUT_ROW_HEIGHT }}>
+                <div key={output.id} className="node-row relative flex items-center justify-end px-2.5 group transition-colors shrink-0" style={{ height: OUTPUT_ROW_HEIGHT }}>
                     {isPreviewOutputType(output.type) && computedResults.has(output.id) && (
                         <span
                           className="text-[10px] leading-none text-cyan-300/90 mr-2 bg-black/30 border border-cyan-900/35 rounded px-1.5 py-0.5 max-w-[90px] truncate"
