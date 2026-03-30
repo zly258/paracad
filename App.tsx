@@ -3,11 +3,11 @@ import NodeCanvas from './components/NodeEditor/NodeCanvas';
 import NodeTree from './components/NodeEditor/NodeTree';
 import Viewer3D from './components/Viewport/Viewer3D';
 import { GraphProvider, useGraph } from './store/GraphStore';
-import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2, SunMoon } from 'lucide-react';
+import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2, SunMoon, Eraser } from 'lucide-react';
 import './styles/workbench.css';
 
 const LogPanel = React.memo(() => {
-  const { logs, t } = useGraph();
+  const { logs, t, clearLogs } = useGraph();
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -18,7 +18,15 @@ const LogPanel = React.memo(() => {
     <div className="log-panel-root flex flex-col h-full font-mono text-xs overflow-hidden">
       <div className="log-panel-header h-6 border-b flex items-center px-2 gap-2">
         <Terminal size={12} />
-        <span className="font-bold">{t('Console')}</span>
+        <span className="font-bold flex-1">{t('Console')}</span>
+        <button
+          onClick={clearLogs}
+          className="log-clear-btn px-1.5 h-5 rounded text-[10px] inline-flex items-center gap-1 border transition-colors"
+          title={t('Clear Logs')}
+        >
+          <Eraser size={10} />
+          {t('Clear')}
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {logs.map((log) => (

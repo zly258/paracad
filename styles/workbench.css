@@ -660,6 +660,22 @@ html[data-theme='light'] .canvas-toolbar button:disabled {
   background: var(--log-panel-bg);
 }
 
+.log-clear-btn {
+  color: var(--log-header-text);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--workbench-border);
+}
+
+.log-clear-btn:hover {
+  filter: brightness(1.08);
+}
+
+html[data-theme='light'] .log-clear-btn {
+  background: rgba(44, 92, 170, 0.08);
+  color: #37547a;
+  border-color: rgba(33, 66, 120, 0.2);
+}
+
 .log-panel {
   height: calc(100% - 44px);
 }

@@ -37,6 +37,7 @@ interface GraphContextType extends GraphState {
   selectNode: (id: string | null, multi?: boolean) => void;
   setSelectedNodes: (ids: string[]) => void;
   addLog: (message: string, type?: 'info' | 'success' | 'error' | 'warning') => void;
+  clearLogs: () => void;
   computedResults: Map<string, any>; 
   setConnectionDraft: (draft: ConnectionDraft | null) => void;
   saveGraph: () => void;
@@ -170,6 +171,10 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setNodes = useCallback((newNodes: NodeData[]) => {
       setNodesState(newNodes);
+  }, []);
+
+  const clearLogs = useCallback(() => {
+    setLogs([]);
   }, []);
   
   const triggerCompute = useCallback(() => {
@@ -458,12 +463,12 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       history, future, canUndo: history.length > 0, canRedo: future.length > 0,
       addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
       addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, loadGraphData, triggerCompute, 
-      saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
+      saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory, clearLogs
   }), [
       nodes, connections, selectedNodeIds, pan, zoom, computedResults, logs, connectionDraft, isComputing, kernelReady, kernelBackend, kernelMessage, savedCustomNodes, language, history, future,
       addLog, setNodes, addNode, removeNode, removeSelectedNodes, duplicateSelectedNodes, fitView, updateNodePosition, updateNodeParam, 
       addConnection, removeConnection, setPan, setZoom, selectNode, setSelectedNodes, setConnectionDraft, saveGraph, loadGraph, loadGraphData, triggerCompute, 
-      saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory
+      saveAsCustomNode, deleteCustomNode, toggleLanguage, t, undo, redo, recordHistory, clearLogs
   ]);
 
   return (
