@@ -38,10 +38,10 @@ const ConnectionLayer: React.FC<ConnectionLayerProps> = ({ nodes, connections, c
              className="pointer-events-auto cursor-pointer group" 
              onDoubleClick={(e) => { e.stopPropagation(); onRemoveConnection(conn.id); }}
           >
-            <path d={pathData} stroke="transparent" strokeWidth="20" fill="none" />
-            <path d={pathData} stroke="#444" strokeWidth="2" fill="none" />
-            <path d={pathData} stroke="#eab308" strokeWidth="2" fill="none" className="connection-line opacity-80" />
-            <path d={pathData} stroke="red" strokeWidth="3" fill="none" className="opacity-0 group-hover:opacity-40 transition-opacity" />
+            <path d={pathData} strokeWidth="20" fill="none" className="connection-hit" />
+            <path d={pathData} strokeWidth="2" fill="none" className="connection-back" />
+            <path d={pathData} strokeWidth="2" fill="none" className="connection-main opacity-80" />
+            <path d={pathData} strokeWidth="3" fill="none" className="connection-hover opacity-0 group-hover:opacity-70 transition-opacity" />
           </g>
         );
       })}
@@ -62,11 +62,11 @@ const ConnectionLayer: React.FC<ConnectionLayerProps> = ({ nodes, connections, c
 
           return (
              <g>
-               <path d={pData} stroke="#fff" strokeWidth="2" strokeDasharray="5,5" fill="none" className="opacity-80 animate-pulse" />
+               <path d={pData} strokeWidth="2" strokeDasharray="5,5" fill="none" className="connection-draft opacity-80 animate-pulse" />
                {connectionDraft.snappedSocketId && (
                    <g transform={`translate(${endX}, ${endY})`}>
-                       <circle r="8" fill="none" stroke="#eab308" strokeWidth="2" className="animate-ping" opacity="0.5" />
-                       <circle r="5" fill="#eab308" />
+                       <circle r="8" fill="none" strokeWidth="2" className="connection-snap-ring animate-ping" opacity="0.5" />
+                       <circle r="5" className="connection-snap-core" />
                    </g>
                )}
              </g>

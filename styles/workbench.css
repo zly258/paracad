@@ -30,6 +30,11 @@
   --node-tree-header-bg: #222;
   --node-tree-header-text: #d6dced;
   --node-tree-footer-text: #818da7;
+  --connection-back: #3a4157;
+  --connection-main: #e8b532;
+  --connection-hover: #ff6a55;
+  --connection-draft: #f5f8ff;
+  --connection-snap: #e8b532;
 }
 
 html[data-theme='light'] {
@@ -62,6 +67,11 @@ html[data-theme='light'] {
   --node-tree-header-bg: #eef2fb;
   --node-tree-header-text: #2b3f61;
   --node-tree-footer-text: #607795;
+  --connection-back: #7f97bc;
+  --connection-main: #1f5fb7;
+  --connection-hover: #d74f4f;
+  --connection-draft: #285a9f;
+  --connection-snap: #1f5fb7;
 }
 
 * {
@@ -923,6 +933,34 @@ html[data-theme='light'] .log-panel-root .text-gray-600 {
   text-transform: uppercase;
   color: var(--workbench-text-muted);
   z-index: 5;
+}
+
+.connection-hit {
+  stroke: transparent;
+}
+
+.connection-back {
+  stroke: var(--connection-back);
+}
+
+.connection-main {
+  stroke: var(--connection-main);
+}
+
+.connection-hover {
+  stroke: var(--connection-hover);
+}
+
+.connection-draft {
+  stroke: var(--connection-draft);
+}
+
+.connection-snap-ring {
+  stroke: var(--connection-snap);
+}
+
+.connection-snap-core {
+  fill: var(--connection-snap);
 }
 
 @media (max-width: 1280px) {
