@@ -37,8 +37,8 @@ export const occtShapeToThreeObject = async (
 
   scene.traverse((child: any) => {
     if (!child.isMesh) return;
-    child.castShadow = true;
-    child.receiveShadow = true;
+    child.castShadow = false;
+    child.receiveShadow = false;
     child.material = new THREE.MeshStandardMaterial({
       color,
       metalness: 0.02,

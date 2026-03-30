@@ -65,8 +65,8 @@ export const computeGraph = async (
           if (result instanceof THREE.Object3D) {
             result.userData.nodeId = node.id;
             result.userData.visible = depth === 0 ? !hiddenByGeometryConsumerIds.has(node.id) : true;
-            result.castShadow = true;
-            result.receiveShadow = true;
+            result.castShadow = false;
+            result.receiveShadow = false;
           }
           results.set(out.id, result);
           hasChanges = true;

@@ -76,13 +76,8 @@ const SceneContent: React.FC<SceneContentProps> = ({ computedResults }) => {
         
         <directionalLight 
             position={[-50, -50, 80]} 
-            intensity={1.2} 
-            castShadow 
-            shadow-mapSize={[2048, 2048]} 
-            shadow-normalBias={0.04} 
-        >
-            <orthographicCamera attach="shadow-camera" args={[-200, 200, 200, -200, 0.1, 1000]} />
-        </directionalLight>
+            intensity={1.0}
+        />
         
         {meshesToRender}
 
@@ -191,7 +186,7 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
                </button>
           </div>
     
-          <Canvas shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true }}>
+          <Canvas dpr={[1, 2]} gl={{ preserveDrawingBuffer: true }}>
             <OrthographicCamera ref={cameraRef} makeDefault position={[50, -50, 50]} up={[0, 0, 1]} zoom={10} near={0.1} far={4000} />
             
             <SceneContent computedResults={computedResults} />
