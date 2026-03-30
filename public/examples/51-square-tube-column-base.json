@@ -1,0 +1,192 @@
+﻿{
+    "nodes":  [
+                  {
+                      "id":  "t1",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  80
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "t1i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "t1i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "t1i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "t1i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "t1o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  0,
+                                                  "z":  0
+                                              },
+                                     "size_x":  51.04,
+                                     "size_y":  51.04,
+                                     "size_z":  197.2,
+                                     "color":  "#80cbc4"
+                                 }
+                  },
+                  {
+                      "id":  "t2",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  240
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "t2i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "t2i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "t2i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "t2i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "t2o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  0,
+                                                  "z":  0
+                                              },
+                                     "size_x":  150.8,
+                                     "size_y":  150.8,
+                                     "size_z":  16.24,
+                                     "color":  "#4db6ac"
+                                 }
+                  },
+                  {
+                      "id":  "t3",
+                      "type":  "TRANSLATION",
+                      "position":  {
+                                       "x":  330,
+                                       "y":  80
+                                   },
+                      "label":  "Move",
+                      "inputs":  [
+                                     {
+                                         "id":  "t3i1",
+                                         "name":  "geometry",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "t3i2",
+                                         "name":  "vector",
+                                         "type":  "vector"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "t3o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "vector":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  85
+                                                }
+                                 }
+                  },
+                  {
+                      "id":  "t4",
+                      "type":  "BOOLEAN_OP",
+                      "position":  {
+                                       "x":  620,
+                                       "y":  160
+                                   },
+                      "label":  "Boolean",
+                      "inputs":  [
+                                     {
+                                         "id":  "t4i1",
+                                         "name":  "object_a",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "t4i2",
+                                         "name":  "object_b",
+                                         "type":  "geometry"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "t4o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "operation":  "UNION",
+                                     "color":  "#4db6ac"
+                                 }
+                  }
+              ],
+    "connections":  [
+                        {
+                            "id":  "tc1",
+                            "sourceNodeId":  "t1",
+                            "sourceSocketId":  "t1o1",
+                            "targetNodeId":  "t3",
+                            "targetSocketId":  "t3i1"
+                        },
+                        {
+                            "id":  "tc2",
+                            "sourceNodeId":  "t2",
+                            "sourceSocketId":  "t2o1",
+                            "targetNodeId":  "t4",
+                            "targetSocketId":  "t4i1"
+                        },
+                        {
+                            "id":  "tc3",
+                            "sourceNodeId":  "t3",
+                            "sourceSocketId":  "t3o1",
+                            "targetNodeId":  "t4",
+                            "targetSocketId":  "t4i2"
+                        }
+                    ]
+}

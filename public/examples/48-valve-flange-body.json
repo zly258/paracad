@@ -1,0 +1,138 @@
+﻿{
+    "nodes":  [
+                  {
+                      "id":  "f1",
+                      "type":  "CYLINDER",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  80
+                                   },
+                      "label":  "Cylinder",
+                      "inputs":  [
+                                     {
+                                         "id":  "f1i1",
+                                         "name":  "center",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "f1i2",
+                                         "name":  "radius",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "f1i3",
+                                         "name":  "height",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "f1o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "center":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  0
+                                                },
+                                     "radius":  47.2,
+                                     "height":  11.8,
+                                     "color":  "#90caf9"
+                                 }
+                  },
+                  {
+                      "id":  "f2",
+                      "type":  "CYLINDER",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  240
+                                   },
+                      "label":  "Cylinder",
+                      "inputs":  [
+                                     {
+                                         "id":  "f2i1",
+                                         "name":  "center",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "f2i2",
+                                         "name":  "radius",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "f2i3",
+                                         "name":  "height",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "f2o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "center":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  0
+                                                },
+                                     "radius":  21.24,
+                                     "height":  14.16,
+                                     "color":  "#ffab91"
+                                 }
+                  },
+                  {
+                      "id":  "f3",
+                      "type":  "BOOLEAN_OP",
+                      "position":  {
+                                       "x":  330,
+                                       "y":  160
+                                   },
+                      "label":  "Boolean",
+                      "inputs":  [
+                                     {
+                                         "id":  "f3i1",
+                                         "name":  "object_a",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "f3i2",
+                                         "name":  "object_b",
+                                         "type":  "geometry"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "f3o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "operation":  "SUBTRACT",
+                                     "color":  "#64b5f6"
+                                 }
+                  }
+              ],
+    "connections":  [
+                        {
+                            "id":  "fc1",
+                            "sourceNodeId":  "f1",
+                            "sourceSocketId":  "f1o1",
+                            "targetNodeId":  "f3",
+                            "targetSocketId":  "f3i1"
+                        },
+                        {
+                            "id":  "fc2",
+                            "sourceNodeId":  "f2",
+                            "sourceSocketId":  "f2o1",
+                            "targetNodeId":  "f3",
+                            "targetSocketId":  "f3i2"
+                        }
+                    ]
+}

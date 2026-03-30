@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { NodeType } from '../../types';
 import { useGraph } from '../../store/GraphStore';
@@ -83,18 +83,20 @@ const NODE_DESCRIPTIONS: Partial<Record<NodeType, { zh: string; en: string }>> =
 };
 
 const CategoryGroup: React.FC<{
+  groupKey: string;
   title: string;
   items: LibraryItem[];
   t: (k: string) => string;
+  expanded: boolean;
   forceExpanded?: boolean;
+  onToggle: (groupKey: string) => void;
   getNodeDescription: (type: NodeType) => string;
-}> = ({ title, items, t, forceExpanded = false, getNodeDescription }) => {
-  const [expanded, setExpanded] = useState(true);
+}> = ({ groupKey, title, items, t, expanded, forceExpanded = false, onToggle, getNodeDescription }) => {
   const isOpen = forceExpanded || expanded;
 
   return (
     <div className="category-group">
-      <div className="category-title" onClick={() => setExpanded(!expanded)}>
+      <div className="category-title" onClick={() => onToggle(groupKey)}>
         <span>{t(title)}</span>
         <span className="flex items-center gap-2">
           <span className="category-count">{items.length}</span>
@@ -127,19 +129,21 @@ const CategoryGroup: React.FC<{
 };
 
 const ExampleScriptsGroup: React.FC<{
+  groupKey: string;
   title: string;
   items: { file: string; label: string }[];
   t: (k: string) => string;
   onLoad: (file: string) => void;
   isLoadingFile: string | null;
+  expanded: boolean;
   forceExpanded?: boolean;
-}> = ({ title, items, t, onLoad, isLoadingFile, forceExpanded = false }) => {
-  const [expanded, setExpanded] = useState(true);
+  onToggle: (groupKey: string) => void;
+}> = ({ groupKey, title, items, t, onLoad, isLoadingFile, expanded, forceExpanded = false, onToggle }) => {
   const isOpen = forceExpanded || expanded;
 
   return (
     <div className="category-group">
-      <div className="category-title" onClick={() => setExpanded(!expanded)}>
+      <div className="category-title" onClick={() => onToggle(groupKey)}>
         <span>{t(title)}</span>
         <span className="flex items-center gap-2">
           <span className="category-count">{items.length}</span>
@@ -173,8 +177,23 @@ const NodeLibrary: React.FC = () => {
   const { t, language, loadGraphData } = useGraph();
   const [query, setQuery] = useState('');
   const [loadingExampleFile, setLoadingExampleFile] = useState<string | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [activeGroupKey, setActiveGroupKey] = useState<string>('examples');
 
   const normalizedQuery = query.trim().toLowerCase();
+  const categoryKeys = useMemo(() => NODE_LIBRARY_CATEGORIES.map((cat) => cat.label), []);
+  const allGroupKeys = useMemo(() => [...categoryKeys, 'examples'], [categoryKeys]);
+
+  useEffect(() => {
+    setExpandedGroups((prev) => {
+      const next: Record<string, boolean> = {};
+      allGroupKeys.forEach((key) => {
+        next[key] = prev[key] ?? false;
+      });
+      return next;
+    });
+  }, [allGroupKeys]);
+
   const getNodeDescription = useCallback((type: NodeType) => {
     const item = NODE_DESCRIPTIONS[type];
     if (!item) return language === 'zh' ? '节点组件' : 'Node component';
@@ -201,6 +220,19 @@ const NodeLibrary: React.FC = () => {
     if (!normalizedQuery) return EXAMPLE_PRESETS;
     return EXAMPLE_PRESETS.filter((item) => item.label.toLowerCase().includes(normalizedQuery));
   }, [normalizedQuery]);
+
+  const setAllGroupsExpanded = useCallback((expanded: boolean) => {
+    setExpandedGroups(Object.fromEntries(allGroupKeys.map((key) => [key, expanded])));
+  }, [allGroupKeys]);
+
+  const toggleGroup = useCallback((groupKey: string) => {
+    setActiveGroupKey(groupKey);
+    setExpandedGroups((prev) => ({ ...prev, [groupKey]: !prev[groupKey] }));
+  }, []);
+
+  const collapseOthers = useCallback(() => {
+    setExpandedGroups(Object.fromEntries(allGroupKeys.map((key) => [key, key === activeGroupKey])));
+  }, [activeGroupKey, allGroupKeys]);
 
   const hasResults = filteredCategories.length > 0 || filteredExamples.length > 0;
 
@@ -241,27 +273,44 @@ const NodeLibrary: React.FC = () => {
               </button>
             )}
           </div>
+          <div className="node-library-controls">
+            <button className="node-library-action-btn" onClick={() => setAllGroupsExpanded(true)}>
+              {t('Expand All')}
+            </button>
+            <button className="node-library-action-btn" onClick={() => setAllGroupsExpanded(false)}>
+              {t('Collapse All')}
+            </button>
+            <button className="node-library-action-btn" onClick={collapseOthers}>
+              {t('Collapse Others')}
+            </button>
+          </div>
 
           {!hasResults && <div className="node-library-empty">{t('No matching nodes')}</div>}
 
           {filteredCategories.map((cat) => (
             <CategoryGroup
               key={cat.label}
+              groupKey={cat.label}
               title={cat.label}
               items={cat.items as LibraryItem[]}
               t={t}
+              expanded={!!expandedGroups[cat.label]}
               forceExpanded={!!normalizedQuery}
+              onToggle={toggleGroup}
               getNodeDescription={getNodeDescription}
             />
           ))}
 
           <ExampleScriptsGroup
+            groupKey="examples"
             title="Example Scripts"
             items={filteredExamples}
             t={t}
             onLoad={handleLoadExample}
             isLoadingFile={loadingExampleFile}
+            expanded={!!expandedGroups.examples}
             forceExpanded={!!normalizedQuery}
+            onToggle={toggleGroup}
           />
           <div className="h-3 shrink-0"></div>
         </div>

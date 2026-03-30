@@ -1,0 +1,194 @@
+﻿{
+    "nodes":  [
+                  {
+                      "id":  "p1",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  80
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "p1i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "p1i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "p1i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "p1i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "p1o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  0,
+                                                  "z":  0
+                                              },
+                                     "size_x":  170.8,
+                                     "size_y":  109.8,
+                                     "size_z":  9.76,
+                                     "color":  "#b39ddb"
+                                 }
+                  },
+                  {
+                      "id":  "p2",
+                      "type":  "CYLINDER",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  240
+                                   },
+                      "label":  "Cylinder",
+                      "inputs":  [
+                                     {
+                                         "id":  "p2i1",
+                                         "name":  "center",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "p2i2",
+                                         "name":  "radius",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "p2i3",
+                                         "name":  "height",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "p2o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "center":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  0
+                                                },
+                                     "radius":  4.88,
+                                     "height":  14.64,
+                                     "color":  "#ef9a9a"
+                                 }
+                  },
+                  {
+                      "id":  "p3",
+                      "type":  "ARRAY_GRID",
+                      "position":  {
+                                       "x":  330,
+                                       "y":  240
+                                   },
+                      "label":  "Array Grid",
+                      "inputs":  [
+                                     {
+                                         "id":  "p3i1",
+                                         "name":  "geometry",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "p3i2",
+                                         "name":  "count_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "p3i3",
+                                         "name":  "count_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "p3i4",
+                                         "name":  "spacing",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "p3o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "count_x":  4,
+                                     "count_y":  2,
+                                     "spacing":  30
+                                 }
+                  },
+                  {
+                      "id":  "p4",
+                      "type":  "BOOLEAN_OP",
+                      "position":  {
+                                       "x":  620,
+                                       "y":  170
+                                   },
+                      "label":  "Boolean",
+                      "inputs":  [
+                                     {
+                                         "id":  "p4i1",
+                                         "name":  "object_a",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "p4i2",
+                                         "name":  "object_b",
+                                         "type":  "geometry"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "p4o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "operation":  "SUBTRACT",
+                                     "color":  "#9575cd"
+                                 }
+                  }
+              ],
+    "connections":  [
+                        {
+                            "id":  "pc1",
+                            "sourceNodeId":  "p2",
+                            "sourceSocketId":  "p2o1",
+                            "targetNodeId":  "p3",
+                            "targetSocketId":  "p3i1"
+                        },
+                        {
+                            "id":  "pc2",
+                            "sourceNodeId":  "p1",
+                            "sourceSocketId":  "p1o1",
+                            "targetNodeId":  "p4",
+                            "targetSocketId":  "p4i1"
+                        },
+                        {
+                            "id":  "pc3",
+                            "sourceNodeId":  "p3",
+                            "sourceSocketId":  "p3o1",
+                            "targetNodeId":  "p4",
+                            "targetSocketId":  "p4i2"
+                        }
+                    ]
+}

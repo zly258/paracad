@@ -92,6 +92,102 @@ const callOcctMethod = (target: any, names: string[], args: any[]) => {
   throw new Error(`OCCT method not found: ${names.join(', ')}`);
 };
 
+const createOcctPoint = (oc: any, x: number, y: number, z: number) => {
+  const names = ['gp_Pnt_3', 'gp_Pnt_2', 'gp_Pnt_1', 'gp_Pnt'];
+  for (const name of names) {
+    const Ctor = oc?.[name];
+    if (typeof Ctor !== 'function') continue;
+    try {
+      return new Ctor(x, y, z);
+    } catch {
+      continue;
+    }
+  }
+  throw new Error('OCCT gp_Pnt constructor not found');
+};
+
+const buildOcctFacetedCompoundFromMeshes = (oc: any, objects: THREE.Object3D[]) => {
+  const builder = createOcctInstance(oc, ['BRep_Builder', 'BRep_Builder_1'], []);
+  const compound = createOcctInstance(oc, ['TopoDS_Compound', 'TopoDS_Compound_1'], []);
+  callOcctMethod(builder, ['MakeCompound', 'MakeCompound_1'], [compound]);
+
+  const localA = new THREE.Vector3();
+  const localB = new THREE.Vector3();
+  const localC = new THREE.Vector3();
+  const worldA = new THREE.Vector3();
+  const worldB = new THREE.Vector3();
+  const worldC = new THREE.Vector3();
+  const edgeAB = new THREE.Vector3();
+  const edgeAC = new THREE.Vector3();
+  const normal = new THREE.Vector3();
+
+  const addTriangleFace = (ax: number, ay: number, az: number, bx: number, by: number, bz: number, cx: number, cy: number, cz: number) => {
+    localA.set(ax, ay, az);
+    localB.set(bx, by, bz);
+    localC.set(cx, cy, cz);
+    worldA.copy(localA).applyMatrix4(currentWorldMatrix);
+    worldB.copy(localB).applyMatrix4(currentWorldMatrix);
+    worldC.copy(localC).applyMatrix4(currentWorldMatrix);
+
+    edgeAB.subVectors(worldB, worldA);
+    edgeAC.subVectors(worldC, worldA);
+    normal.crossVectors(edgeAB, edgeAC);
+    if (normal.lengthSq() < 1e-16) return;
+
+    const polygon = createOcctInstance(oc, ['BRepBuilderAPI_MakePolygon_1', 'BRepBuilderAPI_MakePolygon'], []);
+    callOcctMethod(polygon, ['Add_1', 'Add'], [createOcctPoint(oc, worldA.x, worldA.y, worldA.z)]);
+    callOcctMethod(polygon, ['Add_1', 'Add'], [createOcctPoint(oc, worldB.x, worldB.y, worldB.z)]);
+    callOcctMethod(polygon, ['Add_1', 'Add'], [createOcctPoint(oc, worldC.x, worldC.y, worldC.z)]);
+    callOcctMethod(polygon, ['Close', 'Close_1'], []);
+
+    const wire = callOcctMethod(polygon, ['Wire', 'Wire_1'], []);
+    const faceBuilder = createOcctInstance(oc, ['BRepBuilderAPI_MakeFace_15', 'BRepBuilderAPI_MakeFace_16', 'BRepBuilderAPI_MakeFace_1'], [wire, true]);
+    const face = typeof faceBuilder.Face === 'function' ? faceBuilder.Face() : faceBuilder.Shape();
+    callOcctMethod(builder, ['Add', 'Add_2', 'Add_1'], [compound, face]);
+    facetedFaceCount += 1;
+  };
+
+  let facetedFaceCount = 0;
+  const currentWorldMatrix = new THREE.Matrix4();
+  objects.forEach((obj) => {
+    obj.updateMatrixWorld(true);
+    obj.traverse((child: any) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      if (child.userData?.visible === false) return;
+      const geometry = child.geometry as THREE.BufferGeometry | undefined;
+      const position = geometry?.getAttribute('position') as THREE.BufferAttribute | undefined;
+      if (!geometry || !position || position.count < 3) return;
+
+      currentWorldMatrix.copy(child.matrixWorld);
+      const index = geometry.getIndex();
+      if (index) {
+        for (let i = 0; i + 2 < index.count; i += 3) {
+          const i0 = index.getX(i);
+          const i1 = index.getX(i + 1);
+          const i2 = index.getX(i + 2);
+          addTriangleFace(
+            position.getX(i0), position.getY(i0), position.getZ(i0),
+            position.getX(i1), position.getY(i1), position.getZ(i1),
+            position.getX(i2), position.getY(i2), position.getZ(i2),
+          );
+        }
+        return;
+      }
+
+      for (let i = 0; i + 2 < position.count; i += 3) {
+        addTriangleFace(
+          position.getX(i), position.getY(i), position.getZ(i),
+          position.getX(i + 1), position.getY(i + 1), position.getZ(i + 1),
+          position.getX(i + 2), position.getY(i + 2), position.getZ(i + 2),
+        );
+      }
+    });
+  });
+
+  if (facetedFaceCount === 0) return null;
+  return compound;
+};
+
 const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs') => {
   const { occt: oc } = getKernelStatus();
   if (!oc) throw new Error('当前未启用 OCCT 内核，无法导出 STP/IGS');
@@ -104,7 +200,11 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
     });
   });
   const shapes = Array.from(shapeSet);
-  if (shapes.length === 0) throw new Error('当前模型不含 OCCT Shape。请使用 OCCT 几何节点重建后再导出 STP/IGS');
+  if (shapes.length === 0) {
+    const faceted = buildOcctFacetedCompoundFromMeshes(oc, objects);
+    if (!faceted) throw new Error('当前模型不含可导出的几何体');
+    shapes.push(faceted);
+  }
 
   let targetShape = shapes[0];
   if (shapes.length > 1) {

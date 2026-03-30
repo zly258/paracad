@@ -1,0 +1,201 @@
+﻿{
+    "nodes":  [
+                  {
+                      "id":  "g1",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  80
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "g1i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "g1i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "g1i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "g1i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "g1o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  0,
+                                                  "z":  0
+                                              },
+                                     "size_x":  15.68,
+                                     "size_y":  24.64,
+                                     "size_z":  112,
+                                     "color":  "#4fc3f7"
+                                 }
+                  },
+                  {
+                      "id":  "g2",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  220
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "g2i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "g2i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "g2i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "g2i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "g2o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  0,
+                                                  "z":  0
+                                              },
+                                     "size_x":  56,
+                                     "size_y":  13.44,
+                                     "size_z":  11.2,
+                                     "color":  "#81d4fa"
+                                 }
+                  },
+                  {
+                      "id":  "g3",
+                      "type":  "TRANSLATION",
+                      "position":  {
+                                       "x":  330,
+                                       "y":  220
+                                   },
+                      "label":  "Move",
+                      "inputs":  [
+                                     {
+                                         "id":  "g3i1",
+                                         "name":  "geometry",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "g3i2",
+                                         "name":  "vector",
+                                         "type":  "vector"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "g3o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "vector":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  -46
+                                                }
+                                 }
+                  },
+                  {
+                      "id":  "g4",
+                      "type":  "GROUP",
+                      "position":  {
+                                       "x":  620,
+                                       "y":  160
+                                   },
+                      "label":  "Group",
+                      "inputs":  [
+                                     {
+                                         "id":  "g4i1",
+                                         "name":  "item_1",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "g4i2",
+                                         "name":  "item_2",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "g4i3",
+                                         "name":  "item_3",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "g4i4",
+                                         "name":  "item_4",
+                                         "type":  "geometry"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "g4o1",
+                                          "name":  "group",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+
+                                 }
+                  }
+              ],
+    "connections":  [
+                        {
+                            "id":  "gc1",
+                            "sourceNodeId":  "g2",
+                            "sourceSocketId":  "g2o1",
+                            "targetNodeId":  "g3",
+                            "targetSocketId":  "g3i1"
+                        },
+                        {
+                            "id":  "gc2",
+                            "sourceNodeId":  "g1",
+                            "sourceSocketId":  "g1o1",
+                            "targetNodeId":  "g4",
+                            "targetSocketId":  "g4i1"
+                        },
+                        {
+                            "id":  "gc3",
+                            "sourceNodeId":  "g3",
+                            "sourceSocketId":  "g3o1",
+                            "targetNodeId":  "g4",
+                            "targetSocketId":  "g4i2"
+                        }
+                    ]
+}

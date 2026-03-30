@@ -1,0 +1,250 @@
+﻿{
+    "nodes":  [
+                  {
+                      "id":  "h1",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  70
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "h1i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "h1i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "h1i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "h1i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "h1o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  4,
+                                                  "z":  0
+                                              },
+                                     "size_x":  42,
+                                     "size_y":  31.5,
+                                     "size_z":  231,
+                                     "color":  "#8d6e63"
+                                 }
+                  },
+                  {
+                      "id":  "h2",
+                      "type":  "BOX",
+                      "position":  {
+                                       "x":  40,
+                                       "y":  230
+                                   },
+                      "label":  "Box",
+                      "inputs":  [
+                                     {
+                                         "id":  "h2i1",
+                                         "name":  "base",
+                                         "type":  "vector"
+                                     },
+                                     {
+                                         "id":  "h2i2",
+                                         "name":  "size_x",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "h2i3",
+                                         "name":  "size_y",
+                                         "type":  "number"
+                                     },
+                                     {
+                                         "id":  "h2i4",
+                                         "name":  "size_z",
+                                         "type":  "number"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "h2o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "base":  {
+                                                  "x":  0,
+                                                  "y":  4,
+                                                  "z":  0
+                                              },
+                                     "size_x":  126,
+                                     "size_y":  31.5,
+                                     "size_z":  25.2,
+                                     "color":  "#a1887f"
+                                 }
+                  },
+                  {
+                      "id":  "h3",
+                      "type":  "TRANSLATION",
+                      "position":  {
+                                       "x":  330,
+                                       "y":  230
+                                   },
+                      "label":  "Move",
+                      "inputs":  [
+                                     {
+                                         "id":  "h3i1",
+                                         "name":  "geometry",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "h3i2",
+                                         "name":  "vector",
+                                         "type":  "vector"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "h3o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "vector":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  98
+                                                }
+                                 }
+                  },
+                  {
+                      "id":  "h4",
+                      "type":  "TRANSLATION",
+                      "position":  {
+                                       "x":  330,
+                                       "y":  320
+                                   },
+                      "label":  "Move",
+                      "inputs":  [
+                                     {
+                                         "id":  "h4i1",
+                                         "name":  "geometry",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "h4i2",
+                                         "name":  "vector",
+                                         "type":  "vector"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "h4o1",
+                                          "name":  "geometry",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+                                     "vector":  {
+                                                    "x":  0,
+                                                    "y":  0,
+                                                    "z":  -98
+                                                }
+                                 }
+                  },
+                  {
+                      "id":  "h5",
+                      "type":  "GROUP",
+                      "position":  {
+                                       "x":  620,
+                                       "y":  200
+                                   },
+                      "label":  "Group",
+                      "inputs":  [
+                                     {
+                                         "id":  "h5i1",
+                                         "name":  "item_1",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "h5i2",
+                                         "name":  "item_2",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "h5i3",
+                                         "name":  "item_3",
+                                         "type":  "geometry"
+                                     },
+                                     {
+                                         "id":  "h5i4",
+                                         "name":  "item_4",
+                                         "type":  "geometry"
+                                     }
+                                 ],
+                      "outputs":  [
+                                      {
+                                          "id":  "h5o1",
+                                          "name":  "group",
+                                          "type":  "geometry"
+                                      }
+                                  ],
+                      "params":  {
+
+                                 }
+                  }
+              ],
+    "connections":  [
+                        {
+                            "id":  "hc1",
+                            "sourceNodeId":  "h2",
+                            "sourceSocketId":  "h2o1",
+                            "targetNodeId":  "h3",
+                            "targetSocketId":  "h3i1"
+                        },
+                        {
+                            "id":  "hc2",
+                            "sourceNodeId":  "h2",
+                            "sourceSocketId":  "h2o1",
+                            "targetNodeId":  "h4",
+                            "targetSocketId":  "h4i1"
+                        },
+                        {
+                            "id":  "hc3",
+                            "sourceNodeId":  "h1",
+                            "sourceSocketId":  "h1o1",
+                            "targetNodeId":  "h5",
+                            "targetSocketId":  "h5i1"
+                        },
+                        {
+                            "id":  "hc4",
+                            "sourceNodeId":  "h3",
+                            "sourceSocketId":  "h3o1",
+                            "targetNodeId":  "h5",
+                            "targetSocketId":  "h5i2"
+                        },
+                        {
+                            "id":  "hc5",
+                            "sourceNodeId":  "h4",
+                            "sourceSocketId":  "h4o1",
+                            "targetNodeId":  "h5",
+                            "targetSocketId":  "h5i3"
+                        }
+                    ]
+}
