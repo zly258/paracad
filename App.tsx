@@ -15,8 +15,8 @@ const LogPanel = React.memo(() => {
   }, [logs]);
 
   return (
-    <div className="flex flex-col h-full bg-[#111] font-mono text-xs overflow-hidden">
-      <div className="h-6 bg-[#222] border-b border-black flex items-center px-2 gap-2 text-gray-400">
+    <div className="log-panel-root flex flex-col h-full font-mono text-xs overflow-hidden">
+      <div className="log-panel-header h-6 border-b flex items-center px-2 gap-2">
         <Terminal size={12} />
         <span className="font-bold">{t('Console')}</span>
       </div>
@@ -55,7 +55,7 @@ const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> =
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Boxes className="text-blue-500" size={20} />
-          <h1 className="font-bold text-base tracking-wide text-gray-100">
+          <h1 className="app-header-title font-bold text-base tracking-wide">
             ParaCad <span className="text-[10px] bg-blue-600 text-white px-1 rounded ml-1 font-bold">{kernelReady ? (kernelBackend === 'occt.js' ? 'OCCT.js' : 'Three.js') : 'Booting'}</span>
           </h1>
         </div>

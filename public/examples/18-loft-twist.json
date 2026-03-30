@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    {"id":"l1","type":"CIRCLE","position":{"x":40,"y":140},"label":"Circle","inputs":[{"id":"l1i1","name":"center","type":"vector"},{"id":"l1i2","name":"radius","type":"number"},{"id":"l1i3","name":"is_face","type":"boolean"}],"outputs":[{"id":"l1o1","name":"shape","type":"shape2d"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":16,"plane":"XOY","is_face":false,"color":"#64b5f6"}},
+    {"id":"l2","type":"CIRCLE","position":{"x":40,"y":300},"label":"Circle","inputs":[{"id":"l2i1","name":"center","type":"vector"},{"id":"l2i2","name":"radius","type":"number"},{"id":"l2i3","name":"is_face","type":"boolean"}],"outputs":[{"id":"l2o1","name":"shape","type":"shape2d"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":30,"plane":"XOY","is_face":false,"color":"#9575cd"}},
+    {"id":"l3","type":"LOFT","position":{"x":330,"y":220},"label":"Loft","inputs":[{"id":"l3i1","name":"section_a","type":"shape2d"},{"id":"l3i2","name":"section_b","type":"shape2d"}],"outputs":[{"id":"l3o1","name":"geometry","type":"geometry"}],"params":{"steps":1,"color":"#ff8a65"}}
+  ],
+  "connections": [
+    {"id":"lc1","sourceNodeId":"l1","sourceSocketId":"l1o1","targetNodeId":"l3","targetSocketId":"l3i1"},
+    {"id":"lc2","sourceNodeId":"l2","sourceSocketId":"l2o1","targetNodeId":"l3","targetSocketId":"l3i2"}
+  ]
+}

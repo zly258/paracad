@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    {"id":"u1","type":"CONE","position":{"x":60,"y":120},"label":"Cone","inputs":[{"id":"u1i1","name":"center","type":"vector"},{"id":"u1i2","name":"radius_bottom","type":"number"},{"id":"u1i3","name":"radius_top","type":"number"},{"id":"u1i4","name":"height","type":"number"}],"outputs":[{"id":"u1o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius_bottom":26,"radius_top":4,"height":52,"color":"#4db6ac"}},
+    {"id":"u2","type":"TORUS","position":{"x":60,"y":300},"label":"Torus","inputs":[{"id":"u2i1","name":"center","type":"vector"},{"id":"u2i2","name":"radius_main","type":"number"},{"id":"u2i3","name":"radius_tube","type":"number"}],"outputs":[{"id":"u2o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":22},"radius_main":24,"radius_tube":6,"color":"#ffd54f"}},
+    {"id":"u3","type":"BOOLEAN_OP","position":{"x":360,"y":220},"label":"Boolean","inputs":[{"id":"u3i1","name":"object_a","type":"geometry"},{"id":"u3i2","name":"object_b","type":"geometry"}],"outputs":[{"id":"u3o1","name":"geometry","type":"geometry"}],"params":{"operation":"UNION","color":"#64b5f6"}}
+  ],
+  "connections": [
+    {"id":"uc1","sourceNodeId":"u1","sourceSocketId":"u1o1","targetNodeId":"u3","targetSocketId":"u3i1"},
+    {"id":"uc2","sourceNodeId":"u2","sourceSocketId":"u2o1","targetNodeId":"u3","targetSocketId":"u3i2"}
+  ]
+}

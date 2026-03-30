@@ -187,7 +187,7 @@ const NodeLibrary: React.FC = () => {
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="h-8 flex items-center px-3 text-xs font-bold text-gray-300 bg-[#222] border-b border-black sticky top-0 z-10">
+      <div className="node-tree-header h-8 flex items-center px-3 text-xs font-bold sticky top-0 z-10">
         {t('Node Library')}
       </div>
 
@@ -246,7 +246,7 @@ const NodeLibrary: React.FC = () => {
           )}
           <div className="h-3 shrink-0"></div>
         </div>
-        <div className="px-3 py-2 text-[10px] text-gray-500 border-t border-white/5">
+        <div className="node-tree-footer px-3 py-2 text-[10px] border-t">
           {filteredCategories.reduce((sum, c) => sum + c.items.length, 0) + customItems.length} items
         </div>
       </div>

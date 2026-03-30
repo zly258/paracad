@@ -1,0 +1,9 @@
+{
+  "nodes": [
+    {"id":"r1","type":"CYLINDER","position":{"x":40,"y":200},"label":"Cylinder","inputs":[{"id":"r1i1","name":"center","type":"vector"},{"id":"r1i2","name":"radius","type":"number"},{"id":"r1i3","name":"height","type":"number"}],"outputs":[{"id":"r1o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":0},"radius":4,"height":16,"color":"#f06292"}},
+    {"id":"r2","type":"ARRAY_POLAR","position":{"x":320,"y":200},"label":"Array Polar","inputs":[{"id":"r2i1","name":"geometry","type":"geometry"},{"id":"r2i2","name":"center","type":"vector"},{"id":"r2i3","name":"radius","type":"number"},{"id":"r2i4","name":"count","type":"number"},{"id":"r2i5","name":"fill_angle","type":"number"}],"outputs":[{"id":"r2o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":12},"radius":26,"count":14,"fill_angle":320}}
+  ],
+  "connections": [
+    {"id":"rc1","sourceNodeId":"r1","sourceSocketId":"r1o1","targetNodeId":"r2","targetSocketId":"r2i1"}
+  ]
+}

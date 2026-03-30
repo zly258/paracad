@@ -5,7 +5,7 @@ import ConnectionLayer from './ConnectionLayer';
 import { NodeType, NodeData, SocketType, ConnectionDraft } from '../../types';
 import { Trash2, Copy, Scan, LayoutGrid, Download, Upload, Undo2, Redo2 } from 'lucide-react';
 import { performAutoLayout } from '../../utils/autoLayout';
-import { NODE_WIDTH, calculateSocketPosition } from '../../constants';
+import { NODE_WIDTH, calculateSocketPosition, getNodeRenderHeight } from '../../constants';
 
 const SNAP_THRESHOLD = 72;
 
@@ -22,6 +22,14 @@ const EXAMPLE_PRESETS = [
   { file: '10-list-pipeline.json', label: '示例10 列表管线' },
   { file: '11-mirror-array.json', label: '示例11 镜像与线阵' },
   { file: '12-expression-drive.json', label: '示例12 表达式驱动' },
+  { file: '13-primitives-gallery.json', label: '示例13 基础实体画廊' },
+  { file: '14-cone-torus-union.json', label: '示例14 圆锥与圆环并集' },
+  { file: '15-shell-offset-stack.json', label: '示例15 偏移叠层' },
+  { file: '16-grid-city.json', label: '示例16 网格阵列城市' },
+  { file: '17-polar-crown.json', label: '示例17 极坐标冠环' },
+  { file: '18-loft-twist.json', label: '示例18 放样扭转' },
+  { file: '19-math-driven-radius.json', label: '示例19 数学驱动半径' },
+  { file: '20-analysis-dashboard.json', label: '示例20 分析仪表盘' },
 ];
 
 const isSocketCompatible = (sourceType: SocketType, targetType: SocketType) =>
@@ -170,7 +178,7 @@ const NodeCanvas: React.FC = () => {
             if (node.position.x < x2 && 
                 node.position.x + NODE_WIDTH > x1 &&
                 node.position.y < y2 &&
-                node.position.y + 100 > y1) { 
+                node.position.y + getNodeRenderHeight(node) > y1) { 
                 idsInBox.push(node.id);
             }
         });
@@ -285,7 +293,7 @@ const NodeCanvas: React.FC = () => {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full bg-[#1a1a1a] overflow-hidden cursor-grab active:cursor-grabbing outline-none"
+      className="canvas-root relative w-full h-full overflow-hidden cursor-grab active:cursor-grabbing outline-none"
       onContextMenu={handleContextMenu}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -310,11 +318,7 @@ const NodeCanvas: React.FC = () => {
         className="relative"
       >
           <div 
-            className="absolute -top-[50000px] -left-[50000px] w-[100000px] h-[100000px] opacity-10 pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(#888 1px, transparent 1px)',
-              backgroundSize: '20px 20px'
-            }}
+            className="canvas-grid-bg absolute -top-[50000px] -left-[50000px] w-[100000px] h-[100000px] opacity-10 pointer-events-none"
           />
 
           <ConnectionLayer nodes={nodes} connections={connections} connectionDraft={connectionDraft} onRemoveConnection={removeConnection} />
@@ -388,7 +392,7 @@ const NodeCanvas: React.FC = () => {
 
       {contextMenu && (
         <div 
-          className="absolute bg-[#2a2a2a] border border-gray-600 rounded-md shadow-2xl py-1 z-50 w-40 text-gray-200"
+          className="canvas-context-menu absolute rounded-md shadow-2xl py-1 z-50 w-40"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onMouseDown={e => e.stopPropagation()}
         >

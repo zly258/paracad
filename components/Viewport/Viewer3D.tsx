@@ -50,17 +50,21 @@ interface SceneContentProps {
 const SceneContent: React.FC<SceneContentProps> = ({ computedResults }) => {
   const meshesToRender = useMemo(() => {
     const items: React.ReactNode[] = [];
+    const collectRenderable = (value: any) => {
+      if (!value) return;
+      if (Array.isArray(value)) {
+        value.forEach((item) => collectRenderable(item));
+        return;
+      }
+      if (value instanceof THREE.Object3D) {
+        // 默认可见，只有显式设置 visible=false 时隐藏。
+        const visibleFlag = value.userData?.visible;
+        if (visibleFlag === false) return;
+        items.push(<primitive key={`obj-${value.uuid}`} object={value} />);
+      }
+    };
     computedResults.forEach((value, socketId) => {
-        if (value instanceof THREE.Object3D) {
-            if (value.userData && value.userData.visible) {
-                 items.push(
-                     <primitive 
-                       key={`obj-${value.uuid}`} 
-                       object={value} 
-                     />
-                   );
-            }
-        }
+      collectRenderable(value);
     });
     return items;
   }, [computedResults]);
@@ -117,14 +121,14 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
       };
 
     return (
-        <div className="w-full h-full bg-[#050505] relative group border-l border-black">
+        <div className="viewer-root w-full h-full relative group border-l">
           {/* Scene Toolbar */}
         <div className="viewer-label">实时视图</div>
         <div className="absolute top-4 right-4 z-10 flex gap-2">
-               <button onClick={onTriggerCompute} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="刷新场景">
+               <button onClick={onTriggerCompute} className="viewer-btn p-1.5 rounded backdrop-blur border transition-colors" title="刷新场景">
                    <RefreshCw size={14} />
                </button>
-               <button onClick={handleFitView} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded backdrop-blur border border-white/10 transition-colors" title="充满视图">
+               <button onClick={handleFitView} className="viewer-btn p-1.5 rounded backdrop-blur border transition-colors" title="充满视图">
                    <Scan size={14} />
                </button>
           </div>

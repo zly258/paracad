@@ -48,6 +48,20 @@ const hasGeometryParams = (node: NodeData): boolean => {
   return node.outputs.some(o => o.type === 'geometry' || o.type === 'shape2d' || o.type === 'curve');
 };
 
+export const getNodeRenderHeight = (node: NodeData): number => {
+  let height = NODE_BORDER_WIDTH + HEADER_HEIGHT + CONTENT_PADDING_TOP;
+  height += getInnerBodyHeight(node.type);
+  if (node.inputs.length > 0) {
+    height += node.inputs.reduce((sum, input) => sum + getSocketHeight(input.type), 0);
+    height += INPUT_CONTAINER_PADDING;
+  }
+  if (hasGeometryParams(node)) height += GEOMETRY_PARAMS_HEIGHT;
+  height += INPUT_OUTPUT_GAP;
+  height += node.outputs.length * OUTPUT_ROW_HEIGHT;
+  height += NODE_BORDER_WIDTH + 4;
+  return height;
+};
+
 export const calculateSocketPosition = (node: NodeData, socketId: string, isInput: boolean) => {
   let currentY = NODE_BORDER_WIDTH + HEADER_HEIGHT + getInnerBodyHeight(node.type) + CONTENT_PADDING_TOP;
 

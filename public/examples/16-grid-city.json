@@ -1,0 +1,9 @@
+{
+  "nodes": [
+    {"id":"g1","type":"BOX","position":{"x":50,"y":170},"label":"Box","inputs":[{"id":"g1i1","name":"base","type":"vector"},{"id":"g1i2","name":"size_x","type":"number"},{"id":"g1i3","name":"size_y","type":"number"},{"id":"g1i4","name":"size_z","type":"number"}],"outputs":[{"id":"g1o1","name":"geometry","type":"geometry"}],"params":{"base":{"x":0,"y":0,"z":0},"size_x":10,"size_y":10,"size_z":30,"color":"#4db6ac"}},
+    {"id":"g2","type":"ARRAY_GRID","position":{"x":330,"y":170},"label":"Array Grid","inputs":[{"id":"g2i1","name":"geometry","type":"geometry"},{"id":"g2i2","name":"count_x","type":"number"},{"id":"g2i3","name":"count_y","type":"number"},{"id":"g2i4","name":"spacing","type":"number"}],"outputs":[{"id":"g2o1","name":"geometry","type":"geometry"}],"params":{"count_x":7,"count_y":5,"spacing":18}}
+  ],
+  "connections": [
+    {"id":"gc1","sourceNodeId":"g1","sourceSocketId":"g1o1","targetNodeId":"g2","targetSocketId":"g2i1"}
+  ]
+}

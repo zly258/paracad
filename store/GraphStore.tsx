@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { NodeData, Connection, NodeType, GraphState, LogEntry, ConnectionDraft } from '../types';
-import { createDefaultNode, NODE_WIDTH, HEADER_HEIGHT } from '../constants';
+import { createDefaultNode, NODE_WIDTH, getNodeRenderHeight } from '../constants';
 import { computeGraph, initOCCT } from '../utils/geometryEngine';
 import { KernelBackend } from '../core/kernel';
 import { v4 as uuidv4 } from 'uuid';
 import { translations } from '../translations';
 import { cloneGraphSnapshot, loadCustomNodeStorage, saveCustomNodeStorage } from './graphPersistence';
+import { resolveNodeOverlaps } from '../utils/autoLayout';
 
 export interface CustomNodeDef {
   id: string;
@@ -89,6 +90,8 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Custom Nodes Management
   const [savedCustomNodes, setSavedCustomNodes] = useState<CustomNodeDef[]>([]);
+  const lastComputedKeyRef = useRef('');
+  const lastComputeTriggerRef = useRef(0);
 
   const toggleLanguage = useCallback(() => {
     setLanguage(prev => prev === 'zh' ? 'en' : 'zh');
@@ -173,9 +176,33 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setComputeTrigger(prev => prev + 1);
   }, []);
 
-  // 任意图修改都会触发重新求解；这里仅负责调度，不承载具体几何算法。
+  const computeModelKey = useMemo(() => {
+    const normalizedNodes = nodes
+      .map((node) => ({
+        id: node.id,
+        type: node.type,
+        params: node.params,
+        inputs: node.inputs.map((input) => ({ id: input.id, type: input.type, name: input.name })),
+        outputs: node.outputs.map((output) => ({ id: output.id, type: output.type, name: output.name })),
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    const normalizedConnections = connections
+      .map((conn) => ({
+        id: conn.id,
+        sourceNodeId: conn.sourceNodeId,
+        sourceSocketId: conn.sourceSocketId,
+        targetNodeId: conn.targetNodeId,
+        targetSocketId: conn.targetSocketId,
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+    return JSON.stringify({ normalizedNodes, normalizedConnections });
+  }, [nodes, connections]);
+
+  // 图求解调度：仅模型参数/连接变化或用户手动刷新时重新计算，避免拖拽位置导致反复求解。
   useEffect(() => {
     if (!kernelReady) return; 
+    const forcedByTrigger = computeTrigger !== lastComputeTriggerRef.current;
+    if (!forcedByTrigger && computeModelKey === lastComputedKeyRef.current) return;
 
     let active = true;
     setIsComputing(true);
@@ -187,6 +214,8 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              if(active) {
                  setComputedResults(results);
                  setIsComputing(false);
+                 lastComputedKeyRef.current = computeModelKey;
+                 lastComputeTriggerRef.current = computeTrigger;
              }
         }).catch(err => {
              if(active) {
@@ -194,10 +223,10 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                  setIsComputing(false);
              }
         });
-    }, 50);
+    }, 120);
 
     return () => { active = false; clearTimeout(timer); };
-  }, [nodes, connections, computeTrigger, addLog, kernelReady]); 
+  }, [nodes, connections, computeTrigger, computeModelKey, addLog, kernelReady]); 
 
   const addNode = useCallback((type: NodeType, position: { x: number; y: number }, customSpec?: string) => {
     recordHistory(); // Snapshot before change
@@ -210,6 +239,28 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             while (existingNames.has(newName)) { counter++; newName = `Param${counter}`; }
             newNode.params.name = newName;
         }
+        const occupied = prev.map((node) => ({
+          left: node.position.x,
+          right: node.position.x + NODE_WIDTH,
+          top: node.position.y,
+          bottom: node.position.y + getNodeRenderHeight(node),
+        }));
+        const newHeight = getNodeRenderHeight(newNode);
+        const horizontalOverlaps = (left: number, right: number, box: { left: number; right: number }) => left < box.right && right > box.left;
+        let x = newNode.position.x;
+        let y = newNode.position.y;
+        let attempts = 0;
+        while (attempts < 120) {
+          const left = x;
+          const right = x + NODE_WIDTH;
+          const top = y;
+          const bottom = y + newHeight;
+          const hit = occupied.some((box) => horizontalOverlaps(left, right, box) && top < box.bottom + 20 && bottom > box.top - 20);
+          if (!hit) break;
+          y += 36;
+          attempts += 1;
+        }
+        newNode.position = { x, y };
         return [...prev, newNode];
     });
   }, [addLog, recordHistory]);
@@ -349,7 +400,7 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return;
       }
       recordHistory();
-      setNodesState(data.nodes);
+      setNodesState(resolveNodeOverlaps(data.nodes));
       setConnections(Array.isArray(data.connections) ? data.connections : []);
       addLog(`Imported ${data.nodes.length} nodes from ${sourceLabel}`, 'success');
   }, [addLog, recordHistory]);
