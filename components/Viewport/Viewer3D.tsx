@@ -3,7 +3,8 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, GizmoHelper, GizmoViewport, OrthographicCamera } from '@react-three/drei';
 import { useGraph } from '../../store/GraphStore';
 import * as THREE from 'three';
-import { RefreshCw, Scan } from 'lucide-react';
+import { RefreshCw, Scan, Download } from 'lucide-react';
+import { exportComputedModel, ExportFormat } from '../../utils/modelExport';
 
 // Fix for missing JSX types in the current environment.
 declare global {
@@ -97,6 +98,7 @@ const SceneContent: React.FC<SceneContentProps> = ({ computedResults }) => {
 interface Viewer3DPresenterProps {
     computedResults: Map<string, any>;
     onTriggerCompute: () => void;
+    onAddLog: (message: string, type?: 'info' | 'success' | 'error' | 'warning') => void;
 }
 
 const collectRenderableObjects = (computedResults: Map<string, any>) => {
@@ -118,9 +120,10 @@ const collectRenderableObjects = (computedResults: Map<string, any>) => {
 };
 
 // Memoized Presenter Component
-const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Viewer3DPresenterProps) => {
+const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAddLog }: Viewer3DPresenterProps) => {
     const controlsRef = useRef<any>(null);
     const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
+    const exportFormatRef = useRef<ExportFormat>('glb');
     
     useEffect(() => {
         if (THREE.Object3D && (THREE.Object3D as any).DefaultUp) {
@@ -173,6 +176,16 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
          controls.update();
       };
 
+      const handleExport = async () => {
+        const format = exportFormatRef.current;
+        try {
+          await exportComputedModel(computedResults, format);
+          onAddLog(`导出成功: ${format.toUpperCase()}`, 'success');
+        } catch (error: any) {
+          onAddLog(`导出失败: ${error?.message || 'unknown error'}`, 'error');
+        }
+      };
+
     return (
         <div className="viewer-root w-full h-full relative group border-l">
           {/* Scene Toolbar */}
@@ -183,6 +196,22 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
                </button>
                <button onClick={handleFitView} className="viewer-btn p-1.5 rounded backdrop-blur border transition-colors" title="充满视图">
                    <Scan size={14} />
+               </button>
+               <select
+                 className="viewer-export-select px-2 rounded border text-xs"
+                 defaultValue="glb"
+                 onChange={(e) => {
+                   exportFormatRef.current = e.target.value as ExportFormat;
+                 }}
+                 title="导出格式"
+               >
+                 <option value="glb">GLB</option>
+                 <option value="obj">OBJ</option>
+                 <option value="stp">STP</option>
+                 <option value="igs">IGS</option>
+               </select>
+               <button onClick={handleExport} className="viewer-btn p-1.5 rounded backdrop-blur border transition-colors" title="导出模型">
+                 <Download size={14} />
                </button>
           </div>
     
@@ -207,13 +236,13 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Vie
 // Custom comparison: Only re-render if computedResults reference changes
 
 const Viewer3D: React.FC = () => {
-  const { computedResults, triggerCompute } = useGraph(); 
+  const { computedResults, triggerCompute, addLog } = useGraph(); 
   
   // We pass the data down to the memoized component.
   // Even if 'useGraph' triggers a re-render of this container due to Pan/Zoom/NodeMove,
   // 'Viewer3DPresenter' will NOT re-render because 'computedResults' reference remains stable 
   // until a computation actually finishes.
-  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} />;
+  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} onAddLog={addLog} />;
 };
 
 export default Viewer3D;

@@ -685,6 +685,19 @@ html[data-theme='light'] .canvas-toolbar button:disabled {
   filter: brightness(1.08);
 }
 
+.viewer-export-select {
+  background: var(--viewer-btn-bg);
+  border-color: var(--viewer-btn-border);
+  color: var(--viewer-btn-text);
+  height: 30px;
+}
+
+html[data-theme='light'] .viewer-export-select {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(21, 44, 86, 0.25);
+  color: #1f3558;
+}
+
 .log-panel-root {
   background: var(--log-panel-bg);
 }
