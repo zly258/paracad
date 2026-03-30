@@ -113,7 +113,6 @@ const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> =
 };
 
 const MainLayout: React.FC = () => {
-  const [leftWidth, setLeftWidth] = useState(280);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('paracad-theme');
     return saved === 'dark' ? 'dark' : 'light';
@@ -158,22 +157,8 @@ const MainLayout: React.FC = () => {
       <Header theme={theme} onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} />
 
       <div className="flex-1 flex overflow-hidden relative">
-        <div style={{ width: leftWidth }} className="left-panel shrink-0 relative z-10 h-full border-r">
+        <div style={{ width: 280 }} className="left-panel shrink-0 relative z-10 h-full border-r">
           <NodeTree />
-          <div
-            className="absolute right-0 top-0 h-full w-1 hover:bg-blue-600 cursor-col-resize z-20"
-            onMouseDown={(e) => {
-              const startX = e.clientX;
-              const startW = leftWidth;
-              const onMove = (mv: MouseEvent) => setLeftWidth(Math.max(220, Math.min(420, startW + (mv.clientX - startX))));
-              const onUp = () => {
-                window.removeEventListener('mousemove', onMove);
-                window.removeEventListener('mouseup', onUp);
-              };
-              window.addEventListener('mousemove', onMove);
-              window.addEventListener('mouseup', onUp);
-            }}
-          />
         </div>
 
         <div className="center-panel h-full relative z-0 flex flex-col border-l border-r" style={{ flex: 1, minWidth: 0 }}>
@@ -183,7 +168,7 @@ const MainLayout: React.FC = () => {
         </div>
 
         <div className="right-panel-shell h-full flex flex-col relative z-0 shrink-0" style={{ width: '38%', minWidth: 320 }}>
-          <div style={{ height: '50%' }} className="relative min-h-0">
+          <div style={{ height: '60%' }} className="relative min-h-0">
             <Viewer3D />
           </div>
 
