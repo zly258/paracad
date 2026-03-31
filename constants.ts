@@ -2,16 +2,16 @@ import { NodeType, NodeData } from './types';
 export { createDefaultNode } from './core/nodes/nodeFactory';
 
 export const GRID_SIZE = 20;
-export const NODE_WIDTH = 220;
-export const HEADER_HEIGHT = 30;
-export const SOCKET_ROW_HEIGHT = 24;
-export const VECTOR_ROW_HEIGHT = 24;
-export const OUTPUT_ROW_HEIGHT = 24;
-export const CONTENT_PADDING_TOP = 2;
-export const INPUT_OUTPUT_GAP = 2;
+export const NODE_WIDTH = 240;
+export const HEADER_HEIGHT = 36;
+export const SOCKET_ROW_HEIGHT = 28;
+export const VECTOR_ROW_HEIGHT = 28;
+export const OUTPUT_ROW_HEIGHT = 28;
+export const CONTENT_PADDING_TOP = 4;
+export const INPUT_OUTPUT_GAP = 4;
 export const NODE_BORDER_WIDTH = 1;
-export const INPUT_CONTAINER_PADDING = 2;
-export const GEOMETRY_PARAMS_HEIGHT = 24;
+export const INPUT_CONTAINER_PADDING = 4;
+export const GEOMETRY_PARAMS_HEIGHT = 28;
 
 export const SOCKET_COLORS = {
   number: 'bg-slate-400',

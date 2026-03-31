@@ -19,7 +19,12 @@ export const getVec = (name: string, inputs: Record<string, any>, params: Record
   if (value && typeof value === 'object' && 'x' in value) {
     return { x: Number(value.x) || 0, y: Number(value.y) || 0, z: Number(value.z) || 0 };
   }
-  return { x: 0, y: 0, z: defaultZ };
+  // 回退逻辑：尝试组合单独的 x, y, z 输入（常用于旧版脚本或节点分离定义）
+  return {
+    x: getNum('x', inputs, params, 0),
+    y: getNum('y', inputs, params, 0),
+    z: getNum(name === 'vector' ? 'z' : 'axis_z', inputs, params, defaultZ)
+  };
 };
 
 export const getMaterial = (color: string | number = 0xaaaaaa, wireframe = false) => wireframe

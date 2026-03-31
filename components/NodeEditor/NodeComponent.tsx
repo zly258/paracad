@@ -108,12 +108,12 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
         const paramValue = node.params[input.name];
         const stop = (e: React.MouseEvent) => e.stopPropagation();
 
-        const inputClasses = "node-field w-full outline-none transition-colors h-6 leading-none";
+        const inputClasses = "node-field w-full outline-none transition-colors h-7 leading-normal";
 
         if (type === 'number') return <input type="text" className={inputClasses} value={paramValue ?? 0} onChange={(e) => handleNumberChange(e.target.value, input.name)} onMouseDown={stop} />;
         if (type === 'vector') {
             const v = typeof paramValue === 'object' ? paramValue : { x: 0, y: 0, z: 0 };
-            const baseV = "node-field flex-1 min-w-0 outline-none h-6 leading-none focus:border-blue-500 rounded-none border-l-2 border-l-white/10";
+            const baseV = "node-field flex-1 min-w-0 outline-none h-7 leading-normal focus:border-blue-500 rounded-none border-l-2 border-l-white/10";
             return (
                 <div className="flex flex-row gap-1 w-full" onMouseDown={stop}>
                     <input type="text" placeholder="X" className={baseV} value={v.x} onChange={e => handleNumberChange(e.target.value, input.name, true, 'x')} />
@@ -124,7 +124,7 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
         }
         if (type === 'boolean') return <input type="checkbox" className="h-3 w-3 rounded accent-blue-500" checked={!!paramValue} onChange={e => onUpdateParam(node.id, input.name, e.target.checked)} onMouseDown={stop} />;
         if (type === 'string') return <input type="text" value={paramValue || ''} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className={inputClasses} onMouseDown={stop} />;
-        if (type === 'color') return <div className="flex gap-2 w-full h-6 items-center" onMouseDown={stop}><input type="color" value={paramValue || '#888888'} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className="w-8 h-4 rounded border-none p-0 cursor-pointer bg-transparent" /><span className="text-[10px] opacity-40 font-mono flex-1">{paramValue || '#888888'}</span></div>;
+        if (type === 'color') return <div className="flex gap-2 w-full h-7 items-center" onMouseDown={stop}><input type="color" value={paramValue || '#888888'} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className="w-8 h-4 rounded border-none p-0 cursor-pointer bg-transparent" /><span className="text-[10px] opacity-40 font-mono flex-1">{paramValue || '#888888'}</span></div>;
         if (type === 'any') return <div className="text-[10px] opacity-30 italic">No Input</div>;
         return null;
     };
@@ -149,9 +149,14 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
                     ) : (
                         <>
                             <Edit2 size={10} className="mr-1.5 opacity-40 shrink-0" />
-                            <span className="text-xs font-bold truncate select-none" style={{ color: 'var(--node-header-text)' }}>
-                                {t(displayLabel)}
-                            </span>
+                            <div className="flex flex-col min-w-0 overflow-hidden leading-tight">
+                                <span className="text-[11px] font-bold truncate select-none" style={{ color: 'var(--node-header-text)' }}>
+                                    {t(displayLabel)}
+                                </span>
+                                <span className="text-[8px] uppercase tracking-widest opacity-40 select-none truncate">
+                                    {t(node.label)}
+                                </span>
+                            </div>
                         </>
                     )}
                 </div>
@@ -161,10 +166,10 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
             <div className="node-card-body" style={{ paddingTop: CONTENT_PADDING_TOP }}>
 
                 {node.type === NodeType.PARAMETER && (
-                    <div className="px-2.5 space-y-1.5 box-border border-b shrink-0 flex flex-col justify-center" style={{ minHeight: 60, borderColor: 'var(--node-divider)' }}>
-                        <div className="flex items-center gap-1.5 h-6">
+                    <div className="px-2.5 space-y-2 box-border border-b shrink-0 flex flex-col justify-center" style={{ minHeight: 72, borderColor: 'var(--node-divider)' }}>
+                        <div className="flex items-center gap-1.5 h-7">
                             <span className="node-label w-[40px] text-right">{t('type')}</span>
-                            <select value={node.params.type} onChange={e => onUpdateParam(node.id, 'type', e.target.value)} className="node-field flex-1 outline-none h-6 leading-none" onMouseDown={e => e.stopPropagation()}>
+                            <select value={node.params.type} onChange={e => onUpdateParam(node.id, 'type', e.target.value)} className="node-field flex-1 outline-none h-7 leading-normal" onMouseDown={e => e.stopPropagation()}>
                                 <option value="number">{t('Num')}</option>
                                 <option value="vector">{t('Vec')}</option>
                                 <option value="boolean">{t('Bool')}</option>
@@ -172,23 +177,23 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
                                 <option value="color">{t('Color')}</option>
                             </select>
                         </div>
-                        <div className="flex items-center gap-1.5 h-6">
+                        <div className="flex items-center gap-1.5 h-7">
                             <span className="node-label w-[40px] text-right">{t('Value')}</span>
                             <div className="flex-1 min-w-0">
                                 {node.params.type === 'vector' ? (
                                     <div className="flex gap-1 w-full" onMouseDown={e => e.stopPropagation()}>
-                                        <input type="text" className="node-field flex-1 min-w-0 h-6 leading-none" value={node.params.vecX} onChange={e => handleNumberChange(e.target.value, 'vecX')} />
-                                        <input type="text" className="node-field flex-1 min-w-0 h-6 leading-none" value={node.params.vecY} onChange={e => handleNumberChange(e.target.value, 'vecY')} />
-                                        <input type="text" className="node-field flex-1 min-w-0 h-6 leading-none" value={node.params.vecZ} onChange={e => handleNumberChange(e.target.value, 'vecZ')} />
+                                        <input type="text" className="node-field flex-1 min-w-0 h-7 leading-normal" value={node.params.vecX} onChange={e => handleNumberChange(e.target.value, 'vecX')} />
+                                        <input type="text" className="node-field flex-1 min-w-0 h-7 leading-normal" value={node.params.vecY} onChange={e => handleNumberChange(e.target.value, 'vecY')} />
+                                        <input type="text" className="node-field flex-1 min-w-0 h-7 leading-normal" value={node.params.vecZ} onChange={e => handleNumberChange(e.target.value, 'vecZ')} />
                                     </div>
                                 ) : node.params.type === 'boolean' ? (
-                                    <div className="flex items-center gap-2 w-full h-6"><input type="checkbox" checked={node.params.boolVal} onChange={e => onUpdateParam(node.id, 'boolVal', e.target.checked)} onMouseDown={e => e.stopPropagation()} /><span className="text-[10px] opacity-70">{node.params.boolVal ? 'TRUE' : 'FALSE'}</span></div>
+                                    <div className="flex items-center gap-2 w-full h-7"><input type="checkbox" checked={node.params.boolVal} onChange={e => onUpdateParam(node.id, 'boolVal', e.target.checked)} onMouseDown={e => e.stopPropagation()} /><span className="text-[10px] opacity-70">{node.params.boolVal ? 'TRUE' : 'FALSE'}</span></div>
                                 ) : node.params.type === 'string' ? (
-                                    <input type="text" value={node.params.stringVal} onChange={e => onUpdateParam(node.id, 'stringVal', e.target.value)} className="node-field w-full outline-none h-6 leading-none" onMouseDown={e => e.stopPropagation()} />
+                                    <input type="text" value={node.params.stringVal} onChange={e => onUpdateParam(node.id, 'stringVal', e.target.value)} className="node-field w-full outline-none h-7 leading-normal" onMouseDown={e => e.stopPropagation()} />
                                 ) : node.params.type === 'color' ? (
-                                    <div className="flex items-center gap-2 w-full h-6"><input type="color" value={node.params.colorVal} onChange={e => onUpdateParam(node.id, 'colorVal', e.target.value)} className="w-full h-3 p-0 border-none bg-transparent" onMouseDown={e => e.stopPropagation()} /></div>
+                                    <div className="flex items-center gap-2 w-full h-7"><input type="color" value={node.params.colorVal} onChange={e => onUpdateParam(node.id, 'colorVal', e.target.value)} className="w-full h-4 p-0 border-none bg-transparent" onMouseDown={e => e.stopPropagation()} /></div>
                                 ) : (
-                                    <input type="text" value={node.params.value} onChange={e => handleNumberChange(e.target.value, 'value')} className="node-field w-full outline-none h-6 leading-none font-bold" onMouseDown={e => e.stopPropagation()} />
+                                    <input type="text" value={node.params.value} onChange={e => handleNumberChange(e.target.value, 'value')} className="node-field w-full outline-none h-7 leading-normal font-bold" onMouseDown={e => e.stopPropagation()} />
                                 )}
                             </div>
                         </div>
@@ -196,13 +201,29 @@ const NodeComponent: React.FC<NodeComponentProps> = ({
                 )}
 
                 {node.type === NodeType.EXPRESSION && (
-                    <div className="px-2.5 py-2 box-border border-b relative shrink-0" style={{ minHeight: 64, borderColor: 'var(--node-divider)' }}>
-                        <textarea value={node.params.expression} onChange={(e) => onUpdateParam(node.id, 'expression', e.target.value)} className="node-field w-full h-full font-mono resize-none leading-tight" onMouseDown={e => e.stopPropagation()} placeholder="Math Expression" />
-                        <div className="absolute bottom-3 right-3.5 pointer-events-none">
-                            <span className="node-value-chip shadow-sm">
+                    <div className="px-2.5 py-2.5 box-border border-b flex flex-col gap-2 shrink-0" style={{ minHeight: 80, borderColor: 'var(--node-divider)' }}>
+                        <textarea value={node.params.expression} onChange={(e) => onUpdateParam(node.id, 'expression', e.target.value)} className="node-field w-full h-12 font-mono resize-none leading-normal p-1" onMouseDown={e => e.stopPropagation()} placeholder="Math Expression" />
+                        <div className="flex justify-end pr-1">
+                            <span className="node-value-chip shadow-sm bg-blue-500/10 text-blue-500 border border-dotted border-blue-500/30">
                                 = {formatLinkedValue(computedResults.get(node.outputs?.[0]?.id))}
                             </span>
                         </div>
+                    </div>
+                )}
+
+                {node.type === NodeType.BOOLEAN_OP && (
+                    <div className="px-2.5 py-2 box-border border-b shrink-0 flex items-center gap-1.5" style={{ minHeight: 40, borderColor: 'var(--node-divider)' }}>
+                        <span className="node-label w-[40px] text-right">{t('operation')}</span>
+                        <select
+                            value={node.params.operation || 'UNION'}
+                            onChange={e => onUpdateParam(node.id, 'operation', e.target.value)}
+                            className="node-field flex-1 outline-none h-7 leading-normal"
+                            onMouseDown={e => e.stopPropagation()}
+                        >
+                            <option value="UNION">{t('Union')}</option>
+                            <option value="SUBTRACT">{t('Subtract')}</option>
+                            <option value="INTERSECT">{t('Intersect')}</option>
+                        </select>
                     </div>
                 )}
 

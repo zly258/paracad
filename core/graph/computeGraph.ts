@@ -13,8 +13,10 @@ export const computeGraph = async (
   connections: Connection[],
   logCallback?: (msg: string, type?: 'info' | 'error') => void,
   depth = 0,
+  externalCache?: Map<string, { hash: string, outputs: any[] }>
 ): Promise<Map<string, any>> => {
   const results = new Map<string, any>();
+  const nodeExecutionCache = externalCache || new Map<string, { hash: string, outputs: any[] }>();
 
   if (depth > 5) {
     logCallback?.('自定义节点递归层级过深', 'error');
@@ -63,29 +65,60 @@ export const computeGraph = async (
     for (const node of nodes) {
       if (node.type === NodeType.PARAMETER) continue;
 
-      // 如果这个节点的所有输出都已经在 results 中，且我们不是强制重算的模式，理论上可以跳过。
-      // 但对于表达式，因为 globalParams 可能变化，我们需要至少尝试。
-      const outputsAlreadyComputed = node.outputs.length > 0 && node.outputs.every(out => results.has(out.id));
-      if (outputsAlreadyComputed && node.type !== NodeType.EXPRESSION) continue;
-
       const inputValues: Record<string, any> = {};
-      for (const input of node.inputs) {
+      const missingInputs: string[] = [];
+
+      for (const input of (node.inputs || [])) {
         const conn = connections.find((item) => item.targetSocketId === input.id);
         if (conn && results.has(conn.sourceSocketId)) {
           inputValues[input.name] = results.get(conn.sourceSocketId);
+        } else if (conn) {
+          missingInputs.push(input.name);
         }
+      }
+
+      // 生成输入哈希，用于跳过未变更节点的重复计算
+      const currentHash = JSON.stringify({
+        inputs: Object.fromEntries(
+          Object.entries(inputValues).map(([k, v]) => [k, (v instanceof THREE.Object3D ? v.uuid : v)])
+        ),
+        params: node.params
+      });
+
+      const cached = nodeExecutionCache.get(node.id);
+      if (cached && cached.hash === currentHash) {
+        // 如果输入未变且已有结果，则根据结果状态更新 results
+        cached.outputs.forEach((res, idx) => {
+          const outId = node.outputs?.[idx]?.id;
+          if (outId && !results.has(outId)) {
+            results.set(outId, res);
+            hasChangesInThisPass = true;
+          }
+        });
+        continue;
       }
 
       try {
         const outputs = await executeNode({ node, inputs: inputValues, globalParams });
-        if (!outputs || outputs.length === 0) continue;
 
-        node.outputs.forEach((out, idx) => {
+        if (!outputs || outputs.length === 0) {
+          throw new Error(missingInputs.length > 0 ? `缺少关键输入: ${missingInputs.join(', ')}` : '节点执行未返回结果');
+        }
+
+        // 缓存本次成功执行的结果
+        nodeExecutionCache.set(node.id, { hash: currentHash, outputs });
+
+        (node.outputs || []).forEach((out, idx) => {
           const result = outputs[idx];
+          if (!out) return;
 
-          // 如果结果没变（针对原始值），减少不必要的 hasChanges 标记。
           const prevResult = results.get(out.id);
-          if (prevResult === result && typeof result !== 'object') return;
+
+          if (typeof result === 'number' && typeof prevResult === 'number') {
+            if (Math.abs(result - prevResult) < 1e-6) return;
+          } else if (prevResult === result && typeof result !== 'object') {
+            return;
+          }
 
           if (result instanceof THREE.Object3D) {
             result.userData.nodeId = node.id;
@@ -97,22 +130,24 @@ export const computeGraph = async (
           results.set(out.id, result);
           hasChangesInThisPass = true;
 
-          // 核心逻辑：允许表达式结果作为后续表达式的全局参数命名引用。
-          // 只有带有 name 参数的节点（通常是 Parameter 和 Expression）会暴露给 globalParams。
           if (node.params.name && out.type !== 'geometry') {
             globalParams[node.params.name] = result;
           }
         });
-      } catch (error) {
-        console.warn(`Node ${node.label} Error:`, error);
-        // 不在这里报错，避免阻断整个图的渲染，但在 UI 日志中体现。
+      } catch (error: any) {
+        // 静默处理轮询中的错误
       }
     }
 
     if (!hasChangesInThisPass) break;
+  }
 
-    if (pass === MAX_PASSES - 1) {
-      logCallback?.('检测到循环依赖或计算链路过长，已停止计算', 'error');
+  // 最终验证：如果没有产生任何可见几何体，可选在此低频提示
+  const hasGeometry = Array.from(results.values()).some(v => v instanceof THREE.Object3D);
+  if (!hasGeometry && nodes.length > 0) {
+    const hasGeometryOp = nodes.some(n => n.outputs.some(o => o.type === 'geometry'));
+    if (hasGeometryOp) {
+      // logCallback?.('未生成可视几何体', 'info'); // 也可选择静默
     }
   }
 

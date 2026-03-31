@@ -104,8 +104,18 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleLanguage = useCallback(() => setLanguage(prev => prev === 'zh' ? 'en' : 'zh'), []);
   const t = useCallback((key: string): string => {
+    if (!key) return '';
     if (language === 'en') return key;
-    return translations['zh'][key] || key;
+
+    // 优先尝试精确匹配
+    if (translations['zh'][key]) return translations['zh'][key];
+
+    // 尝试忽略大小写的匹配（处理 JSON 格式不统一的问题）
+    const lowerKey = key.toLowerCase();
+    const foundKey = Object.keys(translations['zh']).find(k => k.toLowerCase() === lowerKey);
+    if (foundKey) return translations['zh'][foundKey];
+
+    return key;
   }, [language]);
 
   const addLog = useCallback((message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') => {
@@ -160,7 +170,9 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setKernelReady(true);
       setKernelBackend(status.backend);
       setKernelMessage(status.message);
-      addLog(status.message, status.backend === 'occt.js' ? 'success' : 'warning');
+      if (status.backend !== 'occt.js') {
+        addLog(status.message, 'warning');
+      }
     };
     init();
   }, [addLog]);
@@ -185,6 +197,8 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return JSON.stringify({ normalizedNodes, normalizedConns });
   }, [nodes, connections]);
 
+  const nodeExecutionCacheRef = useRef<Map<string, { hash: string, outputs: any[] }>>(new Map());
+
   useEffect(() => {
     if (!kernelReady) return;
     if (computeTrigger === lastComputeTriggerRef.current && computeModelKey === lastComputedKeyRef.current) return;
@@ -192,14 +206,22 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let active = true;
     setIsComputing(true);
     const timer = setTimeout(() => {
-      computeGraph(nodes, connections, (msg, type) => { if (active) addLog(msg, type || 'error'); }).then(results => {
-        if (active) {
-          setComputedResults(results);
-          setIsComputing(false);
-          lastComputedKeyRef.current = computeModelKey;
-          lastComputeTriggerRef.current = computeTrigger;
-        }
-      }).catch(() => { if (active) setIsComputing(false); });
+      computeGraph(nodes, connections, (msg, type) => { if (active) addLog(msg, type || 'error'); }, 0, nodeExecutionCacheRef.current)
+        .then(results => {
+          if (active) {
+            setComputedResults(results);
+            setIsComputing(false);
+            lastComputedKeyRef.current = computeModelKey;
+            lastComputeTriggerRef.current = computeTrigger;
+          }
+        })
+        .catch((err) => {
+          if (active) {
+            // 静默处理拖拽产生的碎片化计算中断。主要错误已由节点自身状态体现。
+            setComputedResults(new Map());
+            setIsComputing(false);
+          }
+        });
     }, 120);
     return () => { active = false; clearTimeout(timer); };
   }, [nodes, connections, computeTrigger, computeModelKey, addLog, kernelReady]);
@@ -328,9 +350,24 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadGraphData = useCallback((data: { nodes: NodeData[]; connections?: Connection[] }) => {
     if (!data?.nodes || !Array.isArray(data.nodes)) return;
     recordHistory();
+    nodeExecutionCacheRef.current.clear();
     setNodesState(resolveNodeOverlaps(data.nodes));
     setConnections(Array.isArray(data.connections) ? data.connections : []);
   }, [recordHistory]);
+
+  const loadFromJSON = useCallback((jsonString: string) => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (data.nodes && data.connections) {
+        nodeExecutionCacheRef.current.clear(); // 加载新示例时清空缓存，防止 ID 冲突或残留
+        setNodes(data.nodes);
+        setConnections(data.connections);
+        addLog('脚本已成功加载', 'info');
+      }
+    } catch (err) {
+      addLog(`加载失败: ${err}`, 'error');
+    }
+  }, [addLog]);
 
   const loadGraph = useCallback((file: File) => {
     const reader = new FileReader();

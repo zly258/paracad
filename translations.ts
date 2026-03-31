@@ -319,6 +319,10 @@ export const translations: Record<string, Record<string, string>> = {
     'Str': 'Str',
     'Round': 'Round',
     'Chamfer': 'Chamfer',
+    'Union': 'Union',
+    'Subtract': 'Subtract',
+    'Intersect': 'Intersect',
+    'operation': 'Operation',
     'name': 'Name',
     'type': 'Type',
     'Value': 'Value'

@@ -52,15 +52,18 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       try {
         const keys = Object.keys(globalParams).filter(k => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k));
         const values = keys.map(k => globalParams[k]);
-        const fn = new Function(...keys, `with (Math) { 
+        // 使用 new Function(...keys, body) 配合 try...catch 处理未定义引用
+        const fn = new Function(...keys, `
           try { 
-            const res = (${p.expression || '0'}); 
-            return res === undefined ? 0 : res;
-          } catch(e) { return 0; }
-        }`);
-        const res = fn(...values);
-        return [res !== undefined ? res : 0];
-      } catch {
+            const result = (${p.expression || '0'}); 
+            return (result !== undefined && result !== null) ? result : 0;
+          } catch(e) { 
+            return 0; 
+          }
+        `);
+        const result = fn(...values);
+        return [result];
+      } catch (err) {
         return [0];
       }
     }

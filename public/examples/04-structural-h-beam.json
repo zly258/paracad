@@ -202,9 +202,9 @@
                     "type": "geometry"
                 },
                 {
-                    "id": "mt-v",
-                    "name": "vector",
-                    "type": "vector"
+                    "id": "mt-z",
+                    "name": "z",
+                    "type": "number"
                 }
             ],
             "outputs": [
@@ -320,6 +320,13 @@
             "sourceSocketId": "mt-out",
             "targetNodeId": "group-h",
             "targetSocketId": "g3"
+        },
+        {
+            "id": "c10",
+            "sourceNodeId": "exp-offset",
+            "sourceSocketId": "off-out",
+            "targetNodeId": "move-top",
+            "targetSocketId": "mt-z"
         }
     ]
 }

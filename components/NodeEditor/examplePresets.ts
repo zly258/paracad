@@ -22,13 +22,6 @@ export const EXAMPLE_PRESETS: ExamplePreset[] = [
     summaryEn: 'Based on 1ff2e7a6...xml, demonstrating leg group, base plate, and brace assembly.',
   },
   {
-    file: '03-spherical-washer.json',
-    labelZh: '球锥垫圈',
-    labelEn: 'Spherical Washer',
-    summaryZh: '参考 0bd2d7a4...xml，经典的布尔切削工业件。',
-    summaryEn: 'Based on 0bd2d7a4...xml, a classic boolean subtract industrial part.',
-  },
-  {
     file: '04-structural-h-beam.json',
     labelZh: '工字钢结构件',
     labelEn: 'Structural H-Beam',
@@ -41,27 +34,6 @@ export const EXAMPLE_PRESETS: ExamplePreset[] = [
     labelEn: 'Bolted Assembly',
     summaryZh: '参数化螺栓组件，包含头、杆与尺寸联动逻辑。',
     summaryEn: 'Parametric bolt assembly, featuring head, shank, and dimension linking logic.',
-  },
-  {
-    file: '06-industrial-pipe-joint.json',
-    labelZh: '工业管道接头',
-    labelEn: 'Industrial Pipe Joint',
-    summaryZh: '管道与法兰盘接头，展示极坐标阵列生成螺栓孔模式。',
-    summaryEn: 'Pipe and flange joint, showing polar array for bolt hole patterns.',
-  },
-  {
-    file: '07-circular-heat-exchanger.json',
-    labelZh: '环形换热器壳体',
-    labelEn: 'Circular Exchanger Shell',
-    summaryZh: '换热器大型壳体，包含内部空腔与管口连接逻辑。',
-    summaryEn: 'Large heat exchanger shell with internal cavity and nozzle logic.',
-  },
-  {
-    file: '08-conveyor-roller.json',
-    labelZh: '输送机滚筒轴',
-    labelEn: 'Conveyor Roller Axis',
-    summaryZh: '工业输送机滚筒，多层圆柱体并集。',
-    summaryEn: 'Industrial conveyor roller, a union of multiple cylinders.',
   },
 ];
 

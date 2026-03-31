@@ -559,7 +559,6 @@ html[data-theme='light'] .category-button-name {
   line-height: 1.2;
   max-width: 100%;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
