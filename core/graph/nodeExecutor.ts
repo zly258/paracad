@@ -43,7 +43,6 @@ const extractOcctWire = (input: any) => input?.userData?.occtWire || input?.user
 export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionContext): Promise<any[]> => {
   const p = node.params;
   const color = p.color || '#888888';
-  const SEGMENTS = 64;
 
   const createMesh = (geom: THREE.BufferGeometry, detail: string) =>
     tagKernel(new THREE.Mesh(geom, getMaterial(color)), node, detail);
@@ -51,10 +50,18 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
   switch (node.type) {
     case NodeType.EXPRESSION: {
       try {
-        const fn = new Function(...Object.keys(globalParams), `with (Math) { return ${p.expression || ''}; }`);
-        return [fn(...Object.values(globalParams))];
+        const keys = Object.keys(globalParams).filter(k => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k));
+        const values = keys.map(k => globalParams[k]);
+        const fn = new Function(...keys, `with (Math) { 
+          try { 
+            const res = (${p.expression || '0'}); 
+            return res === undefined ? 0 : res;
+          } catch(e) { return 0; }
+        }`);
+        const res = fn(...values);
+        return [res !== undefined ? res : 0];
       } catch {
-        return [NaN];
+        return [0];
       }
     }
     case NodeType.CUSTOM:
@@ -179,4 +186,3 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       return [];
   }
 };
-

@@ -8,7 +8,6 @@
                 "y": 40
             },
             "label": "Parameter",
-            "inputs": [],
             "outputs": [
                 {
                     "id": "p-h-out",
@@ -30,7 +29,6 @@
                 "y": 140
             },
             "label": "Parameter",
-            "inputs": [],
             "outputs": [
                 {
                     "id": "p-w-out",
@@ -52,7 +50,6 @@
                 "y": 240
             },
             "label": "Parameter",
-            "inputs": [],
             "outputs": [
                 {
                     "id": "p-t-out",
@@ -74,7 +71,6 @@
                 "y": 340
             },
             "label": "Parameter",
-            "inputs": [],
             "outputs": [
                 {
                     "id": "p-l-out",
@@ -96,7 +92,6 @@
                 "y": 40
             },
             "label": "Flange Offset",
-            "inputs": [],
             "outputs": [
                 {
                     "id": "off-out",
@@ -105,6 +100,7 @@
                 }
             ],
             "params": {
+                "name": "WebOffset",
                 "expression": "BeamHeight - Thick"
             }
         },

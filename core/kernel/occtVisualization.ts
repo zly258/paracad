@@ -1,52 +1,128 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-const gltfLoader = new GLTFLoader();
 let exportIndex = 0;
 
-const parseGlbToThree = async (buffer: ArrayBuffer) => {
-  return new Promise<THREE.Object3D>((resolve, reject) => {
-    gltfLoader.parse(buffer, '', (gltf) => resolve(gltf.scene), reject);
-  });
+/**
+ * Extracts edges from an OCCT shape to a THREE.LineSegments object.
+ */
+const extractEdges = (oc: any, shape: any): THREE.LineSegments | null => {
+  try {
+    const edgePositions: number[] = [];
+    const explorer = new oc.TopExp_Explorer_2(shape, oc.TopAbs_ShapeEnum.TopAbs_EDGE, oc.TopAbs_ShapeEnum.TopAbs_SHAPE);
+
+    while (explorer.More()) {
+      const edge = oc.TopoDS.Edge_1(explorer.Current());
+      const adaptor = new oc.BRepAdaptor_Curve_2(edge);
+      const startParam = adaptor.FirstParameter();
+      const endParam = adaptor.LastParameter();
+
+      // Ensure we get the edge's placement in the shape
+      // Actually, TopoDS_Edge in a shape explorer context should already hold its positioning,
+      // but let's be safe and check if it needs location applying.
+      // In OCCT.js, BRepAdaptor_Curve(edge) usually handles the location.
+
+      const divisions = 36; // More smooth for circles
+      for (let i = 0; i < divisions; i++) {
+        const p1 = adaptor.Value(startParam + (endParam - startParam) * (i / divisions));
+        const p2 = adaptor.Value(startParam + (endParam - startParam) * ((i + 1) / divisions));
+        edgePositions.push(p1.X(), p1.Y(), p1.Z());
+        edgePositions.push(p2.X(), p2.Y(), p2.Z());
+      }
+      explorer.Next();
+    }
+
+    if (edgePositions.length === 0) return null;
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
+    const material = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 1 });
+    const segments = new THREE.LineSegments(geometry, material);
+    segments.name = "OCCT_Edges";
+    segments.userData = { isOcctEdge: true };
+    return segments;
+  } catch (e) {
+    console.error("Failed to extract OCCT edges:", e);
+    return null;
+  }
 };
 
-// 使用 OCCT 官方推荐流程：对 shape 进行网格化，写入虚拟文件系统中的 GLB，
-// 再交给 Three 的 GLTFLoader 解析为场景对象。
-export const occtShapeToThreeObject = async (
-  oc: any,
-  shape: any,
-  color: string,
-  meshDeviation = 0.08,
-) => {
-  const filename = `./occt-preview-${exportIndex++}.glb`;
+/**
+ * Manually extracts triangulation from OCCT shape.
+ */
+const extractMesh = (oc: any, shape: any): THREE.BufferGeometry | null => {
+  try {
+    const vertices: number[] = [];
+    const indices: number[] = [];
 
-  const doc = new oc.TDocStd_Document(new oc.TCollection_ExtendedString_1());
-  const shapeTool = oc.XCAFDoc_DocumentTool.ShapeTool(doc.Main()).get();
-  shapeTool.SetShape(shapeTool.NewShape(), shape);
-  new oc.BRepMesh_IncrementalMesh_2(shape, meshDeviation, false, meshDeviation, false);
+    const meshDeviation = 0.1;
+    new oc.BRepMesh_IncrementalMesh_2(shape, meshDeviation, false, meshDeviation, false);
 
-  const cafWriter = new oc.RWGltf_CafWriter(new oc.TCollection_AsciiString_2(filename), true);
-  cafWriter.Perform_2(
-    new oc.Handle_TDocStd_Document_2(doc),
-    new oc.TColStd_IndexedDataMapOfStringString_1(),
-    new oc.Message_ProgressRange_1(),
-  );
+    const explorer = new oc.TopExp_Explorer_2(shape, oc.TopAbs_ShapeEnum.TopAbs_FACE, oc.TopAbs_ShapeEnum.TopAbs_SHAPE);
+    let vertexOffset = 0;
 
-  const glbFile = oc.FS.readFile(filename, { encoding: 'binary' });
-  const scene = await parseGlbToThree(glbFile.buffer.slice(glbFile.byteOffset, glbFile.byteOffset + glbFile.byteLength));
+    while (explorer.More()) {
+      const face = oc.TopoDS.Face_1(explorer.Current());
+      const loc = new oc.TopLoc_Location_1();
+      const triangulation = oc.BRep_Tool.Triangulation(face, loc);
+      if (triangulation.IsNull()) { explorer.Next(); continue; }
 
-  scene.traverse((child: any) => {
-    if (!child.isMesh) return;
-    child.castShadow = false;
-    child.receiveShadow = false;
-    child.material = new THREE.MeshStandardMaterial({
+      const poly = triangulation.get();
+      const trsf = loc.Transformation();
+
+      const nbNodes = poly.NbNodes();
+      for (let i = 1; i <= nbNodes; i++) {
+        let p = poly.Node(i);
+        p = p.Transformed(trsf);
+        vertices.push(p.X(), p.Y(), p.Z());
+      }
+
+      const nbTriangles = poly.NbTriangles();
+      for (let i = 1; i <= nbTriangles; i++) {
+        const tri = poly.Triangle(i);
+        let n1 = tri.Value(1), n2 = tri.Value(2), n3 = tri.Value(3);
+        if (face.Orientation_1() === oc.TopAbs_Orientation.TopAbs_REVERSED) {
+          indices.push(n1 - 1 + vertexOffset, n3 - 1 + vertexOffset, n2 - 1 + vertexOffset);
+        } else {
+          indices.push(n1 - 1 + vertexOffset, n2 - 1 + vertexOffset, n3 - 1 + vertexOffset);
+        }
+      }
+      vertexOffset += nbNodes;
+      explorer.Next();
+    }
+
+    if (vertices.length === 0) return null;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setIndex(indices);
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  } catch (e) {
+    console.error("Failed to extract OCCT mesh:", e);
+    return null;
+  }
+};
+
+export const occtShapeToThreeObject = async (oc: any, shape: any, color: string) => {
+  const group = new THREE.Group();
+  group.name = `occt-shape-${exportIndex++}`;
+
+  const geometry = extractMesh(oc, shape);
+  if (geometry) {
+    const material = new THREE.MeshStandardMaterial({
       color,
-      metalness: 0.02,
-      roughness: 0.45,
+      metalness: 0.05,
+      roughness: 0.4,
       side: THREE.DoubleSide,
     });
-  });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.userData = { isOcctMesh: true };
+    group.add(mesh);
+  }
 
-  try { oc.FS.unlink(filename); } catch {}
-  return scene;
+  const edgeSegments = extractEdges(oc, shape);
+  if (edgeSegments) {
+    group.add(edgeSegments);
+  }
+
+  return group;
 };

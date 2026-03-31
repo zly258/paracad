@@ -264,7 +264,7 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
       oc?.STEPControl_StepModelType?.STEPControl_AsIs ??
       oc?.STEPControl_AsIs ??
       0;
-    callOcctMethodByPrefix(
+    const transferStatus = callOcctMethodByPrefix(
       writer,
       'Transfer',
       [
@@ -273,15 +273,22 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
       ],
       ['Transfer', 'Transfer_1', 'Transfer_2'],
     );
-    callOcctMethodByPrefix(
+
+    const writeStatus = callOcctMethodByPrefix(
       writer,
       'Write',
       [[filename]],
       ['Write', 'Write_1'],
     );
-    const file = oc.FS.readFile(filename, { encoding: 'binary' });
-    downloadBlob(new Blob([file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)], { type: 'model/step' }), `paracad-${Date.now()}.stp`);
-    try { oc.FS.unlink(filename); } catch {}
+
+    // Check possible status returns (1 is usually Success in OCCT STEP writer)
+    if (writeStatus === 0) {
+      throw new Error('STEP writer failed to write file to virtual FS');
+    }
+
+    const file = oc.FS.readFile(filename);
+    downloadBlob(new Blob([file], { type: 'application/step' }), `paracad-${Date.now()}.stp`);
+    try { oc.FS.unlink(filename); } catch { }
     return;
   }
 
@@ -301,15 +308,20 @@ const exportBrepByOcct = async (objects: THREE.Object3D[], format: 'stp' | 'igs'
       ['Transfer', 'Transfer_1'],
     );
   }
-  callOcctMethodByPrefix(
+  const writeStatus = callOcctMethodByPrefix(
     writer,
     'Write',
     [[filename]],
     ['Write', 'Write_1'],
   );
-  const file = oc.FS.readFile(filename, { encoding: 'binary' });
-  downloadBlob(new Blob([file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength)], { type: 'model/iges' }), `paracad-${Date.now()}.igs`);
-  try { oc.FS.unlink(filename); } catch {}
+
+  if (writeStatus === 0) {
+    throw new Error('IGES writer failed to write file to virtual FS');
+  }
+
+  const file = oc.FS.readFile(filename);
+  downloadBlob(new Blob([file], { type: 'application/iges' }), `paracad-${Date.now()}.igs`);
+  try { oc.FS.unlink(filename); } catch { }
 };
 
 export const exportComputedModel = async (computedResults: Map<string, any>, format: ExportFormat) => {

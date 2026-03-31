@@ -7,8 +7,7 @@
                 "x": 30,
                 "y": 40
             },
-            "label": "Parameter",
-            "inputs": [],
+            "label": "Bolt Diameter",
             "outputs": [
                 {
                     "id": "p-dia-out",
@@ -29,8 +28,7 @@
                 "x": 30,
                 "y": 140
             },
-            "label": "Parameter",
-            "inputs": [],
+            "label": "Bolt Length",
             "outputs": [
                 {
                     "id": "p-len-out",
@@ -52,7 +50,6 @@
                 "y": 40
             },
             "label": "Head Resize",
-            "inputs": [],
             "outputs": [
                 {
                     "id": "head-out",
@@ -61,6 +58,7 @@
                 }
             ],
             "params": {
+                "name": "HeadRad",
                 "expression": "BoltDia * 1.8"
             }
         },

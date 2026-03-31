@@ -1,17 +1,16 @@
 {
     "nodes": [
         {
-            "id": "p-d1",
+            "id": "p-dia",
             "type": "PARAMETER",
             "position": {
-                "x": 40,
-                "y": 60
+                "x": 50,
+                "y": 80
             },
             "label": "Parameter",
-            "inputs": [],
             "outputs": [
                 {
-                    "id": "p-d1-out",
+                    "id": "p-dia-out",
                     "name": "Value",
                     "type": "any"
                 }
@@ -19,185 +18,98 @@
             "params": {
                 "name": "OuterDia",
                 "type": "number",
-                "value": 42
+                "value": 40
             }
         },
         {
-            "id": "p-d2",
-            "type": "PARAMETER",
-            "position": {
-                "x": 40,
-                "y": 180
-            },
-            "label": "Parameter",
-            "inputs": [],
-            "outputs": [
-                {
-                    "id": "p-d2-out",
-                    "name": "Value",
-                    "type": "any"
-                }
-            ],
-            "params": {
-                "name": "InnerDia",
-                "type": "number",
-                "value": 18
-            }
-        },
-        {
-            "id": "p-h",
-            "type": "PARAMETER",
-            "position": {
-                "x": 40,
-                "y": 300
-            },
-            "label": "Parameter",
-            "inputs": [],
-            "outputs": [
-                {
-                    "id": "p-h-out",
-                    "name": "Value",
-                    "type": "any"
-                }
-            ],
-            "params": {
-                "name": "Thickness",
-                "type": "number",
-                "value": 8
-            }
-        },
-        {
-            "id": "exp-r1",
+            "id": "exp-r",
             "type": "EXPRESSION",
             "position": {
-                "x": 350,
-                "y": 60
+                "x": 200,
+                "y": 80
             },
-            "label": "Outer Radius",
-            "inputs": [],
+            "label": "Expression",
             "outputs": [
                 {
-                    "id": "r1-out",
+                    "id": "e-out",
                     "name": "Result",
                     "type": "any"
                 }
             ],
             "params": {
+                "name": "OuterRad",
                 "expression": "OuterDia / 2"
             }
         },
         {
-            "id": "exp-r2",
-            "type": "EXPRESSION",
-            "position": {
-                "x": 350,
-                "y": 180
-            },
-            "label": "Inner Radius",
-            "inputs": [],
-            "outputs": [
-                {
-                    "id": "r2-out",
-                    "name": "Result",
-                    "type": "any"
-                }
-            ],
-            "params": {
-                "expression": "InnerDia / 2"
-            }
-        },
-        {
-            "id": "cyl-outer",
+            "id": "body",
             "type": "CYLINDER",
             "position": {
-                "x": 620,
+                "x": 380,
                 "y": 50
             },
-            "label": "Outer Body",
+            "label": "Washer Body",
             "inputs": [
                 {
-                    "id": "co-c",
-                    "name": "center",
-                    "type": "vector"
-                },
-                {
-                    "id": "co-r",
+                    "id": "b-r",
                     "name": "radius",
                     "type": "number"
                 },
                 {
-                    "id": "co-h",
+                    "id": "b-h",
                     "name": "height",
                     "type": "number"
                 }
             ],
             "outputs": [
                 {
-                    "id": "co-out",
+                    "id": "b-out",
                     "name": "geometry",
                     "type": "geometry"
                 }
             ],
             "params": {
+                "customLabel": "Washer Body",
+                "height": 8,
                 "color": "#fab005"
             }
         },
         {
-            "id": "cyl-inner",
+            "id": "hole",
             "type": "CYLINDER",
             "position": {
-                "x": 620,
-                "y": 250
+                "x": 380,
+                "y": 200
             },
-            "label": "Hole Cut",
+            "label": "Central Hole",
             "inputs": [
                 {
-                    "id": "ci-c",
-                    "name": "center",
-                    "type": "vector"
-                },
-                {
-                    "id": "ci-r",
-                    "name": "radius",
-                    "type": "number"
-                },
-                {
-                    "id": "ci-h",
+                    "id": "h-h",
                     "name": "height",
                     "type": "number"
                 }
             ],
             "outputs": [
                 {
-                    "id": "ci-out",
+                    "id": "h-out",
                     "name": "geometry",
                     "type": "geometry"
                 }
             ],
             "params": {
-                "color": "#f25f5c"
+                "customLabel": "Central Hole",
+                "radius": 10,
+                "color": "#ff6b6b"
             }
         },
         {
-            "id": "subtract",
-            "type": "BOOLEAN_OP",
+            "id": "sphere-cut",
+            "type": "SPHERE",
             "position": {
-                "x": 900,
-                "y": 150
+                "x": 380,
+                "y": 350
             },
-            "label": "Subtract",
-            "inputs": [
-                {
-                    "id": "s-a",
-                    "name": "object_a",
-                    "type": "geometry"
-                },
-                {
-                    "id": "s-b",
-                    "name": "object_b",
-                    "type": "geometry"
-                }
-            ],
+            "label": "Spherical Seat",
             "outputs": [
                 {
                     "id": "s-out",
@@ -206,53 +118,117 @@
                 }
             ],
             "params": {
+                "customLabel": "Spherical Seat",
+                "center": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 12
+                },
+                "radius": 32,
+                "color": "#ff6b6b"
+            }
+        },
+        {
+            "id": "sub1",
+            "type": "BOOLEAN_OP",
+            "position": {
+                "x": 680,
+                "y": 100
+            },
+            "label": "Boolean",
+            "inputs": [
+                {
+                    "id": "s1-a",
+                    "name": "object_a",
+                    "type": "geometry"
+                },
+                {
+                    "id": "s1-b",
+                    "name": "object_b",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "s1-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
                 "operation": "SUBTRACT",
                 "color": "#fab005"
+            }
+        },
+        {
+            "id": "sub2",
+            "type": "BOOLEAN_OP",
+            "position": {
+                "x": 930,
+                "y": 150
+            },
+            "label": "Boolean",
+            "inputs": [
+                {
+                    "id": "s2-a",
+                    "name": "object_a",
+                    "type": "geometry"
+                },
+                {
+                    "id": "s2-b",
+                    "name": "object_b",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "s2-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "operation": "SUBTRACT",
+                "color": "#fab005",
+                "customLabel": "Spherical Washer"
             }
         }
     ],
     "connections": [
         {
             "id": "c1",
-            "sourceNodeId": "exp-r1",
-            "sourceSocketId": "r1-out",
-            "targetNodeId": "cyl-outer",
-            "targetSocketId": "co-r"
+            "sourceNodeId": "exp-r",
+            "sourceSocketId": "e-out",
+            "targetNodeId": "body",
+            "targetSocketId": "b-r"
         },
         {
             "id": "c2",
-            "sourceNodeId": "exp-r2",
-            "sourceSocketId": "r2-out",
-            "targetNodeId": "cyl-inner",
-            "targetSocketId": "ci-r"
+            "sourceNodeId": "body",
+            "sourceSocketId": "b-out",
+            "targetNodeId": "sub1",
+            "targetSocketId": "s1-a"
         },
         {
             "id": "c3",
-            "sourceNodeId": "p-h",
-            "sourceSocketId": "p-h-out",
-            "targetNodeId": "cyl-outer",
-            "targetSocketId": "co-h"
+            "sourceNodeId": "hole",
+            "sourceSocketId": "h-out",
+            "targetNodeId": "sub1",
+            "targetSocketId": "s1-b"
         },
         {
             "id": "c4",
-            "sourceNodeId": "p-h",
-            "sourceSocketId": "p-h-out",
-            "targetNodeId": "cyl-inner",
-            "targetSocketId": "ci-h"
+            "sourceNodeId": "sub1",
+            "sourceSocketId": "s1-out",
+            "targetNodeId": "sub2",
+            "targetSocketId": "s2-a"
         },
         {
             "id": "c5",
-            "sourceNodeId": "cyl-outer",
-            "sourceSocketId": "co-out",
-            "targetNodeId": "subtract",
-            "targetSocketId": "s-a"
-        },
-        {
-            "id": "c6",
-            "sourceNodeId": "cyl-inner",
-            "sourceSocketId": "ci-out",
-            "targetNodeId": "subtract",
-            "targetSocketId": "s-b"
+            "sourceNodeId": "sphere-cut",
+            "sourceSocketId": "s-out",
+            "targetNodeId": "sub2",
+            "targetSocketId": "s2-b"
         }
     ]
 }

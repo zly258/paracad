@@ -49,6 +49,20 @@ export const EXAMPLE_PRESETS: ExamplePreset[] = [
     summaryZh: '管道与法兰盘接头，展示极坐标阵列生成螺栓孔模式。',
     summaryEn: 'Pipe and flange joint, showing polar array for bolt hole patterns.',
   },
+  {
+    file: '07-circular-heat-exchanger.json',
+    labelZh: '环形换热器壳体',
+    labelEn: 'Circular Exchanger Shell',
+    summaryZh: '换热器大型壳体，包含内部空腔与管口连接逻辑。',
+    summaryEn: 'Large heat exchanger shell with internal cavity and nozzle logic.',
+  },
+  {
+    file: '08-conveyor-roller.json',
+    labelZh: '输送机滚筒轴',
+    labelEn: 'Conveyor Roller Axis',
+    summaryZh: '工业输送机滚筒，多层圆柱体并集。',
+    summaryEn: 'Industrial conveyor roller, a union of multiple cylinders.',
+  },
 ];
 
 export const getExampleLabel = (preset: ExamplePreset, language: 'zh' | 'en') =>

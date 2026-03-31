@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import NodeCanvas from './components/NodeEditor/NodeCanvas';
 import NodeTree from './components/NodeEditor/NodeTree';
 import Viewer3D from './components/Viewport/Viewer3D';
@@ -33,15 +33,14 @@ const LogPanel = React.memo(() => {
           <div key={log.id} className="flex gap-2 border-b border-white/5 pb-1 last:border-0">
             <span className="text-gray-600 shrink-0">[{log.timestamp.toLocaleTimeString()}]</span>
             <span
-              className={`flex items-center gap-1 ${
-                log.type === 'error'
-                  ? 'text-red-400'
-                  : log.type === 'success'
-                    ? 'text-green-400'
-                    : log.type === 'warning'
-                      ? 'text-yellow-400'
-                      : 'text-gray-300'
-              }`}
+              className={`flex items-center gap-1 ${log.type === 'error'
+                ? 'text-red-400'
+                : log.type === 'success'
+                  ? 'text-green-400'
+                  : log.type === 'warning'
+                    ? 'text-yellow-400'
+                    : 'text-gray-300'
+                }`}
             >
               {log.type === 'error' && <AlertCircle size={10} />}
               {log.type === 'success' && <CheckCircle size={10} />}
@@ -113,11 +112,7 @@ const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> =
 };
 
 const MainLayout: React.FC = () => {
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const saved = localStorage.getItem('paracad-theme');
-    return saved === 'dark' ? 'dark' : 'light';
-  });
-  const { kernelReady, t } = useGraph();
+  const { kernelReady, t, theme, setTheme } = useGraph();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -133,10 +128,9 @@ const MainLayout: React.FC = () => {
     setProgress(100);
   }, [kernelReady]);
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('paracad-theme', theme);
-  }, [theme]);
+  const onToggleTheme = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [theme, setTheme]);
 
   return (
     <div className="app-root flex flex-col h-screen w-screen overflow-hidden text-gray-100">
@@ -154,7 +148,7 @@ const MainLayout: React.FC = () => {
         </div>
       )}
 
-      <Header theme={theme} onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} />
+      <Header theme={theme} onToggleTheme={onToggleTheme} />
 
       <div className="flex-1 flex overflow-hidden relative">
         <div style={{ width: 280 }} className="left-panel shrink-0 relative z-10 h-full border-r">

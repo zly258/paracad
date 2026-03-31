@@ -1,384 +1,252 @@
-import React, { useRef } from 'react';
-import { NodeData, NodeType, SocketType, Connection, ConnectionDraft } from '../../types';
-import { SOCKET_COLORS, NODE_WIDTH, HEADER_HEIGHT, getSocketHeight, OUTPUT_ROW_HEIGHT, getInnerBodyHeight, CONTENT_PADDING_TOP, INPUT_OUTPUT_GAP } from '../../constants';
-import { Play, Trash2 } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { NodeData, NodeType, SocketType, Connection } from '../../types';
+import { SOCKET_COLORS, NODE_WIDTH, HEADER_HEIGHT, getSocketHeight, OUTPUT_ROW_HEIGHT, CONTENT_PADDING_TOP, INPUT_OUTPUT_GAP } from '../../constants';
+import { Trash2, Edit2 } from 'lucide-react';
 
 interface NodeComponentProps {
-  node: NodeData;
-  isSelected: boolean;
-  computedResults: Map<string, any>;
-  connections: Connection[];
-  t: (key: string) => string;
-  // Actions
-  onSelect: (id: string, multi: boolean) => void;
-  onUpdatePosition: (id: string, pos: { x: number, y: number }) => void;
-  onUpdateParam: (id: string, key: string, value: any) => void;
-  onSocketMouseDown: (nodeId: string, socketId: string, type: SocketType, isInput: boolean, x: number, y: number) => void;
-  onSocketMouseUp: (nodeId: string, socketId: string, isInput: boolean) => void;
-  onDragStart?: () => void;
-  onDelete: (id: string) => void;
+    node: NodeData;
+    isSelected: boolean;
+    computedResults: Map<string, any>;
+    connections: Connection[];
+    t: (key: string) => string;
+    onSelect: (id: string, multi: boolean) => void;
+    onUpdatePosition: (id: string, pos: { x: number, y: number }) => void;
+    onUpdateParam: (id: string, key: string, value: any) => void;
+    onSocketMouseDown: (nodeId: string, socketId: string, type: SocketType, isInput: boolean, x: number, y: number) => void;
+    onSocketMouseUp: (nodeId: string, socketId: string, isInput: boolean) => void;
+    onDragStart?: () => void;
+    onDelete: (id: string) => void;
 }
 
-const NodeComponent: React.FC<NodeComponentProps> = ({ 
+const NodeComponent: React.FC<NodeComponentProps> = ({
     node, isSelected, computedResults, connections, t,
     onSelect, onUpdatePosition, onUpdateParam, onSocketMouseDown, onSocketMouseUp, onDragStart, onDelete
 }) => {
-  
-  const draggingRef = useRef<{ startX: number, startY: number, initX: number, initY: number } | null>(null);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
-    e.preventDefault(); 
-    if (e.button !== 0) return;
+    const draggingRef = useRef<{ startX: number, startY: number, initX: number, initY: number } | null>(null);
+    const [editingName, setEditingName] = useState(false);
+    const [tempName, setTempName] = useState(node.params.name || node.label);
 
-    onSelect(node.id, e.shiftKey);
-    if(onDragStart) onDragStart();
-    draggingRef.current = { startX: e.clientX, startY: e.clientY, initX: node.position.x, initY: node.position.y };
-    
-    const handleMouseMove = (mv: MouseEvent) => {
-      if (!draggingRef.current) return;
-      const dx = (mv.clientX - draggingRef.current.startX);
-      const dy = (mv.clientY - draggingRef.current.startY);
-      onUpdatePosition(node.id, { x: draggingRef.current.initX + dx, y: draggingRef.current.initY + dy });
+    useEffect(() => {
+        setTempName(node.params.name || (node.params.customLabel || node.label));
+    }, [node.params.name, node.params.customLabel, node.label]);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (e.button !== 0) return;
+
+        onSelect(node.id, e.shiftKey);
+        if (onDragStart) onDragStart();
+        draggingRef.current = { startX: e.clientX, startY: e.clientY, initX: node.position.x, initY: node.position.y };
+
+        const handleMouseMove = (mv: MouseEvent) => {
+            if (!draggingRef.current) return;
+            const dx = (mv.clientX - draggingRef.current.startX);
+            const dy = (mv.clientY - draggingRef.current.startY);
+            onUpdatePosition(node.id, { x: draggingRef.current.initX + dx, y: draggingRef.current.initY + dy });
+        };
+
+        const handleMouseUp = () => {
+            draggingRef.current = null;
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleMouseUp = () => {
-      draggingRef.current = null;
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+    const saveName = () => {
+        setEditingName(false);
+        const nameVal = node.params.name || (node.params.customLabel || node.label);
+        if (tempName !== nameVal) {
+            if (node.type === NodeType.PARAMETER || node.type === NodeType.EXPRESSION) {
+                onUpdateParam(node.id, 'name', tempName);
+            } else {
+                onUpdateParam(node.id, 'customLabel', tempName);
+            }
+        }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  };
+    const getConnectedSocketId = (socketId: string) => {
+        const conn = connections.find(c => c.targetNodeId === node.id && c.targetSocketId === socketId);
+        return conn ? conn.sourceSocketId : null;
+    };
 
-  const getConnectedSocketId = (socketId: string) => {
-     const conn = connections.find(c => c.targetNodeId === node.id && c.targetSocketId === socketId);
-     return conn ? conn.sourceSocketId : null;
-  };
+    const formatLinkedValue = (val: any) => {
+        if (val === undefined || val === null) return 'null';
+        if (typeof val === 'number') return Number.isInteger(val) ? val.toString() : val.toFixed(2);
+        if (typeof val === 'string') return `"${val.length > 5 ? val.substring(0, 5) + '..' : val}"`;
+        if (typeof val === 'boolean') return val ? 'TRUE' : 'FALSE';
+        if (typeof val === 'object') {
+            if ('x' in val && 'y' in val) return `V(${val.x.toFixed(1)},${val.y.toFixed(1)}..)`;
+            if (val.isMesh) return 'Mesh';
+            if (val.isGroup) return 'Group';
+            return 'Object';
+        }
+        return String(val);
+    };
 
-  const formatLinkedValue = (val: any) => {
-      if (val === undefined || val === null) return 'null';
-      if (typeof val === 'number') return val.toFixed(2);
-      if (typeof val === 'string') return `"${val.length > 5 ? val.substring(0,5)+'..' : val}"`;
-      if (typeof val === 'boolean') return val ? 'TRUE' : 'FALSE';
-      if (typeof val === 'object') {
-          if ('x' in val && 'y' in val) return `V(${val.x.toFixed(1)},${val.y.toFixed(1)}..)`;
-          if (val.isMesh) return 'Mesh';
-          if (val.isGroup) return 'Group';
-          return 'Object';
-      }
-      return String(val);
-  };
+    const handleNumberChange = useCallback((val: string, key: string, isVec = false, vecKey?: string) => {
+        if (val === '' || val === '-') {
+            onUpdateParam(node.id, key, val);
+            return;
+        }
+        const num = parseFloat(val);
+        if (isNaN(num)) return;
+        if (isVec && vecKey) {
+            const v = typeof node.params[key] === 'object' ? node.params[key] : { x: 0, y: 0, z: 0 };
+            onUpdateParam(node.id, key, { ...v, [vecKey]: num });
+        } else {
+            onUpdateParam(node.id, key, num);
+        }
+    }, [node.id, node.params, onUpdateParam]);
 
-  const renderInputField = (input: any) => {
-      const type = input.type;
-      const paramValue = node.params[input.name];
-      const stop = (e: React.MouseEvent) => e.stopPropagation();
-      // Disable wheel value change
-      const blurOnWheel = (e: React.WheelEvent<HTMLInputElement>) => e.currentTarget.blur();
+    const renderInputField = (input: any) => {
+        const type = input.type;
+        const paramValue = node.params[input.name];
+        const stop = (e: React.MouseEvent) => e.stopPropagation();
 
-      if (type === 'number') {
-          return (
-            <input 
-                type="number" 
-                step="0.01"
-                className="node-field w-full bg-black/40 border border-gray-600 rounded px-2 text-[10px] text-blue-300 outline-none hover:border-blue-500 transition-colors h-6 leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                value={paramValue ?? 0} 
-                onChange={(e) => onUpdateParam(node.id, input.name, parseFloat(e.target.value))} 
-                onMouseDown={stop}
-                onWheel={blurOnWheel}
-            />
-          );
-      }
-      
-      if (type === 'vector') {
-          const v = paramValue || {x:0,y:0,z:0};
-          return (
-            <div className="flex flex-row gap-1 w-full" onMouseDown={stop}>
-                 <input type="number" step="0.1" placeholder="X" onWheel={blurOnWheel} className="node-field flex-1 min-w-0 bg-black/30 border-l-2 border-l-red-500/80 border-y border-r border-gray-700 rounded-r px-1 text-[10px] text-gray-300 outline-none h-6 leading-none focus:border-red-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={v.x} onChange={e=>onUpdateParam(node.id, input.name, {...v, x: parseFloat(e.target.value)})} />
-                 <input type="number" step="0.1" placeholder="Y" onWheel={blurOnWheel} className="node-field flex-1 min-w-0 bg-black/30 border-l-2 border-l-green-500/80 border-y border-r border-gray-700 rounded-r px-1 text-[10px] text-gray-300 outline-none h-6 leading-none focus:border-green-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={v.y} onChange={e=>onUpdateParam(node.id, input.name, {...v, y: parseFloat(e.target.value)})} />
-                 <input type="number" step="0.1" placeholder="Z" onWheel={blurOnWheel} className="node-field flex-1 min-w-0 bg-black/30 border-l-2 border-l-blue-500/80 border-y border-r border-gray-700 rounded-r px-1 text-[10px] text-gray-300 outline-none h-6 leading-none focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={v.z} onChange={e=>onUpdateParam(node.id, input.name, {...v, z: parseFloat(e.target.value)})} />
-            </div>
-          );
-      }
-      if (type === 'boolean') return <input type="checkbox" className="h-4 w-4 rounded border-gray-600 bg-black/40" checked={!!paramValue} onChange={e => onUpdateParam(node.id, input.name, e.target.checked)} onMouseDown={stop} />;
-      if (type === 'string') return <input type="text" value={paramValue || ''} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className="node-field w-full bg-black/40 border border-gray-600 rounded px-2 text-[10px] text-yellow-500 outline-none h-6 leading-none" onMouseDown={stop} />;
-      
-      if (type === 'color') {
-          return <div className="flex gap-2 w-full h-6 items-center" onMouseDown={stop}>
-              <input type="color" value={paramValue || '#888888'} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className="w-8 h-full rounded border-none p-0 cursor-pointer bg-transparent" />
-              <span className="text-[10px] text-gray-400 font-mono flex-1">{paramValue || '#888888'}</span>
-          </div>;
-      }
+        const inputClasses = "node-field w-full outline-none transition-colors h-6 leading-none";
 
-      if (type === 'any') {
-         return <div className="text-[10px] text-gray-600 italic">No Input</div>;
-      }
-      return null;
-  };
-
-  const isPreviewOutputType = (type: SocketType) => !['geometry', 'shape2d', 'curve'].includes(type);
-
-  const is2DNode = [NodeType.RECTANGLE, NodeType.CIRCLE, NodeType.ARC, NodeType.ELLIPSE, NodeType.POLYGON, NodeType.STAR].includes(node.type);
-
-  // Common Label Style
-  const LabelCell = ({ text }: { text: string }) => (
-      <span className="text-[10px] leading-none text-gray-400 select-none truncate shrink-0 w-[56px] text-right mr-2" title={text}>
-          {text}
-      </span>
-  );
-  
-  // Render extra params that are not sockets (Color only)
-  const renderGeometryParams = () => {
-       const isGeometryNode = (node.type !== NodeType.PARAMETER && node.type !== NodeType.EXPRESSION && node.type !== NodeType.GROUP && node.outputs.some(o => o.type === 'geometry' || o.type === 'shape2d' || o.type === 'curve'));
-       if (!isGeometryNode) return null;
-
-       return (
-           <div className="px-2.5 py-1 border-b border-white/5 flex flex-col gap-1 shrink-0">
-                <div className="flex items-center gap-1 h-6">
-                    <LabelCell text={t('Color')} />
-                    <div className="flex-1 flex items-center gap-2" onMouseDown={e => e.stopPropagation()}>
-                        <input type="color" value={node.params.color || '#888888'} onChange={e => onUpdateParam(node.id, 'color', e.target.value)} className="w-7 h-6 rounded border border-gray-600 p-0 cursor-pointer bg-transparent" />
-                        <span className="text-[10px] text-gray-500 font-mono uppercase">{node.params.color || '#888'}</span>
-                    </div>
+        if (type === 'number') return <input type="text" className={inputClasses} value={paramValue ?? 0} onChange={(e) => handleNumberChange(e.target.value, input.name)} onMouseDown={stop} />;
+        if (type === 'vector') {
+            const v = typeof paramValue === 'object' ? paramValue : { x: 0, y: 0, z: 0 };
+            const baseV = "node-field flex-1 min-w-0 outline-none h-6 leading-none focus:border-blue-500 rounded-none border-l-2 border-l-white/10";
+            return (
+                <div className="flex flex-row gap-1 w-full" onMouseDown={stop}>
+                    <input type="text" placeholder="X" className={baseV} value={v.x} onChange={e => handleNumberChange(e.target.value, input.name, true, 'x')} />
+                    <input type="text" placeholder="Y" className={baseV} value={v.y} onChange={e => handleNumberChange(e.target.value, input.name, true, 'y')} />
+                    <input type="text" placeholder="Z" className={baseV} value={v.z} onChange={e => handleNumberChange(e.target.value, input.name, true, 'z')} />
                 </div>
-           </div>
-       );
-  };
+            );
+        }
+        if (type === 'boolean') return <input type="checkbox" className="h-3 w-3 rounded accent-blue-500" checked={!!paramValue} onChange={e => onUpdateParam(node.id, input.name, e.target.checked)} onMouseDown={stop} />;
+        if (type === 'string') return <input type="text" value={paramValue || ''} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className={inputClasses} onMouseDown={stop} />;
+        if (type === 'color') return <div className="flex gap-2 w-full h-6 items-center" onMouseDown={stop}><input type="color" value={paramValue || '#888888'} onChange={e => onUpdateParam(node.id, input.name, e.target.value)} className="w-8 h-4 rounded border-none p-0 cursor-pointer bg-transparent" /><span className="text-[10px] opacity-40 font-mono flex-1">{paramValue || '#888888'}</span></div>;
+        if (type === 'any') return <div className="text-[10px] opacity-30 italic">No Input</div>;
+        return null;
+    };
 
-  return (
-    <div 
-      className={`node-card node-component ${isSelected ? 'node-card-active' : ''}`}
-      style={{
-        position: 'absolute',
-        width: NODE_WIDTH,
-        transform: `translate(${node.position.x}px, ${node.position.y}px)`,
-        backgroundColor: 'transparent'
-      }}
-    >
-      {/* Header */}
-      <div 
-        className={`node-card-header flex items-center justify-between cursor-grab active:cursor-grabbing ${isSelected ? 'node-card-header-selected' : ''}`}
-        style={{ height: HEADER_HEIGHT }}
-        onMouseDown={handleMouseDown}
-      >
-        <span className={`text-xs font-bold truncate select-none ${isSelected ? 'text-yellow-100' : 'text-gray-200'}`}>{t(node.label)}</span>
-        
-        <button 
-           className="p-1 text-gray-500 hover:text-red-500 hover:bg-white/10 rounded transition-colors"
-           onMouseDown={(e) => { e.stopPropagation(); onDelete(node.id); }}
-           title={t('Delete Node')}
+    const isPreviewOutputType = (type: SocketType) => !['geometry', 'shape2d', 'curve'].includes(type);
+    const displayLabel = node.params.name || (node.params.customLabel || node.label);
+
+    return (
+        <div
+            className={`node-card node-component ${isSelected ? 'node-card-active' : ''}`}
+            style={{ position: 'absolute', width: NODE_WIDTH, transform: `translate(${node.position.x}px, ${node.position.y}px)` }}
         >
-            <Trash2 size={12} />
-        </button>
-      </div>
-
-      <div className="node-card-body" style={{ paddingTop: CONTENT_PADDING_TOP }}>
-        
-        {/* Custom Body Content */}
-        {node.type === NodeType.PARAMETER && (
-             <div className="px-2.5 space-y-1.5 box-border border-b border-white/5 shrink-0" style={{ height: getInnerBodyHeight(node.type) }}>
-                 <div className="flex items-center gap-1.5 h-6">
-                    <span className="text-[10px] text-gray-500 w-[60px] text-right">{t('name')}</span>
-                    <input type="text" value={node.params.name} onChange={e => onUpdateParam(node.id, 'name', e.target.value)} className="node-field flex-1 bg-black/30 border border-gray-600 rounded px-2 text-[10px] text-yellow-500 outline-none h-6 leading-none" onMouseDown={e => e.stopPropagation()} />
-                 </div>
-                 <div className="flex items-center gap-1.5 h-6">
-                    <span className="text-[10px] text-gray-500 w-[60px] text-right">{t('type')}</span>
-                    <select 
-                        value={node.params.type} 
-                        onChange={e => onUpdateParam(node.id, 'type', e.target.value)} 
-                        className="node-field flex-1 bg-[#111] border border-gray-600 rounded px-1 text-[10px] text-gray-300 outline-none h-6 leading-none" 
-                        onMouseDown={e => e.stopPropagation()}
-                    >
-                        <option value="number">{t('Num')}</option>
-                        <option value="vector">{t('Vec')}</option>
-                        <option value="boolean">{t('Bool')}</option>
-                        <option value="string">{t('Str')}</option>
-                        <option value="color">{t('Color')}</option>
-                    </select>
-                 </div>
-                 <div className="flex items-center gap-1.5 h-6">
-                    <span className="text-[10px] text-gray-500 w-[60px] text-right">{t('Value')}</span>
-                    <div className="flex-1 min-w-0">
-                    {node.params.type === 'vector' ? (
-                         <div className="flex gap-1 w-full" onMouseDown={e => e.stopPropagation()}>
-                            <input type="number" onWheel={e=>e.currentTarget.blur()} className="node-field flex-1 min-w-0 bg-black/30 border border-gray-600 rounded px-1 text-[10px] h-6 leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={node.params.vecX} onChange={e=>onUpdateParam(node.id, 'vecX', parseFloat(e.target.value))} />
-                            <input type="number" onWheel={e=>e.currentTarget.blur()} className="node-field flex-1 min-w-0 bg-black/30 border border-gray-600 rounded px-1 text-[10px] h-6 leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={node.params.vecY} onChange={e=>onUpdateParam(node.id, 'vecY', parseFloat(e.target.value))} />
-                            <input type="number" onWheel={e=>e.currentTarget.blur()} className="node-field flex-1 min-w-0 bg-black/30 border border-gray-600 rounded px-1 text-[10px] h-6 leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" value={node.params.vecZ} onChange={e=>onUpdateParam(node.id, 'vecZ', parseFloat(e.target.value))} />
-                        </div>
-                    ) : node.params.type === 'boolean' ? (
-                        <div className="flex items-center gap-2 w-full h-6">
-                             <input type="checkbox" checked={node.params.boolVal} onChange={e => onUpdateParam(node.id, 'boolVal', e.target.checked)} onMouseDown={e => e.stopPropagation()} />
-                             <span className="text-[10px] text-gray-400">{node.params.boolVal ? 'TRUE' : 'FALSE'}</span>
-                        </div>
-                    ) : node.params.type === 'string' ? (
-                        <input type="text" value={node.params.stringVal} onChange={e => onUpdateParam(node.id, 'stringVal', e.target.value)} className="node-field w-full bg-black/30 border border-gray-600 rounded px-2 text-[10px] text-yellow-500 outline-none h-6 leading-none" onMouseDown={e => e.stopPropagation()} />
-                    ) : node.params.type === 'color' ? (
-                        <div className="flex items-center gap-2 w-full h-6">
-                            <input type="color" value={node.params.colorVal} onChange={e => onUpdateParam(node.id, 'colorVal', e.target.value)} className="w-full h-full p-0 border-none bg-transparent" onMouseDown={e => e.stopPropagation()} />
-                        </div>
+            <div
+                className={`node-card-header flex items-center justify-between cursor-grab active:cursor-grabbing ${isSelected ? 'node-card-header-selected' : ''}`}
+                style={{ height: HEADER_HEIGHT }}
+                onMouseDown={handleMouseDown}
+                onDoubleClick={() => setEditingName(true)}
+            >
+                <div className="flex-1 flex items-center min-w-0 mr-2">
+                    {editingName ? (
+                        <input autoFocus className="node-field w-full outline-none" value={tempName} onChange={e => setTempName(e.target.value)} onBlur={saveName} onKeyDown={e => e.key === 'Enter' && saveName()} onMouseDown={e => e.stopPropagation()} />
                     ) : (
-                        <input type="number" onWheel={e=>e.currentTarget.blur()} value={node.params.value} onChange={e => onUpdateParam(node.id, 'value', parseFloat(e.target.value))} className="node-field w-full bg-black/30 border border-gray-600 rounded px-2 text-[10px] text-blue-400 outline-none h-6 leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" onMouseDown={e => e.stopPropagation()} />
+                        <>
+                            <Edit2 size={10} className="mr-1.5 opacity-40 shrink-0" />
+                            <span className="text-xs font-bold truncate select-none" style={{ color: 'var(--node-header-text)' }}>
+                                {t(displayLabel)}
+                            </span>
+                        </>
                     )}
-                    </div>
-                 </div>
-             </div>
-        )}
+                </div>
+                <button className="p-1 opacity-40 hover:opacity-100 hover:text-red-500 transition-all shrink-0" onMouseDown={(e) => { e.stopPropagation(); onDelete(node.id); }}><Trash2 size={12} /></button>
+            </div>
 
-        {node.type === NodeType.EXPRESSION && (
-             <div className="px-2.5 py-1.5 box-border border-b border-white/5 relative flex flex-col gap-1.5 shrink-0" style={{ height: getInnerBodyHeight(node.type) }}>
-                 <textarea 
-                    value={node.params.expression} 
-                    onChange={(e) => onUpdateParam(node.id, 'expression', e.target.value)} 
-                    className="node-field w-full flex-1 bg-black/30 text-[10px] text-yellow-500 font-mono border border-gray-600 rounded px-2 py-1 outline-none resize-none leading-tight" 
-                    onMouseDown={e => e.stopPropagation()} 
-                    placeholder="Expr"
-                 />
-                 <div className="flex items-center justify-between h-5">
-                     <span className="text-[10px] text-gray-400 bg-black/50 px-2 py-0.5 rounded border border-white/10 truncate max-w-[120px]">
-                        = {(() => {
-                            const val = computedResults.get(node.outputs[0]?.id);
-                            return formatLinkedValue(val);
-                        })()}
-                     </span>
-                     <button 
-                        className="bg-blue-700 hover:bg-blue-600 text-white rounded px-2 py-0.5 text-[10px] flex items-center gap-1"
-                        onMouseDown={e => e.stopPropagation()}
-                     >
-                         <Play size={8} fill="currentColor" /> {t('Run')}
-                     </button>
-                 </div>
-             </div>
-        )}
+            <div className="node-card-body" style={{ paddingTop: CONTENT_PADDING_TOP }}>
 
-        {node.type === NodeType.BOOLEAN_OP && (
-          <div className="px-2.5 border-b border-white/5 flex items-center shrink-0" style={{ height: getInnerBodyHeight(node.type) }}>
-             <span className="text-[10px] text-gray-400 mr-2 w-[60px] text-right">{t('operation')}</span>
-             <select className="node-field flex-1 bg-[#111] text-[10px] text-gray-300 border border-gray-700 rounded px-2 py-0 outline-none h-6 leading-none" value={node.params.operation} onChange={(e) => onUpdateParam(node.id, 'operation', e.target.value)} onMouseDown={e => e.stopPropagation()} >
-               <option value="UNION">{t('Union')}</option>
-               <option value="SUBTRACT">{t('Subtract')}</option>
-               <option value="INTERSECT">{t('Intersect')}</option>
-             </select>
-          </div>
-        )}
-
-        {node.type === NodeType.FILLET && (
-          <div className="px-2.5 border-b border-white/5 flex items-center shrink-0" style={{ height: getInnerBodyHeight(node.type) }}>
-             <span className="text-[10px] text-gray-400 mr-2 w-[60px] text-right">{t('type')}</span>
-             <select className="node-field flex-1 bg-[#111] text-[10px] text-gray-300 border border-gray-700 rounded px-2 py-0 outline-none h-6 leading-none" value={node.params.filletType || 'round'} onChange={(e) => onUpdateParam(node.id, 'filletType', e.target.value)} onMouseDown={e => e.stopPropagation()} >
-               <option value="round">{t('Round')}</option>
-               <option value="chamfer">{t('Chamfer')}</option>
-             </select>
-          </div>
-        )}
-
-        {is2DNode && (
-             <div className="px-2.5 py-0.5 border-b border-white/5 flex flex-col gap-1 justify-center shrink-0" style={{ height: getInnerBodyHeight(node.type) }}>
-                 <div className="flex items-center gap-1.5 h-6">
-                    <span className="text-[10px] text-gray-500 whitespace-nowrap w-[60px] text-right">{t('plane')}</span>
-                    <select className="node-field flex-1 bg-[#111] text-[10px] text-gray-300 border border-gray-700 rounded px-2 py-0 outline-none h-6 leading-none" value={node.params.plane || 'XOY'} onChange={(e) => onUpdateParam(node.id, 'plane', e.target.value)} onMouseDown={e => e.stopPropagation()} >
-                        <option value="XOY">XOY ({t('Top')})</option>
-                        <option value="XOZ">XOZ ({t('Front')})</option>
-                        <option value="YOZ">YOZ ({t('Right')})</option>
-                    </select>
-                 </div>
-             </div>
-        )}
-
-        {/* Inputs - Conditionally Rendered to match Layout Calculations */}
-        {node.inputs.length > 0 && (
-            <div className="flex flex-col border-b border-white/5 pb-1 shrink-0"> 
-                {node.inputs.map(input => {
-                    const sourceSocketId = getConnectedSocketId(input.id);
-                    const connectedValue = sourceSocketId ? computedResults.get(sourceSocketId) : undefined;
-                    const height = getSocketHeight(input.type);
-                    
-                    return (
-                        <div key={input.id} className="node-row relative flex px-2.5 group items-center transition-colors shrink-0" style={{ height: height }}>
-                            {/* Socket Dot - Absolute Positioned */}
-                            <div 
-                                className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 flex items-center justify-center cursor-crosshair hover:scale-125 transition-transform z-10"
-                                onMouseDown={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    if (e.button === 0) onSocketMouseDown(node.id, input.id, input.type, true, node.position.x, node.position.y);
-                                }}
-                                onMouseUp={(e) => {
-                                    e.stopPropagation();
-                                    onSocketMouseUp(node.id, input.id, true);
-                                }}
-                            >
-                                <div className={`w-2.5 h-2.5 rounded-full border border-gray-600 ${SOCKET_COLORS[input.type] || 'bg-gray-400'} ${sourceSocketId ? 'bg-opacity-100' : 'bg-opacity-50'}`} />
+                {node.type === NodeType.PARAMETER && (
+                    <div className="px-2.5 space-y-1.5 box-border border-b shrink-0 flex flex-col justify-center" style={{ minHeight: 60, borderColor: 'var(--node-divider)' }}>
+                        <div className="flex items-center gap-1.5 h-6">
+                            <span className="node-label w-[40px] text-right">{t('type')}</span>
+                            <select value={node.params.type} onChange={e => onUpdateParam(node.id, 'type', e.target.value)} className="node-field flex-1 outline-none h-6 leading-none" onMouseDown={e => e.stopPropagation()}>
+                                <option value="number">{t('Num')}</option>
+                                <option value="vector">{t('Vec')}</option>
+                                <option value="boolean">{t('Bool')}</option>
+                                <option value="string">{t('Str')}</option>
+                                <option value="color">{t('Color')}</option>
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-1.5 h-6">
+                            <span className="node-label w-[40px] text-right">{t('Value')}</span>
+                            <div className="flex-1 min-w-0">
+                                {node.params.type === 'vector' ? (
+                                    <div className="flex gap-1 w-full" onMouseDown={e => e.stopPropagation()}>
+                                        <input type="text" className="node-field flex-1 min-w-0 h-6 leading-none" value={node.params.vecX} onChange={e => handleNumberChange(e.target.value, 'vecX')} />
+                                        <input type="text" className="node-field flex-1 min-w-0 h-6 leading-none" value={node.params.vecY} onChange={e => handleNumberChange(e.target.value, 'vecY')} />
+                                        <input type="text" className="node-field flex-1 min-w-0 h-6 leading-none" value={node.params.vecZ} onChange={e => handleNumberChange(e.target.value, 'vecZ')} />
+                                    </div>
+                                ) : node.params.type === 'boolean' ? (
+                                    <div className="flex items-center gap-2 w-full h-6"><input type="checkbox" checked={node.params.boolVal} onChange={e => onUpdateParam(node.id, 'boolVal', e.target.checked)} onMouseDown={e => e.stopPropagation()} /><span className="text-[10px] opacity-70">{node.params.boolVal ? 'TRUE' : 'FALSE'}</span></div>
+                                ) : node.params.type === 'string' ? (
+                                    <input type="text" value={node.params.stringVal} onChange={e => onUpdateParam(node.id, 'stringVal', e.target.value)} className="node-field w-full outline-none h-6 leading-none" onMouseDown={e => e.stopPropagation()} />
+                                ) : node.params.type === 'color' ? (
+                                    <div className="flex items-center gap-2 w-full h-6"><input type="color" value={node.params.colorVal} onChange={e => onUpdateParam(node.id, 'colorVal', e.target.value)} className="w-full h-3 p-0 border-none bg-transparent" onMouseDown={e => e.stopPropagation()} /></div>
+                                ) : (
+                                    <input type="text" value={node.params.value} onChange={e => handleNumberChange(e.target.value, 'value')} className="node-field w-full outline-none h-6 leading-none font-bold" onMouseDown={e => e.stopPropagation()} />
+                                )}
                             </div>
-                            
-                            {/* Aligned Layout: Label | Control */}
-                            <div className={`flex-1 min-w-0 flex items-center`}>
-                                <LabelCell text={t(input.name)} />
-                                
-                                <div className="flex-1 min-w-0 flex justify-start h-full items-center">
-                                    {sourceSocketId ? (
-                                        <div className="text-[10px] text-green-500/90 italic truncate max-w-[100px] bg-black/20 px-2 py-0.5 rounded border border-green-900/30 w-full text-center" title={String(connectedValue)}>
-                                            {formatLinkedValue(connectedValue)}
+                        </div>
+                    </div>
+                )}
+
+                {node.type === NodeType.EXPRESSION && (
+                    <div className="px-2.5 py-2 box-border border-b relative shrink-0" style={{ minHeight: 64, borderColor: 'var(--node-divider)' }}>
+                        <textarea value={node.params.expression} onChange={(e) => onUpdateParam(node.id, 'expression', e.target.value)} className="node-field w-full h-full font-mono resize-none leading-tight" onMouseDown={e => e.stopPropagation()} placeholder="Math Expression" />
+                        <div className="absolute bottom-3 right-3.5 pointer-events-none">
+                            <span className="node-value-chip shadow-sm">
+                                = {formatLinkedValue(computedResults.get(node.outputs?.[0]?.id))}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {(node.inputs || []).map(input => {
+                    const sourceId = getConnectedSocketId(input.id);
+                    const val = sourceId ? computedResults.get(sourceId) : undefined;
+                    return (
+                        <div key={input.id} className="node-row shrink-0" style={{ height: getSocketHeight(input.type) }}>
+                            <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 flex items-center justify-center cursor-crosshair z-10" onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); if (e.button === 0) onSocketMouseDown(node.id, input.id, input.type, true, node.position.x, node.position.y); }} onMouseUp={(e) => { e.stopPropagation(); onSocketMouseUp(node.id, input.id, true); }}>
+                                <div className={`w-2.5 h-2.5 rounded-full border border-black/10 ${SOCKET_COLORS[input.type] || 'bg-gray-400'} ${sourceId ? 'opacity-100 shadow-sm' : 'opacity-30'}`} />
+                            </div>
+                            <div className="flex-1 min-w-0 flex items-center">
+                                <span className="node-label w-[48px] text-right mr-2 truncate">{t(input.name)}</span>
+                                <div className="flex-1 min-w-0 flex justify-start items-center h-full">
+                                    {sourceId ? (
+                                        <div className="node-value-chip truncate w-full text-center">
+                                            {formatLinkedValue(val)}
                                         </div>
-                                    ) : (
-                                        renderInputField(input)
-                                    )}
+                                    ) : renderInputField(input)}
                                 </div>
                             </div>
                         </div>
                     );
                 })}
-            </div>
-        )}
 
-        {/* Render extra geometry params */}
-        {renderGeometryParams()}
-        
-        {/* Output Gap */}
-        <div style={{ height: INPUT_OUTPUT_GAP }} className="shrink-0"></div>
-
-        {/* Outputs */}
-        <div className="pb-1 shrink-0">
-            {node.outputs.map(output => (
-                <div key={output.id} className="node-row relative flex items-center justify-end px-2.5 group transition-colors shrink-0" style={{ height: OUTPUT_ROW_HEIGHT }}>
-                    {isPreviewOutputType(output.type) && computedResults.has(output.id) && (
-                        <span
-                          className="text-[10px] leading-none text-cyan-300/90 mr-2 bg-black/30 border border-cyan-900/35 rounded px-1.5 py-0.5 max-w-[90px] truncate"
-                          title={String(computedResults.get(output.id))}
-                        >
-                          {formatLinkedValue(computedResults.get(output.id))}
-                        </span>
-                    )}
-                    <span className="text-[10px] text-gray-400 mr-2 select-none group-hover:text-gray-200">{t(output.name)}</span>
-                    <div 
-                        className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-3 flex items-center justify-center cursor-crosshair hover:scale-125 transition-transform z-10"
-                        onMouseDown={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            if (e.button === 0) onSocketMouseDown(node.id, output.id, output.type, false, node.position.x, node.position.y);
-                        }}
-                        onMouseUp={(e) => {
-                            e.stopPropagation();
-                            onSocketMouseUp(node.id, output.id, false);
-                        }}
-                    >
-                        <div className={`w-2.5 h-2.5 rounded-full border border-gray-600 ${SOCKET_COLORS[output.type] || 'bg-gray-400'}`} />
-                    </div>
+                <div style={{ height: INPUT_OUTPUT_GAP }} className="shrink-0"></div>
+                <div className="pb-1 shrink-0">
+                    {(node.outputs || []).map(output => (
+                        <div key={output.id} className="node-row justify-end shrink-0" style={{ height: OUTPUT_ROW_HEIGHT }}>
+                            {isPreviewOutputType(output.type) && computedResults.has(output.id) && (
+                                <span className="node-value-chip mr-2 truncate max-w-[100px] shadow-sm">
+                                    {formatLinkedValue(computedResults.get(output.id))}
+                                </span>
+                            )}
+                            <span className="node-label mr-2 transition-colors">{t(output.name)}</span>
+                            <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-3 flex items-center justify-center cursor-crosshair z-10" onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); if (e.button === 0) onSocketMouseDown(node.id, output.id, output.type, false, node.position.x, node.position.y); }} onMouseUp={(e) => { e.stopPropagation(); onSocketMouseUp(node.id, output.id, false); }}>
+                                <div className={`w-2.5 h-2.5 rounded-full border border-black/10 ${SOCKET_COLORS[output.type] || 'bg-gray-400'}`} />
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            ))}
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
-export default React.memo(NodeComponent, (prev, next) => {
-    return (
-        prev.node === next.node &&
-        prev.isSelected === next.isSelected &&
-        prev.computedResults === next.computedResults &&
-        prev.connections === next.connections &&
-        prev.t === next.t
-    );
-});
+export default React.memo(NodeComponent);
