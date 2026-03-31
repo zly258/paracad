@@ -1,0 +1,391 @@
+{
+    "nodes": [
+        {
+            "id": "p-h1",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 40
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-h1-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "HatchHeight",
+                "type": "number",
+                "value": 850
+            }
+        },
+        {
+            "id": "p-h2",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 140
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-h2-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "BodyHeight",
+                "type": "number",
+                "value": 1488
+            }
+        },
+        {
+            "id": "p-h3",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 240
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-h3-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "ConeHeight",
+                "type": "number",
+                "value": 800
+            }
+        },
+        {
+            "id": "p-w3",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 340
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-w3-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "BodySize",
+                "type": "number",
+                "value": 1000
+            }
+        },
+        {
+            "id": "p-w4",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 440
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-w4-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "DumpSize",
+                "type": "number",
+                "value": 380
+            }
+        },
+        {
+            "id": "body-box",
+            "type": "BOX",
+            "position": {
+                "x": 350,
+                "y": 100
+            },
+            "label": "Hopper Body",
+            "inputs": [
+                {
+                    "id": "body-base",
+                    "name": "base",
+                    "type": "vector"
+                },
+                {
+                    "id": "body-x",
+                    "name": "size_x",
+                    "type": "number"
+                },
+                {
+                    "id": "body-y",
+                    "name": "size_y",
+                    "type": "number"
+                },
+                {
+                    "id": "body-z",
+                    "name": "size_z",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "body-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "color": "#4f8cff"
+            }
+        },
+        {
+            "id": "rect-top",
+            "type": "RECTANGLE",
+            "position": {
+                "x": 350,
+                "y": 300
+            },
+            "label": "Inner Section",
+            "inputs": [
+                {
+                    "id": "rect-top-w",
+                    "name": "width",
+                    "type": "number"
+                },
+                {
+                    "id": "rect-top-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "rect-top-out",
+                    "name": "shape",
+                    "type": "shape2d"
+                }
+            ],
+            "params": {
+                "is_face": true
+            }
+        },
+        {
+            "id": "rect-bot",
+            "type": "RECTANGLE",
+            "position": {
+                "x": 350,
+                "y": 450
+            },
+            "label": "Dump Section",
+            "inputs": [
+                {
+                    "id": "rect-bot-w",
+                    "name": "width",
+                    "type": "number"
+                },
+                {
+                    "id": "rect-bot-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "rect-bot-out",
+                    "name": "shape",
+                    "type": "shape2d"
+                }
+            ],
+            "params": {
+                "is_face": true
+            }
+        },
+        {
+            "id": "cone-move",
+            "type": "TRANSLATION",
+            "position": {
+                "x": 600,
+                "y": 300
+            },
+            "label": "Shift Top",
+            "inputs": [
+                {
+                    "id": "cone-move-in",
+                    "name": "geometry",
+                    "type": "geometry"
+                },
+                {
+                    "id": "cone-move-v",
+                    "name": "vector",
+                    "type": "vector"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "cone-move-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "vector": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 800
+                }
+            }
+        },
+        {
+            "id": "cone-loft",
+            "type": "LOFT",
+            "position": {
+                "x": 850,
+                "y": 350
+            },
+            "label": "Transition",
+            "inputs": [
+                {
+                    "id": "loft-a",
+                    "name": "section_a",
+                    "type": "shape2d"
+                },
+                {
+                    "id": "loft-b",
+                    "name": "section_b",
+                    "type": "shape2d"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "loft-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "color": "#22b8cf"
+            }
+        },
+        {
+            "id": "group-parts",
+            "type": "GROUP",
+            "position": {
+                "x": 1150,
+                "y": 200
+            },
+            "label": "Final Assembler",
+            "inputs": [
+                {
+                    "id": "g-1",
+                    "name": "item_1",
+                    "type": "geometry"
+                },
+                {
+                    "id": "g-2",
+                    "name": "item_2",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "g-out",
+                    "name": "group",
+                    "type": "geometry"
+                }
+            ],
+            "params": {}
+        }
+    ],
+    "connections": [
+        {
+            "id": "c1",
+            "sourceNodeId": "p-w3",
+            "sourceSocketId": "p-w3-out",
+            "targetNodeId": "body-box",
+            "targetSocketId": "body-x"
+        },
+        {
+            "id": "c2",
+            "sourceNodeId": "p-w3",
+            "sourceSocketId": "p-w3-out",
+            "targetNodeId": "body-box",
+            "targetSocketId": "body-y"
+        },
+        {
+            "id": "c3",
+            "sourceNodeId": "p-h2",
+            "sourceSocketId": "p-h2-out",
+            "targetNodeId": "body-box",
+            "targetSocketId": "body-z"
+        },
+        {
+            "id": "c4",
+            "sourceNodeId": "p-w3",
+            "sourceSocketId": "p-w3-out",
+            "targetNodeId": "rect-top",
+            "targetSocketId": "rect-top-w"
+        },
+        {
+            "id": "c5",
+            "sourceNodeId": "p-w3",
+            "sourceSocketId": "p-w3-out",
+            "targetNodeId": "rect-top",
+            "targetSocketId": "rect-top-h"
+        },
+        {
+            "id": "c6",
+            "sourceNodeId": "p-w4",
+            "sourceSocketId": "p-w4-out",
+            "targetNodeId": "rect-bot",
+            "targetSocketId": "rect-bot-w"
+        },
+        {
+            "id": "c7",
+            "sourceNodeId": "p-w4",
+            "sourceSocketId": "p-w4-out",
+            "targetNodeId": "rect-bot",
+            "targetSocketId": "rect-bot-h"
+        },
+        {
+            "id": "c8",
+            "sourceNodeId": "rect-top",
+            "sourceSocketId": "rect-top-out",
+            "targetNodeId": "cone-loft",
+            "targetSocketId": "loft-a"
+        },
+        {
+            "id": "c9",
+            "sourceNodeId": "rect-bot",
+            "sourceSocketId": "rect-bot-out",
+            "targetNodeId": "cone-loft",
+            "targetSocketId": "loft-b"
+        },
+        {
+            "id": "c10",
+            "sourceNodeId": "body-box",
+            "sourceSocketId": "body-out",
+            "targetNodeId": "group-parts",
+            "targetSocketId": "g-1"
+        },
+        {
+            "id": "c11",
+            "sourceNodeId": "cone-loft",
+            "sourceSocketId": "loft-out",
+            "targetNodeId": "group-parts",
+            "targetSocketId": "g-2"
+        }
+    ]
+}

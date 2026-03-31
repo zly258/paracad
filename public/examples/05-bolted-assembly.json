@@ -1,0 +1,207 @@
+{
+    "nodes": [
+        {
+            "id": "p-dia",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 40
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-dia-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "BoltDia",
+                "type": "number",
+                "value": 20
+            }
+        },
+        {
+            "id": "p-len",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 140
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-len-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "BoltLen",
+                "type": "number",
+                "value": 80
+            }
+        },
+        {
+            "id": "head-exp",
+            "type": "EXPRESSION",
+            "position": {
+                "x": 300,
+                "y": 40
+            },
+            "label": "Head Resize",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "head-out",
+                    "name": "Result",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "expression": "BoltDia * 1.8"
+            }
+        },
+        {
+            "id": "cyl-head",
+            "type": "CYLINDER",
+            "position": {
+                "x": 550,
+                "y": 40
+            },
+            "label": "Bolt Head",
+            "inputs": [
+                {
+                    "id": "h-r",
+                    "name": "radius",
+                    "type": "number"
+                },
+                {
+                    "id": "h-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "h-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "height": 12,
+                "color": "#ced4da"
+            }
+        },
+        {
+            "id": "cyl-shank",
+            "type": "CYLINDER",
+            "position": {
+                "x": 550,
+                "y": 200
+            },
+            "label": "Bolt Shank",
+            "inputs": [
+                {
+                    "id": "s-r",
+                    "name": "radius",
+                    "type": "number"
+                },
+                {
+                    "id": "s-h",
+                    "name": "height",
+                    "type": "number"
+                },
+                {
+                    "id": "s-c",
+                    "name": "center",
+                    "type": "vector"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "s-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "center": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 6
+                },
+                "color": "#dee2e6"
+            }
+        },
+        {
+            "id": "group-bolt",
+            "type": "GROUP",
+            "position": {
+                "x": 850,
+                "y": 120
+            },
+            "label": "Full Bolt",
+            "inputs": [
+                {
+                    "id": "g1",
+                    "name": "item_1",
+                    "type": "geometry"
+                },
+                {
+                    "id": "g2",
+                    "name": "item_2",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "gout",
+                    "name": "group",
+                    "type": "geometry"
+                }
+            ],
+            "params": {}
+        }
+    ],
+    "connections": [
+        {
+            "id": "c1",
+            "sourceNodeId": "head-exp",
+            "sourceSocketId": "head-out",
+            "targetNodeId": "cyl-head",
+            "targetSocketId": "h-r"
+        },
+        {
+            "id": "c2",
+            "sourceNodeId": "p-dia",
+            "sourceSocketId": "p-dia-out",
+            "targetNodeId": "cyl-shank",
+            "targetSocketId": "s-r"
+        },
+        {
+            "id": "c3",
+            "sourceNodeId": "p-len",
+            "sourceSocketId": "p-len-out",
+            "targetNodeId": "cyl-shank",
+            "targetSocketId": "s-h"
+        },
+        {
+            "id": "c4",
+            "sourceNodeId": "cyl-head",
+            "sourceSocketId": "h-out",
+            "targetNodeId": "group-bolt",
+            "targetSocketId": "g1"
+        },
+        {
+            "id": "c5",
+            "sourceNodeId": "cyl-shank",
+            "sourceSocketId": "s-out",
+            "targetNodeId": "group-bolt",
+            "targetSocketId": "g2"
+        }
+    ]
+}

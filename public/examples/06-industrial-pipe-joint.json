@@ -1,0 +1,228 @@
+{
+    "nodes": [
+        {
+            "id": "p-id",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 40
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-id-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "PipeID",
+                "type": "number",
+                "value": 100
+            }
+        },
+        {
+            "id": "p-flange",
+            "type": "PARAMETER",
+            "position": {
+                "x": 30,
+                "y": 140
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-fl-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "FlangeDia",
+                "type": "number",
+                "value": 180
+            }
+        },
+        {
+            "id": "cyl-pipe",
+            "type": "CYLINDER",
+            "position": {
+                "x": 350,
+                "y": 100
+            },
+            "label": "Pipe Pipe",
+            "inputs": [
+                {
+                    "id": "p-r",
+                    "name": "radius",
+                    "type": "number"
+                },
+                {
+                    "id": "p-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "p-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "height": 300,
+                "color": "#74c0fc"
+            }
+        },
+        {
+            "id": "cyl-flange",
+            "type": "CYLINDER",
+            "position": {
+                "x": 350,
+                "y": 250
+            },
+            "label": "Flange Plate",
+            "inputs": [
+                {
+                    "id": "f-r",
+                    "name": "radius",
+                    "type": "number"
+                },
+                {
+                    "id": "f-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "f-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "height": 16,
+                "color": "#339af0"
+            }
+        },
+        {
+            "id": "polar-holes",
+            "type": "ARRAY_POLAR",
+            "position": {
+                "x": 650,
+                "y": 250
+            },
+            "label": "Bolt Pattern",
+            "inputs": [
+                {
+                    "id": "ah-g",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "ah-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "count": 8,
+                "radius": 70
+            }
+        },
+        {
+            "id": "sub-bolt",
+            "type": "CYLINDER",
+            "position": {
+                "x": 650,
+                "y": 400
+            },
+            "label": "Bolt Hole Template",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "bh-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "radius": 10,
+                "height": 20
+            }
+        },
+        {
+            "id": "flange-cut",
+            "type": "BOOLEAN_OP",
+            "position": {
+                "x": 950,
+                "y": 200
+            },
+            "label": "Assembly",
+            "inputs": [
+                {
+                    "id": "ba",
+                    "name": "object_a",
+                    "type": "geometry"
+                },
+                {
+                    "id": "bb",
+                    "name": "object_b",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "bout",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "operation": "UNION"
+            }
+        }
+    ],
+    "connections": [
+        {
+            "id": "c1",
+            "sourceNodeId": "p-id",
+            "sourceSocketId": "p-id-out",
+            "targetNodeId": "cyl-pipe",
+            "targetSocketId": "p-r"
+        },
+        {
+            "id": "c2",
+            "sourceNodeId": "p-flange",
+            "sourceSocketId": "p-fl-out",
+            "targetNodeId": "cyl-flange",
+            "targetSocketId": "f-r"
+        },
+        {
+            "id": "c3",
+            "sourceNodeId": "sub-bolt",
+            "sourceSocketId": "bh-out",
+            "targetNodeId": "polar-holes",
+            "targetSocketId": "ah-g"
+        },
+        {
+            "id": "c4",
+            "sourceNodeId": "cyl-flange",
+            "sourceSocketId": "f-out",
+            "targetNodeId": "flange-cut",
+            "targetSocketId": "ba"
+        },
+        {
+            "id": "c5",
+            "sourceNodeId": "cyl-pipe",
+            "sourceSocketId": "p-out",
+            "targetNodeId": "flange-cut",
+            "targetSocketId": "bb"
+        }
+    ]
+}

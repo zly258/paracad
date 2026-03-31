@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';
+import '@fontsource/space-grotesk/index.css';
+import '@fontsource/ibm-plex-sans/index.css';
+import '@fontsource/fira-code/index.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

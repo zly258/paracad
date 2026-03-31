@@ -1,9 +1,0 @@
-{
-  "nodes": [
-    {"id":"p1","type":"BOX","position":{"x":60,"y":70},"label":"Box","inputs":[{"id":"p1i1","name":"base","type":"vector"},{"id":"p1i2","name":"size_x","type":"number"},{"id":"p1i3","name":"size_y","type":"number"},{"id":"p1i4","name":"size_z","type":"number"}],"outputs":[{"id":"p1o1","name":"geometry","type":"geometry"}],"params":{"base":{"x":-80,"y":0,"z":0},"size_x":36,"size_y":28,"size_z":20,"color":"#4fc3f7"}},
-    {"id":"p2","type":"SPHERE","position":{"x":60,"y":250},"label":"Sphere","inputs":[{"id":"p2i1","name":"center","type":"vector"},{"id":"p2i2","name":"radius","type":"number"}],"outputs":[{"id":"p2o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":0,"y":0,"z":16},"radius":18,"color":"#ff8a65"}},
-    {"id":"p3","type":"CYLINDER","position":{"x":360,"y":70},"label":"Cylinder","inputs":[{"id":"p3i1","name":"center","type":"vector"},{"id":"p3i2","name":"radius","type":"number"},{"id":"p3i3","name":"height","type":"number"}],"outputs":[{"id":"p3o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":70,"y":0,"z":0},"radius":14,"height":48,"color":"#81c784"}},
-    {"id":"p4","type":"TORUS","position":{"x":360,"y":250},"label":"Torus","inputs":[{"id":"p4i1","name":"center","type":"vector"},{"id":"p4i2","name":"radius_main","type":"number"},{"id":"p4i3","name":"radius_tube","type":"number"}],"outputs":[{"id":"p4o1","name":"geometry","type":"geometry"}],"params":{"center":{"x":70,"y":0,"z":20},"radius_main":26,"radius_tube":7,"color":"#ba68c8"}}
-  ],
-  "connections": []
-}

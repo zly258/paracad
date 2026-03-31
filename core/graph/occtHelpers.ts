@@ -1,16 +1,16 @@
-// OCCT 执行辅助：统一管理构造器重载、方法重载和基础坐标工具，
-// 避免节点执行器里散落大量“猜导出名”的细节。
+// OCCT 执行辅助：统一管理构造器重载、方法重载和基础坐标工具
 export const createOcctInstance = (oc: any, names: string[], args: any[]) => {
   for (const name of names) {
     const Ctor = oc[name];
     if (!Ctor) continue;
     try {
       return new Ctor(...args);
-    } catch {
+    } catch (e) {
+      // console.warn(`Failed to instantiate ${name}:`, e.message);
       continue;
     }
   }
-  throw new Error(`Unable to resolve OCCT constructor: ${names.join(', ')}`);
+  throw new Error(`Unable to resolve OCCT constructor: ${names.join(', ')} (tried ${args.length} args)`);
 };
 
 export const callOcctMethod = (target: any, names: string[], args: any[]) => {
@@ -26,13 +26,26 @@ export const callOcctMethod = (target: any, names: string[], args: any[]) => {
   throw new Error(`Unable to resolve OCCT method: ${names.join(', ')}`);
 };
 
-export const createOcctPoint = (oc: any, x: number, y: number, z: number) => new oc.gp_Pnt_3(x, y, z);
+export const createOcctPoint = (oc: any, x: number, y: number, z: number) =>
+  createOcctInstance(oc, ['gp_Pnt_3', 'gp_Pnt_2', 'gp_Pnt_1', 'gp_Pnt'], [x, y, z]);
 
 export const createOcctDir = (oc: any, x: number, y: number, z: number) =>
-  createOcctInstance(oc, ['gp_Dir_4', 'gp_Dir_3', 'gp_Dir_2', 'gp_Dir_1'], [x, y, z]);
+  createOcctInstance(oc, ['gp_Dir_4', 'gp_Dir_3', 'gp_Dir_2', 'gp_Dir_1', 'gp_Dir'], [x, y, z]);
 
 export const createOcctVec = (oc: any, x: number, y: number, z: number) =>
-  createOcctInstance(oc, ['gp_Vec_4', 'gp_Vec_3', 'gp_Vec_2', 'gp_Vec_1'], [x, y, z]);
+  createOcctInstance(oc, ['gp_Vec_4', 'gp_Vec_3', 'gp_Vec_2', 'gp_Vec_1', 'gp_Vec'], [x, y, z]);
+
+export const createOcctAx2 = (oc: any, center: { x: number; y: number; z: number }, dir: { x: number; y: number; z: number }) => {
+  const pnt = createOcctPoint(oc, center.x, center.y, center.z);
+  const vdir = createOcctDir(oc, dir.x, dir.y, dir.z);
+  return createOcctInstance(oc, ['gp_Ax2_3', 'gp_Ax2_2', 'gp_Ax2_1', 'gp_Ax2'], [pnt, vdir]);
+};
+
+export const createOcctAx3 = (oc: any, center: { x: number; y: number; z: number }, dir: { x: number; y: number; z: number }) => {
+  const pnt = createOcctPoint(oc, center.x, center.y, center.z);
+  const vdir = createOcctDir(oc, dir.x, dir.y, dir.z);
+  return createOcctInstance(oc, ['gp_Ax3_4', 'gp_Ax3_3', 'gp_Ax3_2', 'gp_Ax3_1', 'gp_Ax3'], [pnt, vdir]);
+};
 
 export const getOcctShapeEnum = (oc: any, key: 'EDGE' | 'FACE' | 'SHAPE') => {
   if (typeof oc[`TopAbs_${key}`] === 'number') return oc[`TopAbs_${key}`];

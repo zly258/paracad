@@ -1,0 +1,258 @@
+{
+    "nodes": [
+        {
+            "id": "p-d1",
+            "type": "PARAMETER",
+            "position": {
+                "x": 40,
+                "y": 60
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-d1-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "OuterDia",
+                "type": "number",
+                "value": 42
+            }
+        },
+        {
+            "id": "p-d2",
+            "type": "PARAMETER",
+            "position": {
+                "x": 40,
+                "y": 180
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-d2-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "InnerDia",
+                "type": "number",
+                "value": 18
+            }
+        },
+        {
+            "id": "p-h",
+            "type": "PARAMETER",
+            "position": {
+                "x": 40,
+                "y": 300
+            },
+            "label": "Parameter",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "p-h-out",
+                    "name": "Value",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "name": "Thickness",
+                "type": "number",
+                "value": 8
+            }
+        },
+        {
+            "id": "exp-r1",
+            "type": "EXPRESSION",
+            "position": {
+                "x": 350,
+                "y": 60
+            },
+            "label": "Outer Radius",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "r1-out",
+                    "name": "Result",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "expression": "OuterDia / 2"
+            }
+        },
+        {
+            "id": "exp-r2",
+            "type": "EXPRESSION",
+            "position": {
+                "x": 350,
+                "y": 180
+            },
+            "label": "Inner Radius",
+            "inputs": [],
+            "outputs": [
+                {
+                    "id": "r2-out",
+                    "name": "Result",
+                    "type": "any"
+                }
+            ],
+            "params": {
+                "expression": "InnerDia / 2"
+            }
+        },
+        {
+            "id": "cyl-outer",
+            "type": "CYLINDER",
+            "position": {
+                "x": 620,
+                "y": 50
+            },
+            "label": "Outer Body",
+            "inputs": [
+                {
+                    "id": "co-c",
+                    "name": "center",
+                    "type": "vector"
+                },
+                {
+                    "id": "co-r",
+                    "name": "radius",
+                    "type": "number"
+                },
+                {
+                    "id": "co-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "co-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "color": "#fab005"
+            }
+        },
+        {
+            "id": "cyl-inner",
+            "type": "CYLINDER",
+            "position": {
+                "x": 620,
+                "y": 250
+            },
+            "label": "Hole Cut",
+            "inputs": [
+                {
+                    "id": "ci-c",
+                    "name": "center",
+                    "type": "vector"
+                },
+                {
+                    "id": "ci-r",
+                    "name": "radius",
+                    "type": "number"
+                },
+                {
+                    "id": "ci-h",
+                    "name": "height",
+                    "type": "number"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "ci-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "color": "#f25f5c"
+            }
+        },
+        {
+            "id": "subtract",
+            "type": "BOOLEAN_OP",
+            "position": {
+                "x": 900,
+                "y": 150
+            },
+            "label": "Subtract",
+            "inputs": [
+                {
+                    "id": "s-a",
+                    "name": "object_a",
+                    "type": "geometry"
+                },
+                {
+                    "id": "s-b",
+                    "name": "object_b",
+                    "type": "geometry"
+                }
+            ],
+            "outputs": [
+                {
+                    "id": "s-out",
+                    "name": "geometry",
+                    "type": "geometry"
+                }
+            ],
+            "params": {
+                "operation": "SUBTRACT",
+                "color": "#fab005"
+            }
+        }
+    ],
+    "connections": [
+        {
+            "id": "c1",
+            "sourceNodeId": "exp-r1",
+            "sourceSocketId": "r1-out",
+            "targetNodeId": "cyl-outer",
+            "targetSocketId": "co-r"
+        },
+        {
+            "id": "c2",
+            "sourceNodeId": "exp-r2",
+            "sourceSocketId": "r2-out",
+            "targetNodeId": "cyl-inner",
+            "targetSocketId": "ci-r"
+        },
+        {
+            "id": "c3",
+            "sourceNodeId": "p-h",
+            "sourceSocketId": "p-h-out",
+            "targetNodeId": "cyl-outer",
+            "targetSocketId": "co-h"
+        },
+        {
+            "id": "c4",
+            "sourceNodeId": "p-h",
+            "sourceSocketId": "p-h-out",
+            "targetNodeId": "cyl-inner",
+            "targetSocketId": "ci-h"
+        },
+        {
+            "id": "c5",
+            "sourceNodeId": "cyl-outer",
+            "sourceSocketId": "co-out",
+            "targetNodeId": "subtract",
+            "targetSocketId": "s-a"
+        },
+        {
+            "id": "c6",
+            "sourceNodeId": "cyl-inner",
+            "sourceSocketId": "ci-out",
+            "targetNodeId": "subtract",
+            "targetSocketId": "s-b"
+        }
+    ]
+}

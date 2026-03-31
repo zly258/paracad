@@ -217,9 +217,13 @@ const NodeLibrary: React.FC = () => {
   }, [getNodeDescription, normalizedQuery, t]);
 
   const filteredExamples = useMemo(() => {
-    if (!normalizedQuery) return EXAMPLE_PRESETS;
-    return EXAMPLE_PRESETS.filter((item) => item.label.toLowerCase().includes(normalizedQuery));
-  }, [normalizedQuery]);
+    const list = EXAMPLE_PRESETS.map((p) => ({
+      ...p,
+      label: language === 'zh' ? p.labelZh : p.labelEn,
+    }));
+    if (!normalizedQuery) return list;
+    return list.filter((item) => item.label.toLowerCase().includes(normalizedQuery));
+  }, [language, normalizedQuery]);
 
   const setAllGroupsExpanded = useCallback((expanded: boolean) => {
     setExpandedGroups(Object.fromEntries(allGroupKeys.map((key) => [key, expanded])));

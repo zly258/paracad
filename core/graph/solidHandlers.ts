@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { NodeData, NodeType } from '../../types';
-import { createOcctInstance, createOcctPoint } from './occtHelpers';
+import { createOcctAx2, createOcctInstance, createOcctPoint } from './occtHelpers';
 import { tryOcct } from './occtRuntime';
 import { getMaterial, getNum, getVec, tagKernel } from './runtimeUtils';
 
@@ -9,7 +9,13 @@ interface SolidContext {
   inputs: Record<string, any>;
 }
 
-// 基础体与实体节点执行器分组，后续可以继续扩展为导出节点或分析节点的前置输入源。
+/**
+ * 实体节点执行器：负责将“参数 + 输入”转换为 3D 几何对象。
+ * 为保证 OCCT 与 Three.js 路径的一致性：
+ * 1. Box：以 corner (base) 为起点。
+ * 2. Cylinder/Cone：以 base 为圆心，垂直方向为 Z/平面法向。
+ * 3. Sphere：以 center 为球心。
+ */
 export const executeSolidNode = async ({ node, inputs }: SolidContext): Promise<any[] | null> => {
   const p = node.params;
   const color = p.color || '#888888';
@@ -21,27 +27,35 @@ export const executeSolidNode = async ({ node, inputs }: SolidContext): Promise<
   switch (node.type) {
     case NodeType.BOX: {
       const c = getVec('base', inputs, p);
-      const occtObject = await tryOcct(node, color, (oc) => new oc.BRepPrimAPI_MakeBox_3(
-        createOcctPoint(oc, c.x, c.y, c.z),
-        getNum('size_x', inputs, p, 10),
-        getNum('size_y', inputs, p, 10),
-        getNum('size_z', inputs, p, 10),
-      ).Shape(), 'occt-box');
+      const dx = getNum('size_x', inputs, p, 10);
+      const dy = getNum('size_y', inputs, p, 10);
+      const dz = getNum('size_z', inputs, p, 10);
+
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const pnt = createOcctPoint(oc, c.x, c.y, c.z);
+        // MakeBox_4(Pnt, dx, dy, dz)
+        return createOcctInstance(oc, ['BRepPrimAPI_MakeBox_4', 'BRepPrimAPI_MakeBox_2', 'BRepPrimAPI_MakeBox'], [pnt, dx, dy, dz]).Shape();
+      }, 'occt-box');
       if (occtObject) return [occtObject];
 
-      const mesh = createMesh(new THREE.BoxGeometry(getNum('size_x', inputs, p, 10), getNum('size_y', inputs, p, 10), getNum('size_z', inputs, p, 10)), 'box');
+      const geom = new THREE.BoxGeometry(dx, dy, dz);
+      // Align to corner (Pnt)
+      geom.translate(dx / 2, dy / 2, dz / 2);
+      const mesh = createMesh(geom, 'box');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }
     case NodeType.SPHERE: {
       const c = getVec('center', inputs, p);
-      const occtObject = await tryOcct(node, color, (oc) => new oc.BRepPrimAPI_MakeSphere_5(
-        createOcctPoint(oc, c.x, c.y, c.z),
-        getNum('radius', inputs, p, 10),
-      ).Shape(), 'occt-sphere');
+      const radius = getNum('radius', inputs, p, 10);
+
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const pnt = createOcctPoint(oc, c.x, c.y, c.z);
+        return createOcctInstance(oc, ['BRepPrimAPI_MakeSphere_5', 'BRepPrimAPI_MakeSphere_4', 'BRepPrimAPI_MakeSphere_1', 'BRepPrimAPI_MakeSphere'], [pnt, radius]).Shape();
+      }, 'occt-sphere');
       if (occtObject) return [occtObject];
 
-      const mesh = createMesh(new THREE.SphereGeometry(getNum('radius', inputs, p, 10), SEGMENTS, Math.floor(SEGMENTS / 2)), 'sphere');
+      const mesh = createMesh(new THREE.SphereGeometry(radius, SEGMENTS, Math.floor(SEGMENTS / 2)), 'sphere');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }
@@ -60,9 +74,10 @@ export const executeSolidNode = async ({ node, inputs }: SolidContext): Promise<
       const occtObject = await tryOcct(node, color, (oc) => {
         const bottom = createOcctPoint(oc, c.x, c.y, c.z - length / 2);
         const top = createOcctPoint(oc, c.x, c.y, c.z + length / 2);
-        const cylinder = new oc.BRepPrimAPI_MakeCylinder_3(bottom, radius, length).Shape();
-        const bottomSphere = new oc.BRepPrimAPI_MakeSphere_5(bottom, radius).Shape();
-        const topSphere = new oc.BRepPrimAPI_MakeSphere_5(top, radius).Shape();
+        const ax2 = createOcctAx2(oc, { x: c.x, y: c.y, z: c.z - length / 2 }, { x: 0, y: 0, z: 1 });
+        const cylinder = createOcctInstance(oc, ['BRepPrimAPI_MakeCylinder_3', 'BRepPrimAPI_MakeCylinder_2', 'BRepPrimAPI_MakeCylinder'], [ax2, radius, length]).Shape();
+        const bottomSphere = createOcctInstance(oc, ['BRepPrimAPI_MakeSphere_5', 'BRepPrimAPI_MakeSphere'], [bottom, radius]).Shape();
+        const topSphere = createOcctInstance(oc, ['BRepPrimAPI_MakeSphere_5', 'BRepPrimAPI_MakeSphere'], [top, radius]).Shape();
         const progress = createOcctInstance(oc, ['Message_ProgressRange_1', 'Message_ProgressRange'], []);
         const fusedBottom = createOcctInstance(oc, ['BRepAlgoAPI_Fuse_3', 'BRepAlgoAPI_Fuse_2', 'BRepAlgoAPI_Fuse'], [
           cylinder,
@@ -77,70 +92,78 @@ export const executeSolidNode = async ({ node, inputs }: SolidContext): Promise<
       }, 'occt-capsule');
       if (occtObject) return [occtObject];
 
-      const mesh = createMesh(new THREE.CapsuleGeometry(getNum('radius', inputs, p, 5), getNum('length', inputs, p, 20), 8, 16), 'capsule');
+      const mesh = createMesh(new THREE.CapsuleGeometry(radius, length, 8, 16), 'capsule');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }
     case NodeType.CYLINDER: {
       const c = getVec('base', inputs, p);
-      const occtObject = await tryOcct(node, color, (oc) => new oc.BRepPrimAPI_MakeCylinder_3(
-        createOcctPoint(oc, c.x, c.y, c.z),
-        getNum('radius', inputs, p, 5),
-        getNum('height', inputs, p, 20),
-      ).Shape(), 'occt-cylinder');
+      const radius = getNum('radius', inputs, p, 5);
+      const height = getNum('height', inputs, p, 20);
+
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const ax2 = createOcctAx2(oc, c, { x: 0, y: 0, z: 1 });
+        return createOcctInstance(oc, ['BRepPrimAPI_MakeCylinder_3', 'BRepPrimAPI_MakeCylinder_2', 'BRepPrimAPI_MakeCylinder'], [ax2, radius, height]).Shape();
+      }, 'occt-cylinder');
       if (occtObject) return [occtObject];
 
-      const geom = new THREE.CylinderGeometry(getNum('radius', inputs, p, 5), getNum('radius', inputs, p, 5), getNum('height', inputs, p, 20), SEGMENTS);
-      geom.rotateX(Math.PI / 2);
+      const geom = new THREE.CylinderGeometry(radius, radius, height, SEGMENTS);
+      // Align base to c: Three centers cylinders along Y. Move up by half height.
+      geom.rotateX(Math.PI / 2); // Now along Z
+      geom.translate(0, 0, height / 2);
       const mesh = createMesh(geom, 'cylinder');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }
     case NodeType.CONE: {
       const c = getVec('base', inputs, p);
-      const occtObject = await tryOcct(node, color, (oc) => new oc.BRepPrimAPI_MakeCone_3(
-        createOcctPoint(oc, c.x, c.y, c.z),
-        0,
-        getNum('radius', inputs, p, 10),
-        getNum('height', inputs, p, 20),
-      ).Shape(), 'occt-cone');
+      const radius = getNum('radius', inputs, p, 10);
+      const height = getNum('height', inputs, p, 20);
+
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const ax2 = createOcctAx2(oc, c, { x: 0, y: 0, z: 1 });
+        return createOcctInstance(oc, ['BRepPrimAPI_MakeCone_3', 'BRepPrimAPI_MakeCone_2', 'BRepPrimAPI_MakeCone'], [ax2, 0, radius, height]).Shape();
+      }, 'occt-cone');
       if (occtObject) return [occtObject];
 
-      const geom = new THREE.ConeGeometry(getNum('radius', inputs, p, 10), getNum('height', inputs, p, 20), SEGMENTS);
+      const geom = new THREE.ConeGeometry(radius, height, SEGMENTS);
       geom.rotateX(Math.PI / 2);
+      geom.translate(0, 0, height / 2);
       const mesh = createMesh(geom, 'cone');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }
     case NodeType.TRUNCATED_CONE: {
       const c = getVec('base', inputs, p);
-      const occtObject = await tryOcct(node, color, (oc) => new oc.BRepPrimAPI_MakeCone_3(
-        createOcctPoint(oc, c.x, c.y, c.z),
-        getNum('radius_top', inputs, p, 5),
-        getNum('radius_bottom', inputs, p, 10),
-        getNum('height', inputs, p, 15),
-      ).Shape(), 'occt-frustum');
+      const radius_top = getNum('radius_top', inputs, p, 5);
+      const radius_bottom = getNum('radius_bottom', inputs, p, 10);
+      const height = getNum('height', inputs, p, 15);
+
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const ax2 = createOcctAx2(oc, c, { x: 0, y: 0, z: 1 });
+        return createOcctInstance(oc, ['BRepPrimAPI_MakeCone_3', 'BRepPrimAPI_MakeCone_2', 'BRepPrimAPI_MakeCone'], [ax2, radius_top, radius_bottom, height]).Shape();
+      }, 'occt-frustum');
       if (occtObject) return [occtObject];
 
-      const geom = new THREE.CylinderGeometry(getNum('radius_top', inputs, p, 5), getNum('radius_bottom', inputs, p, 10), getNum('height', inputs, p, 15), SEGMENTS);
+      const geom = new THREE.CylinderGeometry(radius_top, radius_bottom, height, SEGMENTS);
       geom.rotateX(Math.PI / 2);
+      geom.translate(0, 0, height / 2);
       const mesh = createMesh(geom, 'frustum');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }
     case NodeType.TORUS: {
       const c = getVec('center', inputs, p);
-      const occtObject = await tryOcct(node, color, (oc) => new oc.BRepPrimAPI_MakeTorus_2(
-        getNum('radius_main', inputs, p, 10),
-        getNum('radius_tube', inputs, p, 3),
-        Math.PI * 2,
-      ).Shape(), 'occt-torus');
-      if (occtObject) {
-        occtObject.position.set(c.x, c.y, c.z);
-        return [occtObject];
-      }
+      const r1 = getNum('radius_main', inputs, p, 10);
+      const r2 = getNum('radius_tube', inputs, p, 3);
 
-      const mesh = createMesh(new THREE.TorusGeometry(getNum('radius_main', inputs, p, 10), getNum('radius_tube', inputs, p, 3), 16, SEGMENTS), 'torus');
+      const occtObject = await tryOcct(node, color, (oc) => {
+        const ax2 = createOcctAx2(oc, c, { x: 0, y: 0, z: 1 });
+        return createOcctInstance(oc, ['BRepPrimAPI_MakeTorus_3', 'BRepPrimAPI_MakeTorus_2', 'BRepPrimAPI_MakeTorus'], [ax2, r1, r2]).Shape();
+      }, 'occt-torus');
+      if (occtObject) return [occtObject];
+
+      const mesh = createMesh(new THREE.TorusGeometry(r1, r2, 16, SEGMENTS), 'torus');
       mesh.position.set(c.x, c.y, c.z);
       return [mesh];
     }

@@ -1,4 +1,6 @@
 import {
+  createOcctAx2,
+  createOcctAx3,
   createOcctDir,
   createOcctInstance,
   createOcctPoint,
@@ -10,20 +12,14 @@ import {
 const buildOcctAxis3 = (oc: any, plane: string, center: { x: number; y: number; z: number }) => {
   const origin = planeToPoint(plane, center);
   const normal = planeToNormal(plane);
-  const ax3 = createOcctInstance(oc, ['gp_Ax3_2', 'gp_Ax3_1'], [
-    createOcctPoint(oc, origin.x, origin.y, origin.z),
-    createOcctDir(oc, normal.x, normal.y, normal.z),
-  ]);
+  const ax3 = createOcctAx3(oc, origin, normal);
   return { ax3, origin, normal };
 };
 
 const buildOcctAxis2 = (oc: any, plane: string, center: { x: number; y: number; z: number }) => {
   const origin = planeToPoint(plane, center);
   const normal = planeToNormal(plane);
-  const ax2 = createOcctInstance(oc, ['gp_Ax2_3', 'gp_Ax2_2', 'gp_Ax2_1'], [
-    createOcctPoint(oc, origin.x, origin.y, origin.z),
-    createOcctDir(oc, normal.x, normal.y, normal.z),
-  ]);
+  const ax2 = createOcctAx2(oc, origin, normal);
   return { ax2, origin, normal };
 };
 
