@@ -64,6 +64,7 @@ export const computeGraph = async (
   const MAX_PASSES = 16;
   for (let pass = 0; pass < MAX_PASSES; pass++) {
     let hasChangesInThisPass = false;
+    const failedNodeIds = new Set<string>();
 
     for (const node of nodes) {
       if (node.type === NodeType.PARAMETER) continue;
@@ -146,7 +147,12 @@ export const computeGraph = async (
           }
         });
       } catch (error: any) {
-        // 静默处理轮询中的错误
+        if (!failedNodeIds.has(node.id)) {
+          failedNodeIds.add(node.id);
+          const nodeName = node.label || node.type;
+          const msg = error?.message || String(error || '未知错误');
+          logCallback?.(`节点执行失败 [${nodeName}]: ${msg}`, 'error');
+        }
       }
     }
 

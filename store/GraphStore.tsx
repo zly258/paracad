@@ -187,7 +187,10 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addLog(`Export Failed: ${err.message}`, 'error');
     }
   }, [computedResults, addLog]);
-  const triggerCompute = useCallback(() => { setComputeTrigger(prev => prev + 1); }, []);
+  const triggerCompute = useCallback(() => {
+    nodeExecutionCacheRef.current.clear();
+    setComputeTrigger(prev => prev + 1);
+  }, []);
 
   const computeModelKey = useMemo(() => {
     const normalizedNodes = nodes.map(n => ({ id: n.id, type: n.type, params: n.params })).sort((a, b) => a.id.localeCompare(b.id));

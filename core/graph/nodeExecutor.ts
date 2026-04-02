@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { Brush, Evaluator, SUBTRACTION, ADDITION, INTERSECTION } from 'three-bvh-csg';
 import { CSG } from 'three-csg-ts';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { getManifoldModule, setWasmUrl } from 'manifold-3d/lib/wasm.js';
+import manifoldWasmUrl from 'manifold-3d/manifold.wasm?url';
 import { NodeData, NodeType } from '../../types';
 import { executeAnalysisNode } from './analysisHandlers';
 import { executeDataNode } from './dataHandlers';
@@ -19,6 +22,16 @@ import {
 
 const csgEvaluator = new Evaluator();
 csgEvaluator.attributes = ['position', 'normal', 'uv'];
+setWasmUrl(manifoldWasmUrl);
+
+let manifoldModulePromise: Promise<any> | null = null;
+
+const getManifold = async () => {
+  if (!manifoldModulePromise) {
+    manifoldModulePromise = getManifoldModule();
+  }
+  return manifoldModulePromise;
+};
 
 export interface NodeExecutionContext {
   node: NodeData;
@@ -140,6 +153,73 @@ const toWorldMesh = (mesh: THREE.Mesh): THREE.Mesh => {
   return worldMesh;
 };
 
+const toIndexedWorldGeometry = (mesh: THREE.Mesh): THREE.BufferGeometry => {
+  mesh.updateMatrixWorld(true);
+  let geometry = mesh.geometry.clone();
+  geometry.applyMatrix4(mesh.matrixWorld);
+  geometry = mergeVertices(geometry, 1e-5);
+
+  if (!geometry.getIndex()) {
+    const count = geometry.getAttribute('position')?.count ?? 0;
+    const indices = new Uint32Array(count);
+    for (let i = 0; i < count; i++) indices[i] = i;
+    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+  }
+
+  geometry.computeVertexNormals();
+  return geometry;
+};
+
+const toManifoldMesh = (module: any, mesh: THREE.Mesh) => {
+  const geometry = toIndexedWorldGeometry(mesh);
+  const position = geometry.getAttribute('position') as THREE.BufferAttribute | undefined;
+  const index = geometry.getIndex();
+  if (!position || !index) return null;
+
+  const triVerts = new Uint32Array(index.array as ArrayLike<number>);
+  const vertProperties = new Float32Array(position.array as ArrayLike<number>);
+  return new module.Mesh({
+    numProp: 3,
+    triVerts,
+    vertProperties,
+  });
+};
+
+const manifoldToThreeGeometry = (manifold: any): THREE.BufferGeometry | null => {
+  const mesh = manifold.getMesh();
+  const triVerts: Uint32Array = mesh?.triVerts;
+  const vertProperties: Float32Array = mesh?.vertProperties;
+  const numProp: number = mesh?.numProp ?? 3;
+  if (!triVerts || !vertProperties || triVerts.length === 0 || vertProperties.length === 0) return null;
+
+  const numVerts = Math.floor(vertProperties.length / numProp);
+  const positions = new Float32Array(numVerts * 3);
+  if (numProp === 3) {
+    positions.set(vertProperties);
+  } else {
+    for (let i = 0; i < numVerts; i++) {
+      const src = i * numProp;
+      const dst = i * 3;
+      positions[dst] = vertProperties[src];
+      positions[dst + 1] = vertProperties[src + 1];
+      positions[dst + 2] = vertProperties[src + 2];
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setIndex(new THREE.BufferAttribute(new Uint32Array(triVerts), 1));
+  geometry.computeVertexNormals();
+  return geometry;
+};
+
+const manifoldUnionAll = (module: any, manifolds: any[]) => {
+  if (manifolds.length === 0) return null;
+  let result = manifolds[0];
+  for (let i = 1; i < manifolds.length; i++) result = result.add(manifolds[i]);
+  return result;
+};
+
 const tryBuildTubeFallback = (meshA: THREE.Mesh, meshB: THREE.Mesh): THREE.BufferGeometry | null => {
   const typeA = meshA.geometry?.type || '';
   const typeB = meshB.geometry?.type || '';
@@ -186,7 +266,7 @@ const tryBuildTubeFallback = (meshA: THREE.Mesh, meshB: THREE.Mesh): THREE.Buffe
 };
 
 // 节点执行器：负责把“节点类型 + 输入参数”翻译成几何结果。
-// 当前主要承担浏览器预览职责，用于浏览器实时预览。
+// 当前主要承担浏览器实时预览职责。
 export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionContext): Promise<any[]> => {
   const p = node.params;
   const color = p.color || '#888888';
@@ -322,24 +402,64 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
       }
 
       try {
-        // 主实现改为 three-csg-ts，连续布尔更稳定。
+        // 主实现：manifold-3d，连续布尔稳定性更高。
+        const module = await getManifold();
+        const manifoldsA = meshesA
+          .map((mesh) => toManifoldMesh(module, mesh))
+          .filter(Boolean)
+          .map((mesh) => new module.Manifold(mesh));
+        const manifoldsB = meshesB
+          .map((mesh) => toManifoldMesh(module, mesh))
+          .filter(Boolean)
+          .map((mesh) => new module.Manifold(mesh));
+
+        if (manifoldsA.length > 0 && manifoldsB.length > 0) {
+          const unionA = manifoldUnionAll(module, manifoldsA);
+          if (!unionA) throw new Error('manifold union A failed');
+          let result = unionA;
+
+          if (op === 'SUBTRACT') {
+            const unionB = manifoldUnionAll(module, manifoldsB);
+            if (!unionB) throw new Error('manifold union B failed');
+            result = result.subtract(unionB);
+          } else if (op === 'INTERSECT') {
+            for (const other of manifoldsB) result = result.intersect(other);
+          } else {
+            const unionB = manifoldUnionAll(module, manifoldsB);
+            if (!unionB) throw new Error('manifold union B failed');
+            result = result.add(unionB);
+          }
+
+          const manifoldGeometry = manifoldToThreeGeometry(result);
+          if (manifoldGeometry) return [createMesh(manifoldGeometry, `boolean-${op.toLowerCase()}-manifold`)];
+        }
+      } catch (manifoldError) {
+        // keep fallback chain below
+      }
+
+      try {
+        // fallback #1: three-csg-ts
         let resultMesh = toWorldMesh(meshesA[0]);
         for (let i = 1; i < meshesA.length; i++) {
           resultMesh = CSG.union(resultMesh, toWorldMesh(meshesA[i]));
         }
 
         if (op === 'SUBTRACT') {
-          for (const cutter of meshesB) {
-            resultMesh = CSG.subtract(resultMesh, toWorldMesh(cutter));
+          let cuttersUnion = toWorldMesh(meshesB[0]);
+          for (let i = 1; i < meshesB.length; i++) {
+            cuttersUnion = CSG.union(cuttersUnion, toWorldMesh(meshesB[i]));
           }
+          resultMesh = CSG.subtract(resultMesh, cuttersUnion);
         } else if (op === 'INTERSECT') {
           for (const meshB of meshesB) {
             resultMesh = CSG.intersect(resultMesh, toWorldMesh(meshB));
           }
         } else {
-          for (const meshB of meshesB) {
-            resultMesh = CSG.union(resultMesh, toWorldMesh(meshB));
+          let unionB = toWorldMesh(meshesB[0]);
+          for (let i = 1; i < meshesB.length; i++) {
+            unionB = CSG.union(unionB, toWorldMesh(meshesB[i]));
           }
+          resultMesh = CSG.union(resultMesh, unionB);
         }
 
         return [resultMesh ? createMesh(resultMesh.geometry, `boolean-${op.toLowerCase()}-csgts`) : null];
@@ -352,17 +472,21 @@ export const executeNode = async ({ node, inputs, globalParams }: NodeExecutionC
           }
 
           if (op === 'SUBTRACT') {
-            for (const cutter of meshesB) {
-              resultBrush = csgEvaluator.evaluate(resultBrush, toWorldBrush(cutter), SUBTRACTION);
+            let cuttersUnion = toWorldBrush(meshesB[0]);
+            for (let i = 1; i < meshesB.length; i++) {
+              cuttersUnion = csgEvaluator.evaluate(cuttersUnion, toWorldBrush(meshesB[i]), ADDITION);
             }
+            resultBrush = csgEvaluator.evaluate(resultBrush, cuttersUnion, SUBTRACTION);
           } else if (op === 'INTERSECT') {
             for (const meshB of meshesB) {
               resultBrush = csgEvaluator.evaluate(resultBrush, toWorldBrush(meshB), INTERSECTION);
             }
           } else {
-            for (const meshB of meshesB) {
-              resultBrush = csgEvaluator.evaluate(resultBrush, toWorldBrush(meshB), ADDITION);
+            let unionB = toWorldBrush(meshesB[0]);
+            for (let i = 1; i < meshesB.length; i++) {
+              unionB = csgEvaluator.evaluate(unionB, toWorldBrush(meshesB[i]), ADDITION);
             }
+            resultBrush = csgEvaluator.evaluate(resultBrush, unionB, ADDITION);
           }
           return [resultBrush ? createMesh(resultBrush.geometry, `boolean-${op.toLowerCase()}-bvh`) : null];
         } catch (error2) {

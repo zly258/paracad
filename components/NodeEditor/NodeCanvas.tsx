@@ -3,7 +3,7 @@ import { useGraph } from '../../store/GraphStore';
 import NodeComponent from './NodeComponent';
 import ConnectionLayer from './ConnectionLayer';
 import { NodeType, NodeData, SocketType, ConnectionDraft } from '../../types';
-import { LayoutGrid, Scan, Download, Upload, Undo2, Redo2, Boxes } from 'lucide-react';
+import { LayoutGrid, Scan, Download, Upload, Undo2, Redo2, Boxes, Play } from 'lucide-react';
 import { performAutoLayout } from '../../utils/autoLayout';
 import { NODE_WIDTH, calculateSocketPosition, getNodeRenderHeight } from '../../constants';
 
@@ -22,7 +22,7 @@ const NodeCanvas: React.FC = () => {
     saveGraph, loadGraph, exportModel,
     updateNodePosition, updateNodeParam, computedResults, t,
     undo, redo, recordHistory, canUndo, canRedo,
-    removeNode, removeConnection, theme, addLog
+    removeNode, removeConnection, theme, addLog, triggerCompute, isComputing
   } = useGraph();
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -249,6 +249,14 @@ const NodeCanvas: React.FC = () => {
       <div className="canvas-toolbar">
         <button onClick={undo} disabled={!canUndo} title={t('Undo') + " (Ctrl+Z)"}><Undo2 size={16} /></button>
         <button onClick={redo} disabled={!canRedo} title={t('Redo') + " (Ctrl+Y)"}><Redo2 size={16} /></button>
+        <button
+          onClick={triggerCompute}
+          disabled={isComputing}
+          title={isComputing ? '运行中...' : '运行（强制重算）'}
+          className={isComputing ? 'opacity-60' : ''}
+        >
+          <Play size={16} />
+        </button>
         <button onClick={() => setNodes(performAutoLayout(nodes, connections))} title="自动布局"><LayoutGrid size={16} /></button>
         <button onClick={() => { if (containerRef.current) fitView(containerRef.current.clientWidth, containerRef.current.clientHeight) }} title="充满画布"><Scan size={16} /></button>
         <div className="w-px h-4 bg-white/10 mx-1" />

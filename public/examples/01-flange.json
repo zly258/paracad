@@ -1,0 +1,311 @@
+{
+  "nodes": [
+    {
+      "id": "e74d4024-ad33-4438-afa1-0b031f475fbe",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 36
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "0552fde3-8e88-4968-97ac-06f6fb7a2e48",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "b6c6653e-2f64-405e-addc-7e2319ffcd40",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "ec89774c-eeec-4a22-b28a-f6f704b7f7dd",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "61b80e98-1701-4d61-9612-824722cc483e",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 300,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "42c87ebf-378e-492f-bbcc-4d7435f4b4e9",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 320
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "68a093b9-4bd1-48bf-9f6c-6f0da7585638",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "585c57ad-9331-472a-9222-6d21b3d01b3f",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "ce9dbc1b-6f58-4608-ad1b-66a79a59d94b",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "c1c004a3-1412-4526-965e-9b2960b90c77",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 200,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "5e8ab218-5bce-49f3-bce7-a60f224005a3",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 604
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "68f2e86e-64da-4788-815e-da92baeebf5a",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "a10daa7e-7a5a-47e4-9446-e98920d45d2a",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "7ccd0c43-dfb3-445f-ab98-6bc7055932ec",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "6c312a13-bc50-49d3-8782-024e430c568b",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 15,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "f323c75d-31ba-4835-aa44-86f82767884c",
+      "type": "BOOLEAN_OP",
+      "position": {
+        "x": 450,
+        "y": 30
+      },
+      "label": "Boolean",
+      "inputs": [
+        {
+          "id": "90f3b662-c938-49a4-925a-7a38eaf71a05",
+          "name": "object_a",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "7b02b661-b73b-4c17-9f94-d25d0816ff89",
+          "name": "object_b",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "b3c0b488-e386-4be0-aac3-1aeb74a3982e",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "operation": "SUBTRACT",
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "9f1b2d18-4503-4a0e-b8a6-2b5158603dd8",
+      "type": "ARRAY_POLAR",
+      "position": {
+        "x": 450,
+        "y": 576
+      },
+      "label": "Array Polar",
+      "inputs": [
+        {
+          "id": "9ac68440-690a-4712-afa2-973804e46de3",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "1850042b-3711-4719-95b5-e14a36b6fe4f",
+          "name": "center",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "c4825832-26e1-4505-b426-64c8a0c97fb8",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "b902bbf4-46b7-42e5-bc7c-349f1dbb91c1",
+          "name": "count",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "f7d30091-b290-409d-8149-731a59ca678a",
+          "name": "fill_angle",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "fa17a296-ce38-4d98-83af-f1d1601dd41c",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "center": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 250,
+        "count": 12,
+        "fill_angle": 360
+      }
+    },
+    {
+      "id": "fc33bddb-efe5-4121-859a-fc2227f1b87d",
+      "type": "BOOLEAN_OP",
+      "position": {
+        "x": 860,
+        "y": 30
+      },
+      "label": "Boolean",
+      "inputs": [
+        {
+          "id": "936f7631-92d5-4af8-8d58-e899487080d9",
+          "name": "object_a",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "23716d9c-307c-4b51-ba5e-b3c564f033dc",
+          "name": "object_b",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "d76fb673-62c2-432f-8938-702940dc24dd",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "operation": "SUBTRACT",
+        "color": "#888888"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "481d2352-8080-44ea-a3e9-18e767c3e93d",
+      "sourceNodeId": "e74d4024-ad33-4438-afa1-0b031f475fbe",
+      "sourceSocketId": "61b80e98-1701-4d61-9612-824722cc483e",
+      "targetNodeId": "f323c75d-31ba-4835-aa44-86f82767884c",
+      "targetSocketId": "90f3b662-c938-49a4-925a-7a38eaf71a05"
+    },
+    {
+      "id": "cfff0582-f830-4280-a81f-95e20139bede",
+      "sourceNodeId": "42c87ebf-378e-492f-bbcc-4d7435f4b4e9",
+      "sourceSocketId": "c1c004a3-1412-4526-965e-9b2960b90c77",
+      "targetNodeId": "f323c75d-31ba-4835-aa44-86f82767884c",
+      "targetSocketId": "7b02b661-b73b-4c17-9f94-d25d0816ff89"
+    },
+    {
+      "id": "47593c0b-a953-4861-88e2-069e7f6761f0",
+      "sourceNodeId": "f323c75d-31ba-4835-aa44-86f82767884c",
+      "sourceSocketId": "b3c0b488-e386-4be0-aac3-1aeb74a3982e",
+      "targetNodeId": "fc33bddb-efe5-4121-859a-fc2227f1b87d",
+      "targetSocketId": "936f7631-92d5-4af8-8d58-e899487080d9"
+    },
+    {
+      "id": "4af92803-8022-4f3d-a273-5c1de948f4a4",
+      "sourceNodeId": "9f1b2d18-4503-4a0e-b8a6-2b5158603dd8",
+      "sourceSocketId": "fa17a296-ce38-4d98-83af-f1d1601dd41c",
+      "targetNodeId": "fc33bddb-efe5-4121-859a-fc2227f1b87d",
+      "targetSocketId": "23716d9c-307c-4b51-ba5e-b3c564f033dc"
+    },
+    {
+      "id": "f7b35729-e92a-470c-bca8-dff286ca58c6",
+      "sourceNodeId": "5e8ab218-5bce-49f3-bce7-a60f224005a3",
+      "sourceSocketId": "6c312a13-bc50-49d3-8782-024e430c568b",
+      "targetNodeId": "9f1b2d18-4503-4a0e-b8a6-2b5158603dd8",
+      "targetSocketId": "9ac68440-690a-4712-afa2-973804e46de3"
+    }
+  ]
+}

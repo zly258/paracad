@@ -1,0 +1,763 @@
+{
+  "nodes": [
+    {
+      "id": "e6873336-0809-4da3-9e47-1a1d07c19f2e",
+      "type": "SPHERE",
+      "position": {
+        "x": 40,
+        "y": 30
+      },
+      "label": "Sphere",
+      "inputs": [
+        {
+          "id": "75b4169e-517d-40cf-b3bf-14d66f4846d6",
+          "name": "center",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "d1a2472a-7fd3-4006-8b56-91a2834de0e1",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "2c75f5bf-daf7-4f3a-9a4e-baa738bce593",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "center": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 10,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "6c8222be-726b-4c73-8de5-c413ead2f2d9",
+      "type": "CONE",
+      "position": {
+        "x": 40,
+        "y": 286
+      },
+      "label": "Cone",
+      "inputs": [
+        {
+          "id": "9a137a3d-c7a9-4498-881b-03e7bfd348f6",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "478fbd0c-783c-41da-a82e-8c0bffef97eb",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "35421825-5d61-4ac6-9107-4ea952525ff7",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "47116c28-1c8c-42ce-aec2-27445f163eee",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 10,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "b65462d3-15fc-42e4-b557-c2a2b846062c",
+      "type": "CONE",
+      "position": {
+        "x": 40,
+        "y": 570
+      },
+      "label": "Cone",
+      "inputs": [
+        {
+          "id": "f334b7ea-5436-4a3e-9edb-ab4b7847842d",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "da60900d-5723-4bf6-a6b2-b30fadcbd633",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "2738508f-c97f-4040-a45b-032e8a5a2d92",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "d488e144-15da-48f2-95ac-a97cf2184cac",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 10,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "345cd460-dece-4196-b71a-d789b091ef36",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 854
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "201eaa00-e432-4056-b4fd-7e5ecbb8449d",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "c311dad8-32e3-4122-8529-22b7f2567a65",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "b46bd60f-3dcf-4ca7-9d11-1fa3a2392061",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "73e53df4-363d-4439-86b6-90c316a2a2a4",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 6,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "050a5e73-9bfd-4056-aa51-bc72619af5dc",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 1138
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "fdb59926-b0ed-46ed-ad42-82b73b7c6a28",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "5bd32527-af23-4656-bfc6-dd81d52ff814",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "01dccdb5-1ee5-457f-bf8c-69ea385dbfb2",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "edf51993-2b5c-41de-b6e4-f53557648c73",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 20
+        },
+        "radius": 2,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "98283bf3-ffb2-49a2-8f5d-bfe1d5e4071f",
+      "type": "TORUS",
+      "position": {
+        "x": 40,
+        "y": 1422
+      },
+      "label": "Torus",
+      "inputs": [
+        {
+          "id": "0c0d221a-d16f-48dd-b66b-4d76bfae4294",
+          "name": "center",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "edd57fb2-5046-4635-a387-9473c481e395",
+          "name": "radius_main",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "90209cbf-819c-44c1-88c5-b11d4bdb12ca",
+          "name": "radius_tube",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "63b96dff-6460-4d59-aad6-0cc019b58a17",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "center": {
+          "x": 0,
+          "y": 0,
+          "z": 40
+        },
+        "radius_main": 10,
+        "radius_tube": 1,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "dd4f9200-2e03-44f8-9363-5338f1226b5d",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 1706
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "b2ed16e7-8fb1-4726-94f8-d490b421143a",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "f755ad45-5f6a-458a-b0fa-83893a3a05e9",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "7c61f059-3846-4f8d-a161-44927d9bfdb8",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "cbd8df19-1891-4611-97cd-4a81f7d6e2ae",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 1,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "0841ad59-d976-4ce5-84f8-455086d9121c",
+      "type": "CYLINDER",
+      "position": {
+        "x": 40,
+        "y": 1990
+      },
+      "label": "Cylinder",
+      "inputs": [
+        {
+          "id": "5c3a511d-a987-4454-ac08-e2f793243a7c",
+          "name": "base",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "af952575-d132-42c9-b41c-df07f673efc7",
+          "name": "radius",
+          "type": "number",
+          "value": null
+        },
+        {
+          "id": "7e643cba-6476-4500-a1b8-41becc655a75",
+          "name": "height",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "892df510-0e47-49f6-b449-107504cc1f17",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "base": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "radius": 1,
+        "height": 20,
+        "color": "#888888"
+      }
+    },
+    {
+      "id": "312a66e3-5b16-4094-ac91-36af71f089da",
+      "type": "ROTATION",
+      "position": {
+        "x": 450,
+        "y": 286
+      },
+      "label": "Rotate",
+      "inputs": [
+        {
+          "id": "ddbacff4-a6ee-49bc-ac91-37164de3bda7",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "69cee08c-8586-46c2-83a5-80f8aded1f2d",
+          "name": "axis",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "284f4b21-1339-437b-82cd-ee753e154628",
+          "name": "angle",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "f0d2d059-2134-42a7-8e93-afecc8602b07",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "axis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "angle": 90
+      }
+    },
+    {
+      "id": "5730005c-2068-4a92-8569-889d78936144",
+      "type": "ROTATION",
+      "position": {
+        "x": 450,
+        "y": 570
+      },
+      "label": "Rotate",
+      "inputs": [
+        {
+          "id": "e0481e6c-ca12-48c0-bd13-1c788cd5f159",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "1efa9938-55fb-4688-932e-27d7b8d03a5c",
+          "name": "axis",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "dc7ce650-cfdd-4f3f-8fc1-44348285b92d",
+          "name": "angle",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "0cca4cf5-76db-4a5c-af7e-34b10133dec9",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "axis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "angle": -90
+      }
+    },
+    {
+      "id": "09ecd451-fae0-4c88-9ec5-c8f3671e9baf",
+      "type": "ROTATION",
+      "position": {
+        "x": 450,
+        "y": 1706
+      },
+      "label": "Rotate",
+      "inputs": [
+        {
+          "id": "b796d7b6-5a71-4e4f-afdc-5b6c975f831c",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "835aa642-876b-4ffd-886a-09cc317fdad5",
+          "name": "axis",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "d11433b9-5cf6-454c-bfd9-c88bd1952fdf",
+          "name": "angle",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "b9437b04-a878-470e-b150-2d731619d99d",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "axis": {
+          "x": 1,
+          "y": 0,
+          "z": 0
+        },
+        "angle": 90
+      }
+    },
+    {
+      "id": "04f752f3-2879-4c3e-bf86-5c2bf6470d74",
+      "type": "ROTATION",
+      "position": {
+        "x": 450,
+        "y": 1990
+      },
+      "label": "Rotate",
+      "inputs": [
+        {
+          "id": "5ddfff0c-562c-452d-b662-ed73fe94c785",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "0954bd2e-e8bb-4183-9563-e91b2e7942c0",
+          "name": "axis",
+          "type": "vector",
+          "value": null
+        },
+        {
+          "id": "52968081-148d-4ea4-9975-2dbd31a8b3e4",
+          "name": "angle",
+          "type": "number",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "43b298dc-5bcf-4767-a984-faba1749a4ec",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "axis": {
+          "x": 0,
+          "y": 1,
+          "z": 0
+        },
+        "angle": 90
+      }
+    },
+    {
+      "id": "ec66fdf7-75cc-4518-80ad-1183ad17f04a",
+      "type": "TRANSLATION",
+      "position": {
+        "x": 860,
+        "y": 300
+      },
+      "label": "Move",
+      "inputs": [
+        {
+          "id": "f5f1ee53-3a55-4789-9ed9-93da293c4ec0",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "7daf75cb-2902-4f97-a097-97acd1e04606",
+          "name": "vector",
+          "type": "vector",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "96f31997-11c7-4cd2-b877-84f5ebd8ceb8",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "vector": {
+          "x": 0,
+          "y": 20,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "f6f7d504-8e29-4521-aa85-7c839795bad9",
+      "type": "TRANSLATION",
+      "position": {
+        "x": 860,
+        "y": 584
+      },
+      "label": "Move",
+      "inputs": [
+        {
+          "id": "c6941975-3bb0-421b-94b1-f38d03dd8971",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "692570af-9317-43a4-aab8-835fc2e1907d",
+          "name": "vector",
+          "type": "vector",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "a5bcb218-26e4-43f5-8b33-74f787eacce6",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "vector": {
+          "x": 0,
+          "y": -20,
+          "z": 0
+        }
+      }
+    },
+    {
+      "id": "41a46bb8-9fbb-4df5-b5b4-16053101dae8",
+      "type": "TRANSLATION",
+      "position": {
+        "x": 860,
+        "y": 1720
+      },
+      "label": "Move",
+      "inputs": [
+        {
+          "id": "866b4d38-09d8-400f-8b73-1e855420fbff",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "241a1e6e-02c8-4da4-bfcb-afc0dedef1a8",
+          "name": "vector",
+          "type": "vector",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "291e3ba9-81c9-41f3-8131-37a77ba5f8a1",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "vector": {
+          "x": 0,
+          "y": 10,
+          "z": 40
+        }
+      }
+    },
+    {
+      "id": "b2ac0211-9e60-4894-803a-8107dac0a8ca",
+      "type": "TRANSLATION",
+      "position": {
+        "x": 860,
+        "y": 2004
+      },
+      "label": "Move",
+      "inputs": [
+        {
+          "id": "dad88ef2-bad0-43ba-b25d-b588566c21d8",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        },
+        {
+          "id": "a2df5e37-aa95-4d71-b275-cd235d7e1d49",
+          "name": "vector",
+          "type": "vector",
+          "value": null
+        }
+      ],
+      "outputs": [
+        {
+          "id": "dff5cff4-8a56-44d8-9c28-007e0fd7dafc",
+          "name": "geometry",
+          "type": "geometry",
+          "value": null
+        }
+      ],
+      "params": {
+        "vector": {
+          "x": -10,
+          "y": 0,
+          "z": 40
+        }
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "b2c85d9c-b683-406b-b952-31a64be4d98f",
+      "sourceNodeId": "6c8222be-726b-4c73-8de5-c413ead2f2d9",
+      "sourceSocketId": "47116c28-1c8c-42ce-aec2-27445f163eee",
+      "targetNodeId": "312a66e3-5b16-4094-ac91-36af71f089da",
+      "targetSocketId": "ddbacff4-a6ee-49bc-ac91-37164de3bda7"
+    },
+    {
+      "id": "f31b7db9-7847-4e1f-b529-fbb3957f1c86",
+      "sourceNodeId": "b65462d3-15fc-42e4-b557-c2a2b846062c",
+      "sourceSocketId": "d488e144-15da-48f2-95ac-a97cf2184cac",
+      "targetNodeId": "5730005c-2068-4a92-8569-889d78936144",
+      "targetSocketId": "e0481e6c-ca12-48c0-bd13-1c788cd5f159"
+    },
+    {
+      "id": "af5d67e9-caf2-4523-a10d-9d4e081fcfe2",
+      "sourceNodeId": "312a66e3-5b16-4094-ac91-36af71f089da",
+      "sourceSocketId": "f0d2d059-2134-42a7-8e93-afecc8602b07",
+      "targetNodeId": "ec66fdf7-75cc-4518-80ad-1183ad17f04a",
+      "targetSocketId": "f5f1ee53-3a55-4789-9ed9-93da293c4ec0"
+    },
+    {
+      "id": "c8357244-cffb-4c63-86c7-8e3376ebb4c8",
+      "sourceNodeId": "5730005c-2068-4a92-8569-889d78936144",
+      "sourceSocketId": "0cca4cf5-76db-4a5c-af7e-34b10133dec9",
+      "targetNodeId": "f6f7d504-8e29-4521-aa85-7c839795bad9",
+      "targetSocketId": "c6941975-3bb0-421b-94b1-f38d03dd8971"
+    },
+    {
+      "id": "3ff96673-a8ac-4c83-9f73-6018f6ca9c2c",
+      "sourceNodeId": "dd4f9200-2e03-44f8-9363-5338f1226b5d",
+      "sourceSocketId": "cbd8df19-1891-4611-97cd-4a81f7d6e2ae",
+      "targetNodeId": "09ecd451-fae0-4c88-9ec5-c8f3671e9baf",
+      "targetSocketId": "b796d7b6-5a71-4e4f-afdc-5b6c975f831c"
+    },
+    {
+      "id": "a9019f7f-d44b-4166-919c-ebbaf3ddfb30",
+      "sourceNodeId": "09ecd451-fae0-4c88-9ec5-c8f3671e9baf",
+      "sourceSocketId": "b9437b04-a878-470e-b150-2d731619d99d",
+      "targetNodeId": "41a46bb8-9fbb-4df5-b5b4-16053101dae8",
+      "targetSocketId": "866b4d38-09d8-400f-8b73-1e855420fbff"
+    },
+    {
+      "id": "45c38324-97c4-4ce6-b0e9-298ee168a717",
+      "sourceNodeId": "0841ad59-d976-4ce5-84f8-455086d9121c",
+      "sourceSocketId": "892df510-0e47-49f6-b449-107504cc1f17",
+      "targetNodeId": "04f752f3-2879-4c3e-bf86-5c2bf6470d74",
+      "targetSocketId": "5ddfff0c-562c-452d-b662-ed73fe94c785"
+    },
+    {
+      "id": "2b21254b-321a-45b9-acbd-b416fc77c3cc",
+      "sourceNodeId": "04f752f3-2879-4c3e-bf86-5c2bf6470d74",
+      "sourceSocketId": "43b298dc-5bcf-4767-a984-faba1749a4ec",
+      "targetNodeId": "b2ac0211-9e60-4894-803a-8107dac0a8ca",
+      "targetSocketId": "dad88ef2-bad0-43ba-b25d-b588566c21d8"
+    }
+  ]
+}
