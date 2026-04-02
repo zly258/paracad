@@ -13,7 +13,7 @@ interface LibraryItem {
 
 const NODE_DESCRIPTIONS: Partial<Record<NodeType, { zh: string; en: string }>> = {
   [NodeType.PARAMETER]: { zh: '定义可复用参数值', en: 'Define a reusable value' },
-  [NodeType.EXPRESSION]: { zh: '通过表达式计算结果', en: 'Evaluate a formula from inputs' },
+  [NodeType.EXPRESSION]: { zh: '支持三目与函数表达式计算', en: 'Evaluate formulas with ternary and functions' },
   [NodeType.LINE]: { zh: '由起点终点生成直线', en: 'Create a line from start to end' },
   [NodeType.RECTANGLE]: { zh: '创建矩形草图轮廓', en: 'Create rectangle profile' },
   [NodeType.CIRCLE]: { zh: '创建圆形草图轮廓', en: 'Create circle profile' },

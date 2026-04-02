@@ -201,7 +201,7 @@ export const translations: Record<string, Record<string, string>> = {
     'Copy Nodes': '复制节点',
     'Delete Nodes': '删除节点',
     'Initializing...': '正在初始化几何引擎...',
-    'Loading Kernel': '加载 OCCT.js 内核...',
+    'Loading Engine': '加载 Three.js 引擎...',
     'Delete Node': '删除节点',
     'Delete Component': '删除组件',
     'Run': '运行',
@@ -328,3 +328,4 @@ export const translations: Record<string, Record<string, string>> = {
     'Value': 'Value'
   }
 };
+

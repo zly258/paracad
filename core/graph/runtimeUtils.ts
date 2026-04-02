@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { NodeData } from '../../types';
 import { getKernelStatus } from '../kernel';
 
-// 输入参数读取工具：优先读取连线值，其次读取节点参数，最后回退到默认值。
 export const getVal = (name: string, inputs: Record<string, any>, params: Record<string, any>, fallback: any) => {
   if (inputs[name] !== undefined) return inputs[name];
   if (params?.[name] !== undefined) return params[name];
@@ -19,7 +18,6 @@ export const getVec = (name: string, inputs: Record<string, any>, params: Record
   if (value && typeof value === 'object' && 'x' in value) {
     return { x: Number(value.x) || 0, y: Number(value.y) || 0, z: Number(value.z) || 0 };
   }
-  // 回退逻辑：尝试组合单独的 x, y, z 输入（常用于旧版脚本或节点分离定义）
   return {
     x: getNum('x', inputs, params, 0),
     y: getNum('y', inputs, params, 0),
@@ -38,7 +36,6 @@ export const applyPlane = (obj: THREE.Object3D, plane: string) => {
   obj.updateMatrix();
 };
 
-// 在每个可视对象上挂载内核元数据，便于调试“当前到底走的是哪条执行路径”。
 export const tagKernel = (obj: THREE.Object3D, node: NodeData, detail: string) => {
   const kernel = getKernelStatus();
   obj.userData.kernel = kernel.backend;
@@ -52,9 +49,6 @@ export const cloneObject = <T extends THREE.Object3D>(obj: T): T => {
   const cloned = obj.clone() as T;
   cloned.userData = {
     ...(obj.userData ?? {}),
-    // 非序列化对象直接沿用引用，避免丢失后续 BRep 计算所需的内核对象。
-    occtShape: obj.userData?.occtShape,
-    occtWire: obj.userData?.occtWire,
     curve3d: obj.userData?.curve3d,
     shapes: obj.userData?.shapes,
   };
@@ -93,7 +87,6 @@ export const createCurveObject = (
   return line;
 };
 
-// 轻量 loft 网格：当前用于浏览器预览，后续可由 OCCT 的真实曲面建模替换。
 export const buildLoftGeometry = (shapeA: THREE.Shape, shapeB: THREE.Shape) => {
   const pointsA = shapeA.getSpacedPoints(64);
   const pointsB = shapeB.getSpacedPoints(64);

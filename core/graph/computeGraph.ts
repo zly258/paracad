@@ -28,10 +28,13 @@ export const computeGraph = async (
 
   // 几何流隐藏逻辑：如果一个几何体的输出连接到了另一个几何处理节点，则通常隐藏上游预览。
   connections.forEach((conn) => {
+    const sourceNode = nodeMap.get(conn.sourceNodeId);
     const targetNode = nodeMap.get(conn.targetNodeId);
-    if (!targetNode) return;
+    if (!sourceNode || !targetNode) return;
+    const sourceSocket = sourceNode.outputs.find((output) => output.id === conn.sourceSocketId);
     const targetProducesGeometry = targetNode.outputs.some((output) => output.type === 'geometry');
-    if (targetProducesGeometry) hiddenByGeometryConsumerIds.add(conn.sourceNodeId);
+    const sourceIsSketchPrimitive = sourceSocket?.type === 'shape2d' || sourceSocket?.type === 'curve';
+    if (targetProducesGeometry || sourceIsSketchPrimitive) hiddenByGeometryConsumerIds.add(conn.sourceNodeId);
   });
 
   const globalParams: Record<string, any> = {};
@@ -78,11 +81,19 @@ export const computeGraph = async (
       }
 
       // 生成输入哈希，用于跳过未变更节点的重复计算
+      const inputConnectionState = Object.fromEntries(
+        (node.inputs || []).map((input) => {
+          const conn = connections.find((item) => item.targetSocketId === input.id);
+          return [input.name, conn ? `${conn.sourceNodeId}:${conn.sourceSocketId}` : null];
+        }),
+      );
       const currentHash = JSON.stringify({
         inputs: Object.fromEntries(
-          Object.entries(inputValues).map(([k, v]) => [k, (v instanceof THREE.Object3D ? v.uuid : v)])
+          Object.entries(inputValues).map(([k, v]) => [k, (v instanceof THREE.Object3D ? v.uuid : v)]),
         ),
-        params: node.params
+        connections: inputConnectionState,
+        missingInputs: [...missingInputs].sort(),
+        params: node.params,
       });
 
       const cached = nodeExecutionCache.get(node.id);

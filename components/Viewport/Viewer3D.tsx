@@ -1,10 +1,9 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, GizmoHelper, GizmoViewport, OrthographicCamera } from '@react-three/drei';
+import { OrbitControls, GizmoHelper, GizmoViewport, OrthographicCamera } from '@react-three/drei';
 import { useGraph } from '../../store/GraphStore';
 import * as THREE from 'three';
-import { RefreshCw, Scan, Download, Layers, Box, Sun, Moon } from 'lucide-react';
-import { exportComputedModel, ExportFormat } from '../../utils/modelExport';
+import { RefreshCw, Scan } from 'lucide-react';
 
 declare global {
   namespace JSX {
@@ -19,7 +18,6 @@ declare global {
   }
 }
 
-type RenderMode = 'shaded' | 'wireframe';
 type ViewportTheme = 'light' | 'dark';
 
 const InfiniteAxes: React.FC<{ theme: ViewportTheme }> = ({ theme }) => {
@@ -42,76 +40,57 @@ const InfiniteAxes: React.FC<{ theme: ViewportTheme }> = ({ theme }) => {
     return [lineX, lineY, lineZ];
   }, [isLight]);
 
-  // @ts-ignore
   return (<group>{axes.map((line, i) => <primitive key={i} object={line} />)}</group>) as any;
 };
 
 interface SceneContentProps {
   computedResults: Map<string, any>;
-  renderMode: RenderMode;
   theme: ViewportTheme;
 }
 
-const SceneContent: React.FC<SceneContentProps> = ({ computedResults, renderMode, theme }) => {
+const SceneContent: React.FC<SceneContentProps> = ({ computedResults, theme }) => {
   const isLight = theme === 'light';
   const meshesToRender = useMemo(() => {
     const items: React.ReactNode[] = [];
+    const seenObjectIds = new Set<string>();
     const collectRenderable = (value: any) => {
       if (!value) return;
       if (Array.isArray(value)) { value.forEach((item) => collectRenderable(item)); return; }
       if (value instanceof THREE.Object3D) {
+        if (seenObjectIds.has(value.uuid)) return;
+        seenObjectIds.add(value.uuid);
         if (value.userData?.visible === false) return;
 
         value.traverse((child) => {
-          const isOcctMesh = child.userData?.isOcctMesh;
-          const isOcctEdge = child.userData?.isOcctEdge;
-
-          if (isOcctMesh) {
-            child.visible = renderMode === 'shaded';
-            if ((child as THREE.Mesh).isMesh) {
-              const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial;
-              if (mat) mat.wireframe = false;
-            }
-          }
-          if (isOcctEdge) {
-            child.visible = renderMode === 'wireframe';
-            if ((child as THREE.LineSegments).isLineSegments) {
-              const mat = (child as THREE.LineSegments).material as THREE.LineBasicMaterial;
-              mat.color.set(isLight ? 0x333333 : 0xcccccc);
-              mat.opacity = isLight ? 1 : 0.8;
-            }
-          }
-
-          if (!(isOcctMesh || isOcctEdge) && (child as THREE.Mesh).isMesh) {
+          if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
             const mat = mesh.material as THREE.MeshStandardMaterial;
             if (mat) {
-              mat.wireframe = renderMode === 'wireframe';
+              mat.wireframe = false;
               child.visible = true;
             }
           }
         });
-        // @ts-ignore
+
         items.push(<primitive key={`obj-${value.uuid}`} object={value} />);
       }
     };
     computedResults.forEach((value) => collectRenderable(value));
     return items;
-  }, [computedResults, renderMode, isLight]);
+  }, [computedResults]);
 
   return (
     <>
-      {/* @ts-ignore */}
       <ambientLight intensity={isLight ? 0.9 : 0.7} />
-      {/* @ts-ignore */}
+      <hemisphereLight
+        args={[isLight ? '#f4f8ff' : '#8aa8ff', isLight ? '#cfd8e6' : '#0f111a', isLight ? 0.6 : 0.4]}
+      />
       <pointLight position={[100, 100, 150]} intensity={0.8} />
-      {/* @ts-ignore */}
       <directionalLight position={[-100, -100, 200]} intensity={isLight ? 1.5 : 1.2} />
       {meshesToRender}
       <InfiniteAxes theme={theme} />
-      <Environment preset={isLight ? "apartment" : "city"} />
       <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
-        <GizmoViewport axisColors={['#e65100', '#2e7d32', '#1565c0']} labelColor={isLight ? "#333" : "white"} />
+        <GizmoViewport axisColors={['#e65100', '#2e7d32', '#1565c0']} labelColor={isLight ? '#333' : 'white'} />
       </GizmoHelper>
     </>
   );
@@ -120,16 +99,17 @@ const SceneContent: React.FC<SceneContentProps> = ({ computedResults, renderMode
 interface Viewer3DPresenterProps {
   computedResults: Map<string, any>;
   onTriggerCompute: () => void;
-  onAddLog: (message: string, type?: 'info' | 'success' | 'error' | 'warning') => void;
-  kernelBackend: 'occt.js' | 'three-fallback';
 }
 
 const collectRenderableObjects = (computedResults: Map<string, any>) => {
   const objects: THREE.Object3D[] = [];
+  const seenObjectIds = new Set<string>();
   const visit = (value: any) => {
     if (!value) return;
     if (Array.isArray(value)) { value.forEach(visit); return; }
     if (value instanceof THREE.Object3D) {
+      if (seenObjectIds.has(value.uuid)) return;
+      seenObjectIds.add(value.uuid);
       if (value.userData?.visible === false) return;
       objects.push(value);
     }
@@ -138,11 +118,10 @@ const collectRenderableObjects = (computedResults: Map<string, any>) => {
   return objects;
 };
 
-const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAddLog, kernelBackend }: Viewer3DPresenterProps) => {
+const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute }: Viewer3DPresenterProps) => {
   const controlsRef = useRef<any>(null);
   const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
-  const [renderMode, setRenderMode] = useState<RenderMode>('shaded');
-  const { theme, setTheme, exportModel } = useGraph();
+  const { theme } = useGraph();
 
   useEffect(() => {
     if (THREE.Object3D && (THREE.Object3D as any).DefaultUp) {
@@ -175,14 +154,9 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
     controls.update();
   };
 
-  useEffect(() => { if (computedResults.size > 0) handleFitView(); }, [computedResults.size === 0]);
-
+  useEffect(() => { if (computedResults.size > 0) handleFitView(); }, [computedResults]);
 
   const isLight = theme === 'light';
-  const toolbarBase = isLight ? "flex bg-white shadow-lg rounded-lg border border-gray-200 p-1" : "flex bg-black/60 backdrop-blur-md rounded-lg border border-white/10 p-1 shadow-2xl";
-  const itemBase = "flex items-center gap-1.5 p-1.5 rounded-md transition-all border border-transparent active:scale-95 ";
-  const itemNormal = isLight ? "text-gray-600 hover:text-black hover:bg-gray-100" : "text-gray-300 hover:text-white hover:bg-white/10";
-  const itemActive = isLight ? "bg-blue-50 text-blue-600 border-blue-200 shadow-sm" : "bg-blue-600/20 text-blue-400 border-blue-500/30";
 
   return (
     <div className={`w-full h-full relative group overflow-hidden transition-colors duration-300 ${isLight ? 'bg-[#f8f9fa]' : 'bg-[#0a0b10]'} border-l ${isLight ? 'border-gray-200' : 'border-white/5'}`}>
@@ -192,15 +166,6 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
 
       <div className="absolute top-4 right-4 z-10 flex gap-2 items-center">
         <div className="canvas-toolbar" style={{ position: 'static', backdropFilter: 'blur(8px)' }}>
-          <button onClick={() => setRenderMode('shaded')} className={renderMode === 'shaded' ? 'opacity-100 bg-blue-500/20 text-blue-400' : ''} title="着色模式">
-            <Box size={14} />
-          </button>
-          <button onClick={() => setRenderMode('wireframe')} className={renderMode === 'wireframe' ? 'opacity-100 bg-blue-500/20 text-blue-400' : ''} title="线框模式">
-            <Layers size={14} />
-          </button>
-
-          <div className="w-px h-4 bg-white/10 mx-1" />
-
           <button onClick={onTriggerCompute} title="刷新场景"><RefreshCw size={14} /></button>
           <button onClick={handleFitView} title="充满视图"><Scan size={14} /></button>
         </div>
@@ -208,7 +173,7 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
 
       <Canvas dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true }} shadows>
         <OrthographicCamera ref={cameraRef} makeDefault position={[200, -200, 200]} up={[0, 0, 1]} zoom={20} near={0.1} far={10000} />
-        <SceneContent computedResults={computedResults} renderMode={renderMode} theme={theme} />
+        <SceneContent computedResults={computedResults} theme={theme} />
         <OrbitControls ref={controlsRef} makeDefault enableRotate={true} enableZoom={true} enablePan={true} target={[0, 0, 0]} enableDamping={true} dampingFactor={0.1} />
       </Canvas>
     </div>
@@ -216,8 +181,8 @@ const Viewer3DPresenter = React.memo(({ computedResults, onTriggerCompute, onAdd
 }, (prev, next) => prev.computedResults === next.computedResults);
 
 const Viewer3D: React.FC = () => {
-  const { computedResults, triggerCompute, addLog, kernelBackend } = useGraph();
-  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} onAddLog={addLog} kernelBackend={kernelBackend} />;
+  const { computedResults, triggerCompute } = useGraph();
+  return <Viewer3DPresenter computedResults={computedResults} onTriggerCompute={triggerCompute} />;
 };
 
 export default Viewer3D;

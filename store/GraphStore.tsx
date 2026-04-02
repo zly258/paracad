@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { NodeData, Connection, NodeType, GraphState, LogEntry, ConnectionDraft } from '../types';
 import { createDefaultNode, NODE_WIDTH, getNodeRenderHeight } from '../constants';
-import { computeGraph, initOCCT } from '../utils/geometryEngine';
+import { computeGraph, initKernel } from '../utils/geometryEngine';
 import { KernelBackend } from '../core/kernel';
 import { v4 as uuidv4 } from 'uuid';
 import { translations } from '../translations';
@@ -85,8 +85,8 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isComputing, setIsComputing] = useState(false);
   const [computeTrigger, setComputeTrigger] = useState(0);
   const [kernelReady, setKernelReady] = useState(false);
-  const [kernelBackend, setKernelBackend] = useState<KernelBackend>('three-fallback');
-  const [kernelMessage, setKernelMessage] = useState('初始化中...');
+  const [kernelBackend, setKernelBackend] = useState<KernelBackend>('three');
+  const [kernelMessage, setKernelMessage] = useState('正在初始化 Three.js 引擎...');
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
 
   const [history, setHistory] = useState<HistoryState[]>([]);
@@ -166,13 +166,11 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const init = async () => {
-      const status = await initOCCT();
+      const status = await initKernel();
       setKernelReady(true);
       setKernelBackend(status.backend);
       setKernelMessage(status.message);
-      if (status.backend !== 'occt.js') {
-        addLog(status.message, 'warning');
-      }
+      addLog(status.message, 'info');
     };
     init();
   }, [addLog]);
@@ -411,3 +409,4 @@ export const GraphProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return <GraphContext.Provider value={contextValue}>{children}</GraphContext.Provider>;
 };
 export default GraphProvider;
+

@@ -1,8 +1,5 @@
 import * as THREE from 'three';
 import { NodeData, NodeType } from '../../types';
-import { getKernelStatus } from '../kernel';
-import { createOcctDir, createOcctPoint, createOcctVec } from './occtHelpers';
-import { transformOcctShape } from './occtTransforms';
 import { cloneObject, getNum, getVal, getVec, tagKernel } from './runtimeUtils';
 
 interface TransformContext {
@@ -10,13 +7,8 @@ interface TransformContext {
   inputs: Record<string, any>;
 }
 
-const extractOcctShape = (input: any) => input?.userData?.occtShape;
-
-// 变换、阵列和成组节点统一放在这里，后续可继续补坐标系变换和更高级复制策略。
 export const executeTransformNode = async ({ node, inputs }: TransformContext): Promise<any[] | null> => {
   const p = node.params;
-  const color = p.color || '#888888';
-  const kernel = getKernelStatus();
 
   switch (node.type) {
     case NodeType.GROUP: {
@@ -28,15 +20,10 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [group];
     }
     case NodeType.TRANSLATION: {
-      const occtShape = extractOcctShape(inputs.geometry);
       const v = getVec('vector', inputs, p);
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-move', getKernelStatus(), (oc, trsf) => {
-        trsf.SetTranslation_1(createOcctVec(oc, v.x, v.y, v.z));
-      });
-      if (occtObject) return [occtObject];
-
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
+      geom.userData.visible = false;
       const cloned = tagKernel(cloneObject(geom), node, 'move');
       cloned.position.x += v.x;
       cloned.position.y += v.y;
@@ -44,16 +31,8 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [cloned];
     }
     case NodeType.ROTATION: {
-      const occtShape = extractOcctShape(inputs.geometry);
       const axis = getVec('axis', inputs, p);
       const angleRad = THREE.MathUtils.degToRad(getNum('angle', inputs, p, 45));
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-rotate', getKernelStatus(), (oc, trsf) => {
-        const dir = createOcctDir(oc, axis.x || 0, axis.y || 0, axis.z || 1);
-        const ax1 = new oc.gp_Ax1_2(createOcctPoint(oc, 0, 0, 0), dir);
-        trsf.SetRotation_1(ax1, angleRad);
-      });
-      if (occtObject) return [occtObject];
-
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
       const cloned = tagKernel(cloneObject(geom), node, 'rotate');
@@ -63,13 +42,7 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [cloned];
     }
     case NodeType.SCALE: {
-      const occtShape = extractOcctShape(inputs.geometry);
       const factor = getNum('factor', inputs, p, 1);
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-scale', getKernelStatus(), (oc, trsf) => {
-        trsf.SetScale(createOcctPoint(oc, 0, 0, 0), factor);
-      });
-      if (occtObject) return [occtObject];
-
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
       const cloned = tagKernel(cloneObject(geom), node, 'scale');
@@ -77,26 +50,9 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [cloned];
     }
     case NodeType.MIRROR: {
-      const occtShape = extractOcctShape(inputs.geometry);
-      const normalVec = getVec('plane_normal', inputs, p);
-      const occtObject = await transformOcctShape(node, color, occtShape, 'occt-mirror', getKernelStatus(), (oc, trsf) => {
-        const dir = createOcctDir(oc, normalVec.x || 1, normalVec.y || 0, normalVec.z || 0);
-        const ax2 = new oc.gp_Ax2_3(createOcctPoint(oc, 0, 0, 0), dir);
-        trsf.SetMirror_3(ax2);
-      });
-      if (occtObject) {
-        if (getVal('copy', inputs, p, true)) {
-          const group = tagKernel(new THREE.Group(), node, 'occt-mirror-copy');
-          const sourceObject = inputs.geometry as THREE.Object3D;
-          if (sourceObject) group.add(cloneObject(sourceObject));
-          group.add(occtObject);
-          return [group];
-        }
-        return [occtObject];
-      }
-
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
+      const normalVec = getVec('plane_normal', inputs, p);
       const normal = new THREE.Vector3(normalVec.x, normalVec.y, normalVec.z).normalize();
       if (normal.lengthSq() === 0) normal.set(1, 0, 0);
       const { x, y, z } = normal;
@@ -117,22 +73,11 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [mirrored];
     }
     case NodeType.ARRAY_LINEAR: {
-      const occtShape = extractOcctShape(inputs.geometry);
       const dir = getVec('direction', inputs, p);
       const direction = new THREE.Vector3(dir.x, dir.y, dir.z).normalize();
       if (direction.lengthSq() === 0) direction.set(1, 0, 0);
       const count = Math.max(1, Math.floor(getNum('count', inputs, p, 3)));
       const spacing = getNum('spacing', inputs, p, 20);
-      if (occtShape && kernel.backend === 'occt.js' && kernel.occt) {
-        const group = tagKernel(new THREE.Group(), node, 'occt-array-linear');
-        for (let i = 0; i < count; i++) {
-          const instance = await transformOcctShape(node, color, occtShape, `occt-array-linear-${i}`, kernel, (oc, trsf) => {
-            trsf.SetTranslation_1(createOcctVec(oc, direction.x * spacing * i, direction.y * spacing * i, direction.z * spacing * i));
-          });
-          if (instance) group.add(instance);
-        }
-        if (group.children.length > 0) return [group];
-      }
 
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
@@ -145,22 +90,9 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [group];
     }
     case NodeType.ARRAY_GRID: {
-      const occtShape = extractOcctShape(inputs.geometry);
       const countX = Math.max(1, Math.floor(getNum('count_x', inputs, p, 3)));
       const countY = Math.max(1, Math.floor(getNum('count_y', inputs, p, 3)));
       const spacing = getNum('spacing', inputs, p, 20);
-      if (occtShape && kernel.backend === 'occt.js' && kernel.occt) {
-        const group = tagKernel(new THREE.Group(), node, 'occt-array-grid');
-        for (let ix = 0; ix < countX; ix++) {
-          for (let iy = 0; iy < countY; iy++) {
-            const instance = await transformOcctShape(node, color, occtShape, `occt-array-grid-${ix}-${iy}`, kernel, (oc, trsf) => {
-              trsf.SetTranslation_1(createOcctVec(oc, ix * spacing, iy * spacing, 0));
-            });
-            if (instance) group.add(instance);
-          }
-        }
-        if (group.children.length > 0) return [group];
-      }
 
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
@@ -176,30 +108,10 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       return [group];
     }
     case NodeType.ARRAY_POLAR: {
-      const occtShape = extractOcctShape(inputs.geometry);
       const center = getVec('center', inputs, p);
       const count = Math.max(1, Math.floor(getNum('count', inputs, p, 6)));
       const fillAngle = THREE.MathUtils.degToRad(getNum('fill_angle', inputs, p, 360));
       const paramRadius = Math.max(0, getNum('radius', inputs, p, 20));
-      if (occtShape && kernel.backend === 'occt.js' && kernel.occt) {
-        const group = tagKernel(new THREE.Group(), node, 'occt-array-polar');
-        for (let i = 0; i < count; i++) {
-          const angle = count === 1 ? 0 : (fillAngle / count) * i;
-          const x = center.x + Math.cos(angle) * paramRadius;
-          const y = center.y + Math.sin(angle) * paramRadius;
-          const instance = await transformOcctShape(node, color, occtShape, `occt-array-polar-${i}`, kernel, (oc, trsf) => {
-            const translation = new oc.gp_Trsf_1();
-            translation.SetTranslation_1(createOcctVec(oc, x, y, center.z));
-            const rotationAxis = new oc.gp_Ax1_2(createOcctPoint(oc, center.x, center.y, center.z), createOcctDir(oc, 0, 0, 1));
-            const rotation = new oc.gp_Trsf_1();
-            rotation.SetRotation_1(rotationAxis, angle);
-            trsf.Multiply(translation);
-            trsf.Multiply(rotation);
-          });
-          if (instance) group.add(instance);
-        }
-        if (group.children.length > 0) return [group];
-      }
 
       const geom = inputs.geometry as THREE.Object3D;
       if (!geom) return [null];
@@ -207,8 +119,8 @@ export const executeTransformNode = async ({ node, inputs }: TransformContext): 
       const radius = paramRadius > 0
         ? paramRadius
         : Math.max(1, geom.position.distanceTo(new THREE.Vector3(center.x, center.y, geom.position.z)));
-      for (let i = 0; i < count; i++) {
-        const angle = count === 1 ? 0 : (fillAngle / count) * i;
+      for (let i = 1; i <= count; i++) {
+        const angle = count === 1 ? fillAngle : (fillAngle / count) * i;
         const cloned = cloneObject(geom);
         cloned.position.set(center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius, cloned.position.z);
         cloned.rotateZ(angle);

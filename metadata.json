@@ -1,5 +1,6 @@
 {
   "name": "ParaCad",
-  "description": "基于 Web 的节点式参数化建模系统，采用 OCCT.js + Three.js 混合内核架构。",
+  "description": "基于 Web 的节点式参数化建模系统，采用 Three.js 实时建模架构。",
   "requestFramePermissions": []
 }
+

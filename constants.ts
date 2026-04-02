@@ -12,6 +12,7 @@ export const INPUT_OUTPUT_GAP = 4;
 export const NODE_BORDER_WIDTH = 1;
 export const INPUT_CONTAINER_PADDING = 4;
 export const GEOMETRY_PARAMS_HEIGHT = 28;
+export const BOOLEAN_OP_PANEL_HEIGHT = 40;
 
 export const SOCKET_COLORS = {
   number: 'bg-slate-400',
@@ -28,6 +29,7 @@ export const getInnerBodyHeight = (type: NodeType): number => {
   switch (type) {
     case NodeType.PARAMETER: return 60;
     case NodeType.EXPRESSION: return 64;
+    case NodeType.BOOLEAN_OP: return BOOLEAN_OP_PANEL_HEIGHT;
     default: return 0;
   }
 };

@@ -22,7 +22,7 @@ const NodeCanvas: React.FC = () => {
     saveGraph, loadGraph, exportModel,
     updateNodePosition, updateNodeParam, computedResults, t,
     undo, redo, recordHistory, canUndo, canRedo,
-    removeNode, removeConnection, theme, kernelBackend, addLog
+    removeNode, removeConnection, theme, addLog
   } = useGraph();
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -269,18 +269,15 @@ const NodeCanvas: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               {[
                 { id: 'glb', label: 'GLB (Binary)', desc: 'Web & AR optimized' },
-                { id: 'obj', label: 'OBJ (Wavefront)', desc: 'Legacy mesh support' },
-                { id: 'stp', label: 'STP (STEP)', desc: 'CAD Standard', occt: true },
-                { id: 'igs', label: 'IGS (IGES)', desc: 'Classic CAD format', occt: true }
+                { id: 'obj', label: 'OBJ (Wavefront)', desc: 'Legacy mesh support' }
               ].map(fmt => (
                 <button
                   key={fmt.id}
                   onClick={() => setExportFormat(fmt.id)}
                   className={`p-3 rounded-xl border text-left transition-all ${exportFormat === fmt.id
                     ? 'bg-blue-600/20 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                    : (fmt.occt && kernelBackend !== 'occt.js' ? 'opacity-30 cursor-not-allowed border-white/5' : 'bg-white/5 border-white/10 hover:border-white/30')
+                    : 'bg-white/5 border-white/10 hover:border-white/30'
                     }`}
-                  disabled={fmt.occt && kernelBackend !== 'occt.js'}
                 >
                   <div className={`text-sm font-bold ${exportFormat === fmt.id ? 'text-blue-400' : 'text-gray-200'}`}>{fmt.label}</div>
                   <div className="text-[10px] text-gray-500 mt-1">{fmt.desc}</div>

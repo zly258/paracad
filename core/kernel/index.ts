@@ -1,4 +1,1 @@
-export * from './occtAdapter';
-
-export * from './occtVisualization';
-
+export * from './adapter';

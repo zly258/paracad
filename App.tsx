@@ -3,7 +3,7 @@ import NodeCanvas from './components/NodeEditor/NodeCanvas';
 import NodeTree from './components/NodeEditor/NodeTree';
 import Viewer3D from './components/Viewport/Viewer3D';
 import { GraphProvider, useGraph } from './store/GraphStore';
-import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, Undo2, Redo2, SunMoon, Eraser } from 'lucide-react';
+import { Boxes, Terminal, AlertCircle, CheckCircle, Info, Loader2, Globe, SunMoon, Eraser } from 'lucide-react';
 import './styles/workbench.css';
 
 const LogPanel = React.memo(() => {
@@ -56,37 +56,17 @@ const LogPanel = React.memo(() => {
 });
 
 const Header: React.FC<{ theme: 'dark' | 'light'; onToggleTheme: () => void }> = ({ theme, onToggleTheme }) => {
-  const { kernelReady, kernelBackend, toggleLanguage, t, undo, redo, canUndo, canRedo } = useGraph();
+  const { kernelReady, kernelBackend, toggleLanguage, t } = useGraph();
   return (
     <header className="app-header h-10 border-b flex items-center px-4 justify-between shrink-0 z-10 shadow-md">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Boxes className="text-blue-500" size={20} />
           <h1 className="app-header-title font-bold text-base tracking-wide">
-            ParaCad <span className="text-[10px] bg-blue-600 text-white px-1 rounded ml-1 font-bold">{kernelReady ? (kernelBackend === 'occt.js' ? 'OCCT.js' : 'Three.js') : 'Booting'}</span>
+            ParaCad <span className="text-[10px] bg-blue-600 text-white px-1 rounded ml-1 font-bold">{kernelReady ? ('Three.js') : 'Booting'}</span>
           </h1>
         </div>
 
-        <div className="h-4 w-px bg-white/10 mx-2" />
-
-        <div className="flex gap-1">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className={`header-icon-btn p-1.5 rounded transition-colors ${canUndo ? 'text-gray-200 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
-            title={t('Undo') + ' (Ctrl+Z)'}
-          >
-            <Undo2 size={16} />
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className={`header-icon-btn p-1.5 rounded transition-colors ${canRedo ? 'text-gray-200 hover:text-white' : 'text-gray-600 cursor-not-allowed'}`}
-            title={t('Redo') + ' (Ctrl+Y)'}
-          >
-            <Redo2 size={16} />
-          </button>
-        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -144,7 +124,7 @@ const MainLayout: React.FC = () => {
           <div className="w-64 h-1 bg-gray-800 rounded overflow-hidden">
             <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${progress}%` }}></div>
           </div>
-          <div className="text-gray-500 text-xs font-mono">{t('Loading Kernel')}... {Math.floor(progress)}%</div>
+          <div className="text-gray-500 text-xs font-mono">{t('Loading Engine')}... {Math.floor(progress)}%</div>
         </div>
       )}
 
@@ -184,3 +164,4 @@ const App: React.FC = () => (
 );
 
 export default App;
+
